@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Exam</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background: #f4f7fc;
+            font-family: Poppins;
+        }
+
+        .container-box{
+            max-width: 900px;
+            margin: auto;
+            margin-top: 80px;
+        }
+
+        .exam-card{
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .exam-card:hover{
+            transform: translateY(-5px);
+        }
+
+        .title{
+            text-align: center;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 50px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container container-box">
+
+    <h1 class="title">
+        Choose Examination
+    </h1>
+
+    <div class="row">
+
+        <div class="col-md-6 mb-4">
+
+            <div class="exam-card">
+
+                <h2>JAMB CBT</h2>
+
+                <p>
+                    Practice real JAMB questions with explanations.
+                </p>
+
+                <a href="/jamb_courses"
+                   class="btn btn-primary">
+
+                    Start JAMB
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6 mb-4">
+
+            <div class="exam-card">
+
+                <h2>WAEC CBT</h2>
+
+                <p>
+                    Practice real WAEC questions with explanations.
+                </p>
+
+                <a href="/waec_subjects"
+                   class="btn btn-success">
+
+                    Start WAEC
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Answer Review</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        body{
+            background: #f4f7fc;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .review-container{
+            max-width: 850px;
+            margin: auto;
+            margin-top: 60px;
+        }
+
+        .review-card{
+            background: white;
+            border-radius: 20px;
+            padding: 45px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .result-box{
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-text{
+            font-size: 42px;
+            font-weight: 700;
+        }
+
+        .correct{
+            color: #198754;
+        }
+
+        .wrong{
+            color: #dc3545;
+        }
+
+        .explanation-box{
+            background: #f8f9fa;
+            border-left: 6px solid #0d6efd;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+
+        .next-btn{
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .score-badge{
+            background: #0d6efd;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container review-container">
+
+    <div class="review-card">
+
+        <!-- Score -->
+        <div class="d-flex justify-content-end">
+            <div class="score-badge">
+                Score: {{ score }}
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div class="result-box">
+
+            {% if result == "Correct!" %}
+                <div class="result-text correct">
+                    ✅ Correct!
+                </div>
+            {% else %}
+                <div class="result-text wrong">
+                    ❌ Wrong!
+                </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Explanation -->
+        <h4>Solution Explanation</h4>
+
+        <div class="explanation-box">
+            {{ explanation }}
+        </div>
+
+        <!-- Next -->
+        <a href="/next_question" class="btn btn-primary next-btn mt-4">
+            Next Question →
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
