@@ -587,6 +587,8 @@ def reset_password(token):
         cur.execute("UPDATE users SET password = ? WHERE email = ?", (generate_password_hash(password), row["email"]))
         cur.execute("UPDATE password_reset_tokens SET used = 1 WHERE token = ?", (token,))
         cur.execute("UPDATE user_sessions SET is_active = 0 WHERE username = ?", (row["email"],))
+        # A successful reset proves ownership: lift any lockout caused by earlier failed attempts
+        cur.execute("DELETE FROM login_attempts WHERE email = ? AND successful = 0", (row["email"],))
         conn.commit()
         conn.close()
         flash("Your password has been changed. Please log in with your new password.", "success")
