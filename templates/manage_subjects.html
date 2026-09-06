@@ -14,14 +14,14 @@
 
     <!-- Bootstrap 5 -->
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        href="/static/vendor/bootstrap/bootstrap.min.css"
         rel="stylesheet"
     >
 
     <!-- Bootstrap Icons -->
     <link
         rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css"
     >
 
     <style>
@@ -621,31 +621,11 @@
 
                                 {% if subject.status == "Active" %}
 
-                                    <a
-                                        href="/toggle_subject/{{ subject.id }}"
-                                        class="btn btn-sm btn-outline-danger"
-                                        title="Deactivate subject"
-                                    >
-
-                                        <i class="bi bi-toggle-off"></i>
-
-                                        Deactivate
-
-                                    </a>
+                                    <form method="POST" action="/toggle_subject/{{ subject.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-danger" title="Deactivate subject"><i class="bi bi-toggle-off"></i> Deactivate</button></form>
 
                                 {% else %}
 
-                                    <a
-                                        href="/toggle_subject/{{ subject.id }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        title="Activate subject"
-                                    >
-
-                                        <i class="bi bi-toggle-on"></i>
-
-                                        Activate
-
-                                    </a>
+                                    <form method="POST" action="/toggle_subject/{{ subject.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-success" title="Activate subject"><i class="bi bi-toggle-on"></i> Activate</button></form>
 
                                 {% endif %}
 
@@ -654,8 +634,7 @@
 
                                 <form
                                     method="POST"
-                                    action="{{ url_for(
-                                        'delete_subject',
+                                    action="{{ url_for('admin_bp.delete_subject',
                                         subject_id=subject.id
                                     ) }}"
                                     style="display: inline;"
@@ -663,6 +642,7 @@
                                         'Are you sure you want to delete {{ subject.subject_name }} ({{ subject.exam_type }})?'
                                     );"
                                 >
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                     <button
                                         type="submit"
@@ -732,7 +712,7 @@
 <!-- Bootstrap JS -->
 
 <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    src="/static/vendor/bootstrap/bootstrap.bundle.min.js"
 ></script>
 
 

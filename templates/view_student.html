@@ -4,7 +4,7 @@
 
 <title>Student Profile</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+<link href="/static/vendor/bootstrap/bootstrap.min.css"
       rel="stylesheet">
 
 </head>
@@ -73,21 +73,11 @@
 
                 {% if student[7] == 1 %}
 
-                    <a href="/suspend_student/{{ student[0] }}"
-                    class="btn btn-warning">
-
-                        🔒 Suspend Student
-
-                    </a>
+                    <form method="POST" action="/suspend_student/{{ student[0] }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-warning">🔒 Suspend Student</button></form>
 
                 {% else %}
 
-                    <a href="/activate_student/{{ student[0] }}"
-                    class="btn btn-success">
-
-                        🟢 Activate Student
-
-                    </a>
+                    <form method="POST" action="/activate_student/{{ student[0] }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-success">🟢 Activate Student</button></form>
 
                 {% endif %}
 

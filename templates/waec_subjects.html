@@ -1,118 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>WAEC Subjects</title>
+{% extends "base.html" %}
+{% block title %}WAEC — choose a subject{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-
-        body{
-            background: linear-gradient(135deg, #eef4ff, #f9fbff);
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .container-box{
-            max-width: 1000px;
-            margin: auto;
-            margin-top: 50px;
-            margin-bottom: 50px;
-        }
-
-        .main-card{
-            background: white;
-            padding: 40px;
-            border-radius: 25px;
-            box-shadow: 0px 15px 40px rgba(0,0,0,0.08);
-        }
-
-        .title{
-            font-size: 38px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .subtitle{
-            color: #6c757d;
-            margin-bottom: 35px;
-        }
-
-        .subject-card{
-            border: 2px solid #edf2ff;
-            border-radius: 18px;
-            padding: 25px;
-            margin-bottom: 25px;
-            transition: 0.3s;
-            text-align: center;
-        }
-
-        .subject-card:hover{
-            border-color: #198754;
-            transform: translateY(-4px);
-            background: #f8fff9;
-        }
-
-        .subject-title{
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .btn-start{
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
-    </style>
-</head>
-<body>
-
-<div class="container container-box">
-
-    <div class="main-card">
-
-        <h1 class="title">
-            WAEC Subject Selection
-        </h1>
-
-        <p class="subtitle">
-            Select a WAEC subject and begin CBT practice.
-        </p>
-
-        <div class="row">
-
-            {% for subject in subjects %}
-
-            <div class="col-lg-4 col-md-6 mb-4">
-
-                <div class="subject-card">
-
-                    <div class="subject-title">
-                        📘 {{ subject }}
-                    </div>
-
-                    <a href="/start_waec/{{ subject }}"
-                       class="btn btn-success btn-start">
-
-                        Start WAEC CBT
-
-                    </a>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>WAEC</span></div>
+        <h1>Choose a WAEC subject</h1>
+        <p class="lead">{{ per_exam }} randomised objective questions · {{ duration }} minutes · full corrections afterwards.</p>
     </div>
-
 </div>
 
-</body>
-</html>
+{% if subjects %}
+<div class="row g-3">
+    {% for name, count in subjects %}
+    <div class="col-sm-6 col-lg-4">
+        <form method="POST" action="{{ url_for('start_waec', subject=name) }}" data-once>
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+            <button type="submit" class="pn-subject-link w-100 text-start anim-rise d{{ loop.index0 % 4 }}" data-confirm="Start the WAEC {{ name }} mock now? The {{ duration }}-minute timer begins immediately." data-loading="Preparing…">
+                <span class="pn-stat-icon tint-blue"><i class="bi {{ subject_icon(name) }}"></i></span>
+                <span>{{ name }}<small>{{ count }} questions in bank</small></span>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No WAEC subjects available yet</h3><p>Our team is adding questions. Please check back soon or try a JAMB mock.</p><a href="{{ url_for('jamb_courses') }}" class="btn btn-primary btn-sm">Go to JAMB</a></div>
+{% endif %}
+{% endblock %}

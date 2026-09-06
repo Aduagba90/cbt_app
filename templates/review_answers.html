@@ -1,99 +1,68 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
+{% block title %}Corrections — {{ r['exam_type'] }} {{ r['exam_name'] }}{% endblock %}
 
-    <title>Review Answers</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-
-        body{
-            background: #f4f7fc;
-        }
-
-        .card{
-            border-radius: 20px;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="container mt-5 mb-5">
-
-    <h2 class="mb-4">
-        📖 Review Answers
-    </h2>
-
-    {% for a in answers %}
-
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-body">
-
-            <h5>
-                {{ loop.index }}.
-                {{ a[1] }}
-            </h5>
-
-            <p>
-                <strong>Subject:</strong>
-                {{ a[0] }}
-            </p>
-
-            <p>
-
-                <strong>Your Answer:</strong>
-
-                {% if a[5] == 1 %}
-
-                    <span class="text-success">
-                        {{ a[2] }} ✅
-                    </span>
-
-                {% else %}
-
-                    <span class="text-danger">
-                        {{ a[2] }} ❌
-                    </span>
-
-                {% endif %}
-
-            </p>
-
-            <p>
-
-                <strong>Correct Answer:</strong>
-
-                {{ a[3] }}
-
-            </p>
-
-            <p>
-
-                <strong>Explanation:</strong>
-
-                {{ a[4] }}
-
-            </p>
-
-        </div>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('my_results') }}">My results</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('result_details', result_id=r['id']) }}">Result #{{ r['id'] }}</a><i class="bi bi-chevron-right"></i><span>Corrections</span></div>
+        <h1>Corrections &amp; explanations</h1>
+        <p class="lead">{{ r['exam_type'] }} · {{ r['exam_name'] }} · scored {{ r['score'] }}/{{ r['total'] }}</p>
     </div>
-
-    {% endfor %}
-
-    <a href="/my_results"
-       class="btn btn-primary">
-
-        ← Back to My Results
-
-    </a>
-
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('review_answers', result_id=r['id'], show='all') }}" class="btn btn-outline-primary {{ 'active' if show != 'wrong' }}">All</a>
+        <a href="{{ url_for('review_answers', result_id=r['id'], show='wrong') }}" class="btn btn-outline-primary {{ 'active' if show == 'wrong' }}">Wrong only</a>
+    </div>
 </div>
 
-</body>
-</html>
+{% if subjects|length > 1 %}
+<div class="d-flex flex-wrap gap-2 mb-3 anim-rise d1" id="subjectFilter">
+    <button class="btn btn-sm btn-primary" data-subject="">All subjects</button>
+    {% for s in subjects %}<button class="btn btn-sm btn-outline-primary" data-subject="{{ s }}">{{ s }}</button>{% endfor %}
+</div>
+{% endif %}
+
+{% if items %}
+<div id="reviewList">
+    {% for it in items %}
+    <div class="pn-review-item {{ 'ok' if it.is_correct else 'bad' }} reveal" data-subject="{{ it.subject }}">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div class="pn-qnum">Q{{ it.n }} <span class="text-muted fw-semibold">· {{ it.subject }}</span></div>
+            {% if it.is_correct %}<span class="badge bg-success"><i class="bi bi-check-lg"></i> Correct</span>{% elif it.selected %}<span class="badge bg-danger"><i class="bi bi-x-lg"></i> Wrong</span>{% else %}<span class="badge bg-secondary">Not answered</span>{% endif %}
+        </div>
+        {% if it.passage %}<div class="pn-passage">{{ it.passage }}</div>{% endif %}
+        <div class="pn-qtext">{{ it.text }}</div>
+        {% if it.options %}
+            {% for k, v in it.options.items() %}
+            <div class="pn-option locked {% if k == it.correct %}correct{% elif k == it.selected %}wrong{% endif %}">
+                <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                {% if k == it.correct %}<i class="bi bi-check-circle-fill text-success ms-auto"></i>{% elif k == it.selected %}<i class="bi bi-x-circle-fill text-danger ms-auto"></i>{% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="d-flex flex-wrap gap-3 small mb-2"><span>Your answer: <b class="{{ 'text-success' if it.is_correct else 'text-danger' }}">{{ it.selected or '—' }}</b></span><span>Correct answer: <b class="text-success">{{ it.correct }}</b></span></div>
+        {% endif %}
+        {% if it.explanation %}
+        <div class="pn-explain {{ '' if it.is_correct else 'wrong' }} mt-2"><h5><i class="bi bi-lightbulb me-1"></i>Explanation</h5><div style="white-space:pre-line">{{ it.explanation }}</div></div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="pn-empty card"><span class="ico"><i class="bi bi-emoji-sunglasses"></i></span><h3>{% if show == 'wrong' %}No wrong answers — perfect score!{% else %}No review data{% endif %}</h3><p>{% if show == 'wrong' %}Outstanding. Try a harder subject next.{% else %}This result has no stored corrections.{% endif %}</p><a href="{{ url_for('exam_types') }}" class="btn btn-primary btn-sm">Take another mock</a></div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var f = document.getElementById('subjectFilter'); if (!f) return;
+    f.addEventListener('click', function(e){
+        var b = e.target.closest('button'); if (!b) return;
+        f.querySelectorAll('button').forEach(function(x){ x.classList.remove('btn-primary'); x.classList.add('btn-outline-primary'); });
+        b.classList.add('btn-primary'); b.classList.remove('btn-outline-primary');
+        var s = b.dataset.subject;
+        document.querySelectorAll('.pn-review-item').forEach(function(it){ it.classList.toggle('d-none', !!s && it.dataset.subject !== s); });
+    });
+})();
+</script>
+{% endblock %}

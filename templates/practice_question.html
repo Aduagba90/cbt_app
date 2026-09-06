@@ -1,450 +1,105 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-    <title>Practice Question</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-
-    <style>
-
-        body{
-            background:#f5f7fb;
-        }
-
-        .question-card{
-            background:white;
-            border-radius:15px;
-            padding:30px;
-            box-shadow:0 5px 20px rgba(0,0,0,.08);
-            max-width:900px;
-            margin:auto;
-        }
-
-        .option-card{
-            border:2px solid #dee2e6;
-            border-radius:12px;
-            padding:15px;
-            margin-bottom:15px;
-            transition:.3s;
-            cursor:pointer;
-        }
-
-        .option-card:hover{
-            transform:translateY(-2px);
-        }
-
-        .correct-option{
-            background:#d1e7dd;
-            border-color:#198754;
-            color:#0f5132;
-            font-weight:bold;
-        }
-
-        .wrong-option{
-            background:#f8d7da;
-            border-color:#dc3545;
-            color:#842029;
-            font-weight:bold;
-        }
-
-        .normal-option{
-            background:white;
-        }
-
-        .result-icon{
-            font-size:22px;
-            margin-right:10px;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="container mt-5 mb-5">
-
-    <div class="question-card">
-
-        <h3>
-
-            {{ exam_type }} - {{ subject }}
-
-        </h3>
-
-        <hr>
-
-        <h4>
-
-            {{ question[1] }}
-
-        </h4>
-
-        <form method="POST">
-
-            <input
-                type="hidden"
-                name="question_id"
-                value="{{ question[0] }}">
-
-            <!-- OPTION A -->
-
-            <label class="option-card
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'A' %}
-
-                        correct-option
-
-                    {% elif selected_answer == 'A' %}
-
-                        wrong-option
-
-                    {% else %}
-
-                        normal-option
-
-                    {% endif %}
-
-                {% else %}
-
-                    normal-option
-
-                {% endif %}
-
-            ">
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="A"
-                    required
-
-                    {% if feedback %}disabled{% endif %}
-
-                    {% if selected_answer == 'A' %}checked{% endif %}
-
-                >
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'A' %}
-
-                        <span class="result-icon">✅</span>
-
-                    {% elif selected_answer == 'A' %}
-
-                        <span class="result-icon">❌</span>
-
-                    {% endif %}
-
-                {% endif %}
-
-                <strong>A.</strong>
-
-                {{ question[2] }}
-
-            </label>
-
-            <!-- OPTION B -->
-
-            <label class="option-card
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'B' %}
-
-                        correct-option
-
-                    {% elif selected_answer == 'B' %}
-
-                        wrong-option
-
-                    {% else %}
-
-                        normal-option
-
-                    {% endif %}
-
-                {% else %}
-
-                    normal-option
-
-                {% endif %}
-
-            ">
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="B"
-
-                    {% if feedback %}disabled{% endif %}
-
-                    {% if selected_answer == 'B' %}checked{% endif %}
-
-                >
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'B' %}
-
-                        <span class="result-icon">✅</span>
-
-                    {% elif selected_answer == 'B' %}
-
-                        <span class="result-icon">❌</span>
-
-                    {% endif %}
-
-                {% endif %}
-
-                <strong>B.</strong>
-
-                {{ question[3] }}
-
-            </label>
-
-            <!-- OPTION C -->
-
-            <label class="option-card
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'C' %}
-
-                        correct-option
-
-                    {% elif selected_answer == 'C' %}
-
-                        wrong-option
-
-                    {% else %}
-
-                        normal-option
-
-                    {% endif %}
-
-                {% else %}
-
-                    normal-option
-
-                {% endif %}
-
-            ">
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="C"
-
-                    {% if feedback %}disabled{% endif %}
-
-                    {% if selected_answer == 'C' %}checked{% endif %}
-
-                >
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'C' %}
-
-                        <span class="result-icon">✅</span>
-
-                    {% elif selected_answer == 'C' %}
-
-                        <span class="result-icon">❌</span>
-
-                    {% endif %}
-
-                {% endif %}
-
-                <strong>C.</strong>
-
-                {{ question[4] }}
-
-            </label>
-
-            <!-- OPTION D -->
-
-            <label class="option-card
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'D' %}
-
-                        correct-option
-
-                    {% elif selected_answer == 'D' %}
-
-                        wrong-option
-
-                    {% else %}
-
-                        normal-option
-
-                    {% endif %}
-
-                {% else %}
-
-                    normal-option
-
-                {% endif %}
-
-            ">
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="D"
-
-                    {% if feedback %}disabled{% endif %}
-
-                    {% if selected_answer == 'D' %}checked{% endif %}
-
-                >
-
-                {% if feedback %}
-
-                    {% if correct_answer == 'D' %}
-
-                        <span class="result-icon">✅</span>
-
-                    {% elif selected_answer == 'D' %}
-
-                        <span class="result-icon">❌</span>
-
-                    {% endif %}
-
-                {% endif %}
-
-                <strong>D.</strong>
-
-                {{ question[5] }}
-
-            </label>
-
-            {% if feedback %}
-
-                {% if is_correct %}
-
-                    <div class="alert alert-success mt-4">
-
-                        🎉 Correct!
-
-                    </div>
-
-                {% else %}
-
-                    <div class="alert alert-danger mt-4">
-
-                        ❌ Incorrect!
-
-                    </div>
-
-                {% endif %}
-
-                <div class="card mt-3">
-
-                    <div class="card-body">
-
-                        <h5>
-
-                            Correct Answer
-
-                        </h5>
-
-                        <p>
-
-                            <strong>{{ correct_answer }}</strong>
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="card mt-3">
-
-                    <div class="card-body">
-
-                        <h5>
-
-                            Explanation
-
-                        </h5>
-
-                        <p>
-
-                            {{ explanation }}
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <a
-                    href="/practice_questions/{{ exam_type }}/{{ subject }}"
-                    class="btn btn-primary mt-4">
-
-                    Next Question
-
-                </a>
-
-            {% else %}
-
-                <button
-                    type="submit"
-                    class="btn btn-success mt-4">
-
-                    Check Answer
-
-                </button>
-
-            {% endif %}
-
-        </form>
-
-        <hr class="mt-4">
-
-        <form
-            action="/bookmark_question"
-            method="POST">
-
-            <input
-                type="hidden"
-                name="question_id"
-                value="{{ question[0] }}">
-
-            <input
-                type="hidden"
-                name="exam_type"
-                value="{{ exam_type }}">
-
-            <input
-                type="hidden"
-                name="subject"
-                value="{{ subject }}">
-
-            <button
-                type="submit"
-                class="btn btn-warning">
-
-                ⭐ Bookmark this Question
-
-            </button>
-
-        </form>
-
-
+{% extends "base.html" %}
+{% block title %}Practice — {{ subject }}{% endblock %}
+
+{% block content %}
+{% set answered = feedback is not none %}
+<div class="pn-page-head anim-rise mb-3">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('practice') }}">Practice</a><i class="bi bi-chevron-right"></i><span>{{ exam_type }} · {{ subject }}</span></div>
+        <h1 class="h3">{{ subject }} <span class="badge bg-primary align-middle ms-1">{{ exam_type }}</span></h1>
     </div>
-
+    <div class="d-flex align-items-center gap-2">
+        <div class="pn-kpi py-2 px-3"><b class="fs-6 text-primary">{{ state.correct }}/{{ state.total }}</b><small>correct</small></div>
+        {% if remaining is not none %}<div class="pn-kpi py-2 px-3"><b class="fs-6">{{ remaining }}</b><small>free left</small></div>{% endif %}
+        <form method="POST" action="{{ url_for('practice_reset', exam_type=exam_type, subject=subject) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary" title="Reset score"><i class="bi bi-arrow-counterclockwise"></i></button></form>
+    </div>
 </div>
 
-</body>
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="pn-qcard">
+            <div class="pn-qhead">
+                <div class="pn-qnum">Question <strong>{{ state.total + (0 if answered else 1) }}</strong>{% if q.topic %} <span class="text-muted fw-semibold ms-2">· {{ q.topic }}</span>{% endif %}{% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}</div>
+                <form method="POST" action="{{ url_for('bookmark_question') }}">
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <input type="hidden" name="source" value="{{ q.source if q.source else 'questions_v2' }}">
+                    <input type="hidden" name="exam_type" value="{{ exam_type }}">
+                    <input type="hidden" name="subject" value="{{ subject }}">
+                    <button class="btn btn-sm {{ 'btn-warning' if bookmarked else 'btn-outline-warning' }}" type="submit"><i class="bi {{ 'bi-bookmark-star-fill' if bookmarked else 'bi-bookmark-star' }}"></i> {{ 'Bookmarked' if bookmarked else 'Bookmark' }}</button>
+                </form>
+            </div>
+            {% if q.passage %}<div class="pn-passage">{{ q.passage }}</div>{% endif %}
+            <div class="pn-qtext">{{ q.text }}</div>
 
-</html>
+            {% if not answered %}
+            <form method="POST" action="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" id="practiceForm" data-once>
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <input type="hidden" name="question_id" value="{{ q.id }}">
+                {% for k, v in q.options.items() %}
+                <label class="pn-option" data-key="{{ k }}">
+                    <input type="radio" name="answer" value="{{ k }}" required>
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                </label>
+                {% endfor %}
+                <div class="pn-qactions">
+                    <div class="left"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" class="btn btn-outline-secondary"><i class="bi bi-skip-forward"></i> Skip</a></div>
+                    <div class="right"><button class="btn btn-primary" type="submit" id="checkBtn" disabled data-loading="Checking…">Check answer <i class="bi bi-check2-circle"></i></button></div>
+                </div>
+            </form>
+            {% else %}
+                {% for k, v in q.options.items() %}
+                <div class="pn-option locked {% if k == feedback.q.correct %}correct{% elif k == feedback.chosen %}wrong{% endif %}">
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                    {% if k == feedback.q.correct %}<i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>{% elif k == feedback.chosen %}<i class="bi bi-x-circle-fill text-danger ms-auto fs-5"></i>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="pn-explain {{ '' if feedback.is_correct else 'wrong' }}">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        {% if feedback.is_correct %}<i class="bi bi-emoji-smile-fill text-success fs-4"></i><b class="text-success">Correct! Well done.</b>{% else %}<i class="bi bi-emoji-neutral-fill text-warning fs-4"></i><b class="text-danger">Not quite.</b> <span>The correct answer is <b>{{ feedback.q.correct }}</b>.</span>{% endif %}
+                    </div>
+                    <h5>Explanation</h5>
+                    <div style="white-space:pre-line">{{ feedback.q.explanation }}</div>
+                </div>
+                <div class="pn-qactions">
+                    <div class="left"><a href="{{ url_for('practice') }}" class="btn btn-outline-secondary"><i class="bi bi-grid"></i> Subjects</a></div>
+                    <div class="right"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" class="btn btn-primary" id="nextQ">Next question <i class="bi bi-arrow-right"></i></a></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h6 text-uppercase text-muted ls-1 mb-3">This session</h3>
+                {% set pct = (100 * state.correct / state.total)|round|int if state.total else 0 %}
+                <div class="pn-score-ring mb-3" style="--p:{{ pct }};--c:{{ 'var(--pn-success)' if pct >= 70 else ('var(--pn-warning)' if pct >= 50 else 'var(--pn-danger)') }};width:130px;height:130px"><div><b style="font-size:1.6rem">{{ pct }}%</b><small>accuracy</small></div></div>
+                <div class="row g-2 text-center">
+                    <div class="col-4"><div class="pn-kpi"><b class="text-success">{{ state.correct }}</b><small>Right</small></div></div>
+                    <div class="col-4"><div class="pn-kpi"><b class="text-danger">{{ state.total - state.correct }}</b><small>Wrong</small></div></div>
+                    <div class="col-4"><div class="pn-kpi"><b>{{ state.total }}</b><small>Total</small></div></div>
+                </div>
+                <hr>
+                <p class="small text-muted mb-2"><i class="bi bi-lightbulb me-1 text-warning"></i>Tip: read the explanation even when you are right — it often reveals a faster method.</p>
+                <a href="{{ url_for('exam_types') }}" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-stopwatch me-1"></i> Ready for a timed mock?</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var form = document.getElementById('practiceForm'); if (!form) { var n = document.getElementById('nextQ'); document.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === 'ArrowRight') { n.click(); } }); return; }
+    var opts = form.querySelectorAll('.pn-option'), btn = document.getElementById('checkBtn');
+    function pick(o){ opts.forEach(function(x){ x.classList.remove('selected'); }); o.classList.add('selected'); o.querySelector('input').checked = true; btn.disabled = false; }
+    opts.forEach(function(o){ o.addEventListener('click', function(){ pick(o); }); });
+    document.addEventListener('keydown', function(e){
+        var k = e.key.toUpperCase();
+        if (['A','B','C','D'].indexOf(k) > -1) { var o = form.querySelector('.pn-option[data-key="'+k+'"]'); if (o) pick(o); }
+        else if (e.key === 'Enter' && !btn.disabled) { form.requestSubmit(); }
+    });
+})();
+</script>
+{% endblock %}

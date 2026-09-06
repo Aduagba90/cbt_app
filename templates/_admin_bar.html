@@ -1,0 +1,56 @@
+{# Shared admin chrome injected into every legacy admin page (see admin_routes / _admin_chrome) #}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/static/css/prepnova.css?v=2">
+<style>
+  body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; font-size: .925rem; }
+  .pn-admin-bar { position: sticky; top: 0; z-index: 1050; background: #0f1f3d; color: #fff; box-shadow: 0 4px 14px rgba(15,31,61,.25); }
+  .pn-admin-bar .inner { max-width: 1320px; margin: 0 auto; padding: .45rem 1rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .pn-admin-bar .brand { display: inline-flex; align-items: center; gap: .5rem; color: #fff; text-decoration: none; font-weight: 800; letter-spacing: -.01em; margin-right: .5rem; }
+  .pn-admin-bar .brand .pn-logo { width: 30px; height: 30px; font-size: .75rem; }
+  .pn-admin-bar .brand small { display: block; font-size: .62rem; font-weight: 700; letter-spacing: .12em; color: #f6b200; text-transform: uppercase; line-height: 1; }
+  .pn-admin-bar nav { display: flex; gap: .15rem; flex-wrap: wrap; flex: 1; }
+  .pn-admin-bar nav a { color: rgba(255,255,255,.8); text-decoration: none; font-size: .8rem; font-weight: 600; padding: .4rem .65rem; border-radius: 8px; display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+  .pn-admin-bar nav a:hover { background: rgba(255,255,255,.1); color: #fff; }
+  .pn-admin-bar nav a.active { background: #0b7a4b; color: #fff; }
+  .pn-admin-bar .right { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+  .pn-admin-bar .right a { font-size: .8rem; }
+  .pn-admin-bar .dropdown-menu { font-size: .85rem; }
+  @media (max-width: 991.98px) { .pn-admin-bar nav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: .25rem; scrollbar-width: none; } }
+  .pn-admin-flash { max-width: 1320px; margin: .75rem auto 0; padding: 0 1rem; }
+  h1, h2, h3, .title { font-family: inherit !important; }
+  .table { font-size: .875rem; }
+  .btn { font-weight: 600; }
+</style>
+<div class="pn-admin-bar">
+  <div class="inner">
+    <a class="brand" href="{{ url_for('admin_bp.admin') }}"><span class="pn-logo">PN</span><span>PrepNova<small>Admin</small></span></a>
+    <nav>
+      {% set ep = (request.endpoint or '').split('.')[-1] %}
+      <a href="{{ url_for('admin_bp.admin') }}" class="{{ 'active' if ep == 'admin' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="{{ url_for('admin_bp.manage_students') }}" class="{{ 'active' if ep in ['manage_students','view_student','delete_student'] }}"><i class="bi bi-people"></i> Students</a>
+      <a href="{{ url_for('admin_bp.question_bank_v2') }}" class="{{ 'active' if ep in ['question_bank_v2','manage_questions_v2','admin_questions_v2','edit_question_v2','view_question_v2'] }}"><i class="bi bi-collection"></i> Question bank</a>
+      <a href="{{ url_for('admin_bp.import_questions_v2') }}" class="{{ 'active' if ep in ['import_questions_v2','question_import_history','question_import_details','upload_questions'] }}"><i class="bi bi-upload"></i> Import</a>
+      <a href="{{ url_for('admin_bp.manage_subjects') }}" class="{{ 'active' if ep in ['manage_subjects','add_subject','edit_subject'] }}"><i class="bi bi-journal-bookmark"></i> Subjects</a>
+      <a href="{{ url_for('admin_bp.manage_topics') }}" class="{{ 'active' if ep in ['manage_topics','add_topic','edit_topic'] }}"><i class="bi bi-diagram-3"></i> Topics</a>
+      <a href="{{ url_for('admin_bp.manage_post_utme_universities') }}" class="{{ 'active' if 'post_utme' in ep or 'subject_combination' in ep }}"><i class="bi bi-building"></i> Post-UTME</a>
+      <a href="{{ url_for('admin_bp.manage_results') }}" class="{{ 'active' if ep in ['manage_results','view_result','review_result'] }}"><i class="bi bi-bar-chart-line"></i> Results</a>
+    </nav>
+    <div class="right">
+      <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View site</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-accent"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+  </div>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="pn-admin-flash">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-2 mb-2" role="alert">{{ message }}<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}

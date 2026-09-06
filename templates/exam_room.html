@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block title %}{{ attempt.exam_type }} — {{ attempt.exam_name }}{% endblock %}
+{% block body_class %}pn-exam-body{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block main %}
+<!-- ============ Exam top bar ============ -->
+<div class="pn-exam-top">
+    <div class="container d-flex align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-3 min-w-0">
+            <span class="pn-brand d-none d-sm-flex"><span class="pn-logo">PN</span></span>
+            <div class="min-w-0">
+                <div class="fw-bold text-truncate" style="font-size:.95rem">{{ attempt.exam_type }} · {{ attempt.exam_name }}</div>
+                <div class="pn-exam-meta"><span><i class="bi bi-person"></i> {{ session.get('name') }}</span><span class="d-none d-md-inline">·</span><span class="d-none d-md-inline"><i class="bi bi-list-ol"></i> <strong>{{ attempt.total }}</strong> questions</span></div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="pn-timer" id="timer" title="Time remaining"><i class="bi bi-stopwatch"></i><span id="timerText">--:--</span></div>
+            <button class="btn btn-accent btn-sm fw-bold d-none d-md-inline-flex" id="submitTop"><i class="bi bi-send-check me-1"></i> Submit</button>
+        </div>
+    </div>
+</div>
+
+<main class="pn-main pt-3">
+    <div class="container">
+        <!-- Subject tabs (JAMB / multi-subject) -->
+        {% if attempt.subjects|length > 1 %}
+        <div class="pn-subject-tabs" id="subjectTabs"></div>
+        {% endif %}
+
+        <div class="row g-3 mt-0">
+            <!-- ============ Question ============ -->
+            <div class="col-lg-8">
+                <div class="pn-qcard" id="qcard">
+                    <div class="pn-qhead">
+                        <div class="pn-qnum">Question <strong id="qNum">1</strong> of {{ attempt.total }} <span class="text-muted fw-semibold ms-2" id="qSubject"></span></div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-flag" id="flagBtn" type="button"><i class="bi bi-flag"></i> <span>Flag for review</span></button>
+                        </div>
+                    </div>
+                    <div class="progress mb-3" style="height:5px"><div class="progress-bar" id="qProgress" style="width:0%"></div></div>
+                    <div class="pn-passage d-none" id="qPassage"></div>
+                    <div class="pn-qtext" id="qText"></div>
+                    <div id="options">
+                        {% for k in ['A','B','C','D'] %}
+                        <label class="pn-option" data-key="{{ k }}">
+                            <input type="radio" name="answer" value="{{ k }}">
+                            <span class="key">{{ k }}</span>
+                            <span class="txt"></span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="pn-qactions">
+                        <div class="left">
+                            <button class="btn btn-outline-secondary" id="prevBtn" type="button"><i class="bi bi-chevron-left"></i> Previous</button>
+                            <button class="btn btn-outline-secondary" id="clearBtn" type="button" title="Clear selection"><i class="bi bi-eraser"></i><span class="d-none d-sm-inline"> Clear</span></button>
+                        </div>
+                        <div class="right">
+                            <button class="btn btn-primary" id="nextBtn" type="button">Save &amp; Next <i class="bi bi-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="small text-muted mt-2 d-flex align-items-center gap-2"><i class="bi bi-cloud-check" id="saveIcon"></i><span id="saveStatus">All answers are saved automatically.</span><span class="ms-auto d-none d-md-inline">Keyboard: <kbd>A</kbd>–<kbd>D</kbd> select · <kbd>←</kbd>/<kbd>→</kbd> navigate · <kbd>F</kbd> flag</span></div>
+            </div>
+
+            <!-- ============ Palette (desktop) ============ -->
+            <div class="col-lg-4 pn-palette-col">
+                <div class="pn-palette" id="paletteDesktop">
+                    <h4>Question palette <span id="palCount"></span></h4>
+                    <div class="pn-summary">
+                        <div><b class="text-primary" id="sumAnswered">0</b><small>Answered</small></div>
+                        <div><b class="text-warning" id="sumFlagged">0</b><small>Flagged</small></div>
+                        <div><b class="text-muted" id="sumLeft">0</b><small>Unanswered</small></div>
+                    </div>
+                    <div class="pn-palette-grid" id="paletteGrid"></div>
+                    <div class="pn-legend">
+                        <span><i class="answered"></i>Answered</span><span><i class="flagged"></i>Flagged</span><span><i></i>Not answered</span><span><i class="current"></i>Current</span>
+                    </div>
+                    <button class="btn btn-accent w-100 mt-3 fw-bold" id="submitSide"><i class="bi bi-send-check me-1"></i> Submit exam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Mobile palette toggle + drawer -->
+<button class="btn btn-navy pn-palette-toggle" data-bs-toggle="offcanvas" data-bs-target="#paletteDrawer"><i class="bi bi-grid-3x3-gap"></i> Palette <span class="cnt" id="palCountMobile"></span></button>
+<div class="offcanvas offcanvas-bottom pn-offcanvas" tabindex="-1" id="paletteDrawer">
+    <div class="offcanvas-header pb-0"><h5 class="offcanvas-title fw-bold">Question palette</h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button></div>
+    <div class="offcanvas-body">
+        <div class="pn-palette">
+            <div class="pn-summary">
+                <div><b class="text-primary" id="sumAnsweredM">0</b><small>Answered</small></div>
+                <div><b class="text-warning" id="sumFlaggedM">0</b><small>Flagged</small></div>
+                <div><b class="text-muted" id="sumLeftM">0</b><small>Unanswered</small></div>
+            </div>
+            <div class="pn-palette-grid" id="paletteGridMobile"></div>
+            <div class="pn-legend"><span><i class="answered"></i>Answered</span><span><i class="flagged"></i>Flagged</span><span><i></i>Not answered</span><span><i class="current"></i>Current</span></div>
+            <button class="btn btn-accent w-100 mt-3 fw-bold" id="submitMobile"><i class="bi bi-send-check me-1"></i> Submit exam</button>
+        </div>
+    </div>
+</div>
+
+<!-- Submit confirmation -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-4 text-center">
+                <span class="pn-stat-icon tint-gold mx-auto mb-3" style="width:60px;height:60px;font-size:1.6rem"><i class="bi bi-send-check"></i></span>
+                <h3 class="h4">Submit your exam?</h3>
+                <p class="text-muted mb-3">You have answered <b id="modalAnswered">0</b> of {{ attempt.total }} questions.<span id="modalWarn" class="d-block text-danger fw-semibold mt-1"></span></p>
+                <p class="small text-muted">Once submitted you cannot change your answers. Your result and corrections will be shown immediately.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg" id="confirmSubmit" data-loading="Submitting…"><i class="bi bi-check2-circle me-1"></i> Yes, submit now</button>
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue exam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pn-integrity" id="integrityToast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script id="attemptData" type="application/json">{{ attempt_json|safe }}</script>
+<script>
+(function () {
+    "use strict";
+    var DATA = JSON.parse(document.getElementById("attemptData").textContent);
+    var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+    var Q = DATA.questions, TOTAL = Q.length, idx = 0;
+    var subjects = DATA.subjects || [];
+    var BASE = "/exam/" + DATA.id;
+    var submitted = false;
+
+    // Restore last position on refresh
+    try { var saved = parseInt(sessionStorage.getItem("pn_pos_" + DATA.id), 10); if (saved >= 0 && saved < TOTAL) idx = saved; } catch (e) {}
+    // Open on first unanswered question if nothing saved
+    if (!idx) { for (var i = 0; i < TOTAL; i++) { if (!Q[i].selected) { idx = i; break; } } }
+
+    var el = function (id) { return document.getElementById(id); };
+    var qNum = el("qNum"), qText = el("qText"), qSubject = el("qSubject"), qPassage = el("qPassage"), qProgress = el("qProgress");
+    var options = Array.prototype.slice.call(document.querySelectorAll("#options .pn-option"));
+    var flagBtn = el("flagBtn"), prevBtn = el("prevBtn"), nextBtn = el("nextBtn"), clearBtn = el("clearBtn");
+    var saveStatus = el("saveStatus"), saveIcon = el("saveIcon");
+    var grids = [el("paletteGrid"), el("paletteGridMobile")];
+    var drawer = el("paletteDrawer");
+
+    /* ---------------- Rendering ---------------- */
+    function escapeHtml(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+    function renderSubjectTabs() {
+        var wrap = el("subjectTabs"); if (!wrap) return;
+        wrap.innerHTML = "";
+        subjects.forEach(function (s) {
+            var qs = Q.filter(function (q) { return q.subject === s; });
+            var ans = qs.filter(function (q) { return q.selected; }).length;
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "pn-subject-tab" + (Q[idx].subject === s ? " active" : (ans === qs.length && qs.length ? " done" : ""));
+            b.innerHTML = escapeHtml(s) + '<span class="cnt">' + ans + "/" + qs.length + "</span>";
+            b.addEventListener("click", function () { var first = Q.findIndex(function (q) { return q.subject === s; }); if (first > -1) go(first); });
+            wrap.appendChild(b);
+        });
+    }
+
+    function renderPalette() {
+        grids.forEach(function (g) {
+            if (!g) return;
+            g.innerHTML = "";
+            Q.forEach(function (q, i) {
+                var b = document.createElement("button");
+                b.type = "button";
+                b.className = "pn-pal" + (q.selected ? " answered" : "") + (q.flagged ? " flagged" : "") + (i === idx ? " current" : "");
+                b.textContent = i + 1;
+                b.title = q.subject + " — Q" + q.sn;
+                b.setAttribute("aria-label", "Question " + (i + 1) + (q.selected ? ", answered" : ", not answered") + (q.flagged ? ", flagged" : ""));
+                b.addEventListener("click", function () { go(i); if (drawer && drawer.classList.contains("show")) bootstrap.Offcanvas.getInstance(drawer).hide(); });
+                g.appendChild(b);
+            });
+        });
+        updateSummary();
+    }
+
+    function updatePaletteCell(i) {
+        grids.forEach(function (g) {
+            if (!g) return;
+            var b = g.children[i]; if (!b) return;
+            b.className = "pn-pal" + (Q[i].selected ? " answered" : "") + (Q[i].flagged ? " flagged" : "") + (i === idx ? " current" : "");
+        });
+        updateSummary();
+    }
+
+    function updateSummary() {
+        var a = 0, f = 0;
+        Q.forEach(function (q) { if (q.selected) a++; if (q.flagged) f++; });
+        ["sumAnswered", "sumAnsweredM"].forEach(function (id) { el(id).textContent = a; });
+        ["sumFlagged", "sumFlaggedM"].forEach(function (id) { el(id).textContent = f; });
+        ["sumLeft", "sumLeftM"].forEach(function (id) { el(id).textContent = TOTAL - a; });
+        el("palCount").textContent = a + "/" + TOTAL;
+        el("palCountMobile").textContent = a + "/" + TOTAL;
+        el("modalAnswered").textContent = a;
+    }
+
+    function render() {
+        var q = Q[idx];
+        qNum.textContent = idx + 1;
+        qSubject.textContent = "· " + q.subject;
+        qText.textContent = q.text;
+        if (q.passage) { qPassage.textContent = q.passage; qPassage.classList.remove("d-none"); } else { qPassage.classList.add("d-none"); }
+        qProgress.style.width = Math.round(((idx + 1) / TOTAL) * 100) + "%";
+        options.forEach(function (o) {
+            var k = o.dataset.key;
+            o.querySelector(".txt").textContent = q.options[k] || "";
+            o.classList.toggle("selected", q.selected === k);
+            o.querySelector("input").checked = q.selected === k;
+        });
+        flagBtn.classList.toggle("on", !!q.flagged);
+        flagBtn.querySelector("span").textContent = q.flagged ? "Flagged" : "Flag for review";
+        prevBtn.disabled = idx === 0;
+        nextBtn.innerHTML = idx === TOTAL - 1 ? 'Finish <i class="bi bi-check2-circle"></i>' : 'Save &amp; Next <i class="bi bi-chevron-right"></i>';
+        document.querySelectorAll(".pn-pal.current").forEach(function (b) { b.classList.remove("current"); });
+        grids.forEach(function (g) { if (g && g.children[idx]) { g.children[idx].classList.add("current"); } });
+        var cur = grids[0] && grids[0].children[idx]; if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: "nearest" });
+        renderSubjectTabs();
+        try { sessionStorage.setItem("pn_pos_" + DATA.id, idx); } catch (e) {}
+        // subtle re-animate
+        var card = el("qcard"); card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function go(i) { if (i < 0 || i >= TOTAL) return; idx = i; render(); }
+
+    /* ---------------- Saving ---------------- */
+    var queue = Promise.resolve();
+    function setStatus(text, icon, cls) { saveStatus.textContent = text; saveIcon.className = "bi " + icon + " " + (cls || ""); }
+
+    function persist(i, payload) {
+        payload.position = Q[i].n;
+        setStatus("Saving…", "bi-cloud-arrow-up", "text-muted");
+        var attempt = function (n) {
+            return fetch(BASE + "/answer", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF }, body: JSON.stringify(payload) })
+                .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+                .then(function (res) {
+                    if (res.status === 409 && res.body.time_up) { timeUp(); return; }
+                    if (!res.body.ok) throw new Error(res.body.error || res.body.message || "Save failed");
+                    setStatus("Saved", "bi-cloud-check", "text-success");
+                })
+                .catch(function () {
+                    if (n < 3) return new Promise(function (r) { setTimeout(r, 800 * (n + 1)); }).then(function () { return attempt(n + 1); });
+                    setStatus("Could not save — check your connection. We will retry.", "bi-cloud-slash", "text-danger");
+                    pendingRetry.push({ i: i, payload: payload });
+                });
+        };
+        queue = queue.then(function () { return attempt(0); });
+        return queue;
+    }
+    var pendingRetry = [];
+    setInterval(function () {
+        if (!pendingRetry.length || submitted) return;
+        var items = pendingRetry.splice(0);
+        items.forEach(function (it) { persist(it.i, it.payload); });
+    }, 5000);
+
+    function select(k) {
+        if (submitted) return;
+        var q = Q[idx];
+        if (q.selected === k) return;
+        q.selected = k;
+        options.forEach(function (o) { o.classList.toggle("selected", o.dataset.key === k); });
+        updatePaletteCell(idx);
+        renderSubjectTabs();
+        persist(idx, { answer: k });
+    }
+    options.forEach(function (o) { o.addEventListener("click", function (e) { e.preventDefault(); select(o.dataset.key); }); });
+
+    clearBtn.addEventListener("click", function () {
+        var q = Q[idx]; if (!q.selected) return;
+        q.selected = null; options.forEach(function (o) { o.classList.remove("selected"); o.querySelector("input").checked = false; });
+        updatePaletteCell(idx); renderSubjectTabs(); persist(idx, { answer: "" });
+    });
+    flagBtn.addEventListener("click", function () {
+        var q = Q[idx]; q.flagged = !q.flagged;
+        flagBtn.classList.toggle("on", q.flagged); flagBtn.querySelector("span").textContent = q.flagged ? "Flagged" : "Flag for review";
+        updatePaletteCell(idx); persist(idx, { flagged: q.flagged });
+    });
+    prevBtn.addEventListener("click", function () { go(idx - 1); });
+    nextBtn.addEventListener("click", function () { if (idx === TOTAL - 1) openSubmit(); else go(idx + 1); });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.ctrlKey || e.metaKey || e.altKey) return;
+        var k = e.key.toUpperCase();
+        if (["A", "B", "C", "D"].indexOf(k) > -1) { select(k); e.preventDefault(); }
+        else if (e.key === "ArrowRight" || k === "N") { go(idx + 1); }
+        else if (e.key === "ArrowLeft" || k === "P") { go(idx - 1); }
+        else if (k === "F") { flagBtn.click(); }
+    });
+
+    /* ---------------- Submit ---------------- */
+    var modal = new bootstrap.Modal(el("submitModal"));
+    function openSubmit() {
+        var a = Q.filter(function (q) { return q.selected; }).length, f = Q.filter(function (q) { return q.flagged; }).length;
+        var warn = [];
+        if (TOTAL - a > 0) warn.push((TOTAL - a) + " unanswered");
+        if (f > 0) warn.push(f + " flagged for review");
+        el("modalWarn").textContent = warn.length ? "You still have " + warn.join(" and ") + "." : "";
+        modal.show();
+    }
+    ["submitTop", "submitSide", "submitMobile"].forEach(function (id) { el(id).addEventListener("click", openSubmit); });
+
+    function doSubmit(auto) {
+        if (submitted) return; submitted = true;
+        var btn = el("confirmSubmit"); btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting…';
+        queue.then(function () {
+            return fetch(BASE + "/submit", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF }, body: "{}" });
+        }).then(function (r) { return r.json(); }).then(function (j) {
+            try { sessionStorage.removeItem("pn_pos_" + DATA.id); } catch (e) {}
+            window.location.href = (j && j.redirect ? j.redirect : "/dashboard") + "?done=1";
+        }).catch(function () { window.location.href = BASE + "/finish"; });
+    }
+    el("confirmSubmit").addEventListener("click", function () { doSubmit(false); });
+
+    /* ---------------- Timer (server-authoritative) ---------------- */
+    var remaining = DATA.remaining, timerEl = el("timer"), timerText = el("timerText"), lastSync = Date.now();
+    function fmt(s) { s = Math.max(0, s); var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? (h < 10 ? "0" + h : h) + ":" : "") + (m < 10 ? "0" + m : m) + ":" + (x < 10 ? "0" + x : x); }
+    function tick() {
+        timerText.textContent = fmt(remaining);
+        timerEl.classList.toggle("warn", remaining <= 600 && remaining > 120);
+        timerEl.classList.toggle("danger", remaining <= 120);
+        if (remaining <= 0) { timeUp(); return; }
+        remaining--;
+    }
+    tick(); var timerId = setInterval(tick, 1000);
+    function timeUp() {
+        if (submitted) return;
+        clearInterval(timerId);
+        timerText.textContent = "00:00";
+        showToast("Time is up! Submitting your answers…");
+        doSubmit(true);
+    }
+    // Re-sync with server every 60 s so a paused tab or clock change cannot cheat the timer
+    setInterval(function () {
+        fetch(BASE + "/state", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (j) {
+            if (!j.ok) return;
+            if (j.status !== "IN_PROGRESS") { window.location.href = "/dashboard"; return; }
+            remaining = j.remaining; lastSync = Date.now();
+        }).catch(function () {});
+    }, 60000);
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+            fetch(BASE + "/state", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) remaining = j.remaining; }).catch(function () {});
+        }
+    });
+
+    /* ---------------- Integrity ---------------- */
+    var toastEl = el("integrityToast"), toastTimer;
+    function showToast(msg) { toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 3500); }
+    var switches = 0;
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden" && !submitted) {
+            switches++;
+            fetch(BASE + "/event", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF }, body: JSON.stringify({ type: "tab_switch" }) }).catch(function () {});
+        } else if (switches > 0 && !submitted) {
+            showToast("Leaving the exam tab is recorded (" + switches + "). Stay focused!");
+        }
+    });
+    document.addEventListener("contextmenu", function (e) { if (e.target.closest("#qcard")) e.preventDefault(); });
+    document.addEventListener("copy", function (e) { if (e.target.closest && e.target.closest("#qcard")) { e.preventDefault(); showToast("Copying questions is disabled."); } });
+    window.addEventListener("beforeunload", function (e) { if (!submitted) { e.preventDefault(); e.returnValue = ""; } });
+
+    /* ---------------- Boot ---------------- */
+    renderPalette();
+    render();
+})();
+</script>
+{% endblock %}

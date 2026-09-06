@@ -14,7 +14,7 @@
     </title>
 
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        href="/static/vendor/bootstrap/bootstrap.min.css"
         rel="stylesheet">
 
 </head>
@@ -521,29 +521,11 @@
                 
                 {% if question.status == "Active" %}
 
-                        <a
-                            href="/toggle_question_v2/{{ question.id }}"
-                            class="btn btn-danger"
-                            onclick="return confirm(
-                                'Are you sure you want to deactivate this question?'
-                            );">
-
-                            🔴 Deactivate
-
-                        </a>
+                        <form method="POST" action="/toggle_question_v2/{{ question.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to deactivate this question?');">🔴 Deactivate</button></form>
 
                     {% else %}
 
-                        <a
-                            href="/toggle_question_v2/{{ question.id }}"
-                            class="btn btn-success"
-                            onclick="return confirm(
-                                'Are you sure you want to activate this question?'
-                            );">
-
-                            🟢 Activate
-
-                        </a>
+                        <form method="POST" action="/toggle_question_v2/{{ question.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to activate this question?');">🟢 Activate</button></form>
 
                     {% endif %}
 
@@ -554,6 +536,7 @@
                         onsubmit="return confirm(
                             '⚠️ Are you sure you want to permanently delete this question? This action cannot be undone.'
                         );">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <button
                             type="submit"

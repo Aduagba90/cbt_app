@@ -1,0 +1,38 @@
+# Secrets & local config
+.env
+*.env
+!.env.example
+
+# Databases & backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backups/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Scratch / tooling
+_work/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs & uploads
+*.log
+uploads/
+
+# The seed question bank ships with the repo (see README); keep it tracked.
+!database.db
+
+# Generated on download (in-memory now)
+cbt_questions_export.xlsx
+question_import_template.xlsx

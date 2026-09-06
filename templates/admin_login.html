@@ -1,87 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Login</title>
+{% extends "base.html" %}
+{% block flashes %}{% endblock %}
+{% block title %}Administrator Login{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-
-        body{
-            background: linear-gradient(135deg, #0d6efd, #00d4ff);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .login-card{
-            width: 420px;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .title{
-            text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-
-        .btn-login{
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-    </style>
-</head>
-<body>
-
-<div class="login-card">
-
-    <h2 class="title">
-        Admin Login
-    </h2>
-
-    <form method="POST">
-
-        <div class="mb-3">
-
-            <label>Email</label>
-
-            <input type="email"
-                   name="email"
-                   class="form-control"
-                   required>
-
+{% block main %}
+<div class="min-h-100 d-flex align-items-center justify-content-center p-3" style="background:radial-gradient(800px 400px at 80% -10%, rgba(242,183,5,.18), transparent 60%), linear-gradient(160deg,#0f1f3d,#0b3b2c)">
+    <div class="pn-auth-card" style="max-width:420px">
+        <div class="text-center mb-4">
+            <span class="pn-logo mx-auto mb-3" style="width:52px;height:52px;font-size:1.1rem">PN</span>
+            <h1>Admin Console</h1>
+            <p class="sub mb-0">Restricted area — authorised staff only.</p>
         </div>
 
-        <div class="mb-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for c, m in messages %}<div class="alert alert-{{ 'danger' if c == 'danger' else 'warning' }}">{{ m }}</div>{% endfor %}
+        {% endwith %}
 
-            <label>Password</label>
-
-            <input type="password"
-                   name="password"
-                   class="form-control"
-                   required>
-
-        </div>
-
-        <button class="btn btn-primary btn-login">
-            Login
-        </button>
-
-    </form>
-
+        <form method="POST" action="{{ url_for('admin_login') }}" data-once novalidate>
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label" for="email">Admin email</label>
+                <input type="email" class="form-control" id="email" name="email" autocomplete="username" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
+                <div class="pn-password-wrap">
+                    <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+                    <button type="button" class="pn-eye" data-toggle-password="password" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-navy btn-lg w-100" data-loading="Verifying…"><i class="bi bi-shield-lock me-1"></i> Sign in</button>
+        </form>
+        <p class="text-center small text-muted mt-4 mb-0">All admin logins are logged with IP address.</p>
+        <p class="text-center small mt-2 mb-0"><a href="/">← Back to site</a></p>
+    </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

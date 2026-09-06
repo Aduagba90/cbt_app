@@ -6,7 +6,7 @@
     <title>Manage Questions</title>
 
     <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        href="/static/vendor/bootstrap/bootstrap.min.css"
         rel="stylesheet">
 
 </head>
@@ -414,23 +414,11 @@
 
                             {% if question.status == "Active" %}
 
-                                <a
-                                    href="/toggle_question_v2/{{ question.id }}"
-                                    class="btn btn-danger btn-sm">
-
-                                    Deactivate
-
-                                </a>
+                                <form method="POST" action="/toggle_question_v2/{{ question.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-danger btn-sm">Deactivate</button></form>
 
                             {% else %}
 
-                                <a
-                                    href="/toggle_question_v2/{{ question.id }}"
-                                    class="btn btn-success btn-sm">
-
-                                    Activate
-
-                                </a>
+                                <form method="POST" action="/toggle_question_v2/{{ question.id }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-success btn-sm">Activate</button></form>
 
                             {% endif %}
 

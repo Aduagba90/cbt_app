@@ -1,83 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Select Course</title>
+{% extends "base.html" %}
+{% block title %}{{ university['university_name'] }} — choose course{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-
-        body{
-            background:#f4f7fc;
-            font-family:Poppins;
-        }
-
-        .box{
-            max-width:800px;
-            margin:80px auto;
-            background:white;
-            padding:40px;
-            border-radius:20px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.08);
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-    <div class="box">
-
-        <h2 class="mb-2">
-            🎓 Select Course
-        </h2>
-
-        <p class="text-muted mb-4">
-
-            {{ university }}
-
-        </p>
-
-        <form method="GET" action="/post_utme_subjects">
-
-            <input
-                type="hidden"
-                name="university"
-                value="{{ university }}">
-
-            <select
-                name="course"
-                class="form-select mb-4"
-                required>
-
-                <option value="">
-                    Choose Course
-                </option>
-
-                {% for course in courses %}
-
-                <option value="{{ course[0] }}">
-                    {{ course[0] }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-            <button class="btn btn-warning">
-
-                Continue →
-
-            </button>
-
-        </form>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('post_utme') }}">Post-UTME</a><i class="bi bi-chevron-right"></i><span>{{ university['university_name'] }}</span></div>
+        <h1>{{ university['university_name'] }}</h1>
+        <p class="lead">Select your course to load its subject combination.</p>
     </div>
-
 </div>
 
-</body>
-</html>
+{% if courses %}
+<div class="row g-3">
+    {% for c in courses %}
+    <div class="col-sm-6 col-lg-4">
+        <a href="{{ url_for('post_utme_subjects', university=university['university_name'], course=c) }}" class="pn-subject-link anim-rise d{{ loop.index0 % 4 }}">
+            <span class="pn-stat-icon tint-gold"><i class="bi bi-mortarboard"></i></span>
+            <span>{{ c }}<small>View subjects</small></span>
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No courses configured yet</h3><p>Please check back soon.</p><a href="{{ url_for('post_utme') }}" class="btn btn-primary btn-sm">Back to universities</a></div>
+{% endif %}
+{% endblock %}

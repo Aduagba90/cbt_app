@@ -1,462 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>PrepNova CBT | Student Login</title>
-
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body{
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
-            background:
-            linear-gradient(rgba(8,15,40,0.82), rgba(8,15,40,0.82)),
-            url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .login-container{
-            width: 100%;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            overflow: hidden;
-            border-radius: 30px;
-            box-shadow: 0px 25px 60px rgba(0,0,0,0.35);
-            background: white;
-            animation: fadeIn 0.8s ease;
-        }
-
-        .left-side{
-            background: linear-gradient(135deg, #0d6efd, #0046b8);
-            color: white;
-            padding: 70px 55px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .left-side::before{
-            content: "";
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 50%;
-            top: -80px;
-            right: -80px;
-        }
-
-        .left-side::after{
-            content: "";
-            position: absolute;
-            width: 220px;
-            height: 220px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%;
-            bottom: -60px;
-            left: -60px;
-        }
-
-        .brand{
-            position: relative;
-            z-index: 2;
-        }
-
-        .logo{
-            width: 90px;
-            height: 90px;
-            border-radius: 24px;
-            background: white;
-            color: #0d6efd;
-            font-size: 38px;
-            font-weight: 800;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .main-title{
-            font-size: 42px;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 20px;
-        }
-
-        .description{
-            font-size: 16px;
-            line-height: 1.9;
-            color: rgba(255,255,255,0.9);
-            max-width: 450px;
-        }
-
-        .features{
-            margin-top: 40px;
-        }
-
-        .feature-item{
-            margin-bottom: 18px;
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .right-side{
-            padding: 70px 55px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: #ffffff;
-        }
-
-        .welcome{
-            font-size: 34px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 10px;
-        }
-
-        .sub-text{
-            color: #6b7280;
-            margin-bottom: 35px;
-            font-size: 15px;
-        }
-
-        label{
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 10px;
-        }
-
-        .form-control{
-            height: 58px;
-            border-radius: 16px;
-            border: 1px solid #dbe3f0;
-            padding-left: 18px;
-            font-size: 15px;
-            transition: 0.3s;
-            box-shadow: none;
-        }
-
-        .form-control:focus{
-            border-color: #0d6efd;
-            box-shadow: 0px 0px 0px 5px rgba(13,110,253,0.12);
-        }
-
-        .btn-login{
-            width: 100%;
-            height: 58px;
-            border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #0d6efd, #0046b8);
-            color: white;
-            font-size: 17px;
-            font-weight: 600;
-            margin-top: 15px;
-            transition: 0.3s;
-        }
-
-        .btn-login:hover{
-            transform: translateY(-2px);
-            box-shadow: 0px 12px 24px rgba(13,110,253,0.25);
-        }
-
-        .bottom-text{
-            margin-top: 28px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .bottom-text a{
-            color: #0d6efd;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        @keyframes fadeIn{
-            from{
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to{
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media(max-width: 900px){
-
-            .login-container{
-                grid-template-columns: 1fr;
-            }
-
-            .left-side{
-                display: none;
-            }
-
-            .right-side{
-                padding: 45px 30px;
-            }
-
-            .welcome{
-                font-size: 30px;
-            }
-
-        }
-
-    </style>
-</head>
-<body>
-
-    <div class="login-container">
-
-        <!-- LEFT SIDE -->
-
-        <div class="left-side">
-
-            <div class="brand">
-
-                <div class="logo">
-                    PN
-                </div>
-
-                <h1 class="main-title">
-                    Nigeria's Smart Exam Preparation Platform
-                </h1>
-
-                <p class="description">
-                    Master your WAEC, JAMB and Post-UTME examinations with realistic CBT simulations, 
-                    detailed explanations, performance tracking, and an engaging learning experience.
-                </p>
-
-                <div class="features">
-
-                <div class="feature-item">
-                    🎓 WAEC, JAMB & Post-UTME CBT Practice
-                </div>
-
-                <div class="feature-item">
-                    📖 Instant Results with Detailed Explanations
-                </div>
-
-                <div class="feature-item">
-                    🔖 Bookmark Questions & Track Your Progress
-                </div>
-
-                <div class="feature-item">
-                    📊 Secure Accounts, PDF Results & Performance Analytics
-                </div>
-
-            </div>
-
-            </div>
-
-        </div>
-
-        <!-- RIGHT SIDE -->
-
-        <div class="right-side">
-
-            <h2 class="welcome">
-                Welcome Back 👋
-            </h2>
-
-            <p class="sub-text">
-                Login to continue your CBT preparation journey.
-            </p>
-
-            <!-- ========================= -->
-            <!-- SUCCESS ALERTS -->
-            <!-- ========================= -->
-
-            {% if password_changed %}
-
-            <div class="alert alert-success">
-
-                ✅ Your password has been changed successfully.
-
-                Please sign in with your new password.
-
-            </div>
-
-            {% endif %}
-
-            {% if email_verified %}
-
-            <div class="alert alert-success">
-
-                🎉 Your email has been verified successfully.
-
-                You can now log in.
-
-            </div>
-
-            {% endif %}
-
-
-            <!-- ========================= -->
-            <!-- INFORMATION ALERTS -->
-            <!-- ========================= -->
-
-            {% if verification_sent %}
-
-            <div class="alert alert-info">
-
-                📧 A verification email has been sent.
-
-                Please check your inbox.
-
-            </div>
-
-            {% endif %}
-
-
-            <!-- ========================= -->
-            <!-- WARNING ALERTS -->
-            <!-- ========================= -->
-
-            {% if logged_out %}
-
-            <div class="alert alert-warning">
-
-                ⚠️ Your account was signed in on another device.
-
-                Please log in again.
-
-            </div>
-
-            {% endif %}
-
-            {% if session_expired %}
-
-            <div class="alert alert-warning">
-
-                ⏰ Your session expired after 30 minutes of inactivity.
-
-                Please log in again.
-
-            </div>
-
-            {% endif %}
-
-
-            <!-- ========================= -->
-            <!-- ERROR ALERTS -->
-            <!-- ========================= -->
-
-            {% if account_not_verified %}
-
-            <div class="alert alert-danger">
-
-                ❌ Your email address has not been verified.
-
-                Please verify your email before logging in.
-
-            </div>
-
-            {% endif %}
-
-            {% if login_error %}
-
-            <div class="alert alert-danger">
-
-                ❌ {{ login_error }}
-
-            </div>
-
-            {% endif %}
-
-                
-
-            <form method="POST" action="/login">
-
-                <div class="mb-4">
-
-                    <label>
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        placeholder="Enter your email address"
-                        required
-                    >
-
-                </div>
-
-                <div class="mb-4">
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-
-                        <label class="mb-0">
-                            Password
-                        </label>
-
-                        <a
-                            href="/forgot_password"
-                            class="text-decoration-none small fw-bold"
-                        >
-                            Forgot Password?
-                        </a>
-
+{% extends "base.html" %}
+{% block flashes %}{% endblock %}
+{% block title %}Student Login{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block main %}
+<div class="pn-auth">
+    {% include "_auth_side.html" %}
+    <div class="pn-auth-body">
+        <div class="pn-auth-card">
+            <a class="pn-brand d-lg-none mb-4" href="/"><span class="pn-logo">PN</span><span>PrepNova <span class="text-primary">CBT</span></span></a>
+            <h1>Welcome back</h1>
+            <p class="sub">Log in to continue your CBT preparation.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else ('success' if category == 'success' else 'warning') }} d-flex gap-2 align-items-start">
+                        <i class="bi {{ 'bi-x-circle-fill' if category == 'danger' else ('bi-check-circle-fill' if category == 'success' else 'bi-exclamation-triangle-fill') }} mt-1"></i><span>{{ message }}</span>
                     </div>
+                {% endfor %}
+            {% endwith %}
 
-                    <input
-                        type="password"
-                        name="password"
-                        class="form-control"
-                        placeholder="Enter your password"
-                        required
-                    >
-
+            <form method="POST" action="{{ url_for('login') }}" data-once novalidate>
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label" for="email">Email address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ email }}" placeholder="you@example.com" autocomplete="email" inputmode="email" required autofocus>
+                    </div>
                 </div>
-
-                <button class="btn-login">
-
-                    Sign In to Dashboard
-
-                </button>
-
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label class="form-label mb-1" for="password">Password</label>
+                        <a href="{{ url_for('forgot_password') }}" class="small fw-semibold">Forgot password?</a>
+                    </div>
+                    <div class="pn-password-wrap">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Your password" autocomplete="current-password" required>
+                        <button type="button" class="pn-eye" data-toggle-password="password" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" data-loading="Signing in…">Log in <i class="bi bi-arrow-right ms-1"></i></button>
             </form>
 
-            <div class="bottom-text">
-
-                Don't have an account yet?
-
-                <a href="/register">
-                    Create an Account
-                </a>
-
-            </div>
-
+            <p class="text-center small text-muted mt-4 mb-0">New to PrepNova? <a href="{{ url_for('register') }}" class="fw-bold">Create a free account</a></p>
+            <p class="text-center small text-muted mt-3 mb-0"><i class="bi bi-shield-lock me-1"></i>For your security, an account can only be signed in on one device at a time.</p>
         </div>
-
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}

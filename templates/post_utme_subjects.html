@@ -1,85 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>POST-UTME Subjects</title>
+{% extends "base.html" %}
+{% block title %}{{ university['university_name'] }} — confirm exam{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        body{
-            background:#f4f7fc;
-            font-family:Poppins;
-        }
-
-        .box{
-            max-width:800px;
-            margin:80px auto;
-            background:white;
-            padding:40px;
-            border-radius:20px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.08);
-        }
-
-        .subject-badge{
-            display:inline-block;
-            background:#eef4ff;
-            color:#0d6efd;
-            padding:10px 18px;
-            border-radius:25px;
-            margin:8px;
-            font-weight:600;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-
-    <div class="box">
-
-        <h2>
-            📚 POST-UTME Subject Combination
-        </h2>
-
-        <p class="text-muted">
-
-            {{ university }}
-
-            {% if course %}
-                • {{ course }}
-            {% endif %}
-
-        </p>
-
-        <div class="mt-4">
-
-            {% for subject in subjects %}
-
-                <span class="subject-badge">
-
-                    {{ subject[0] }}
-
-                </span>
-
-            {% endfor %}
-
-        </div>
-
-        <div class="mt-5">
-
-            <a href="/start_post_utme?university={{ university }}{% if course %}&course={{ course }}{% endif %}"
-            class="btn btn-primary btn-lg">
-
-                🚀 Start POST-UTME Exam
-
-            </a>
-
-        </div>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('post_utme') }}">Post-UTME</a><i class="bi bi-chevron-right"></i><span>{{ university['university_name'] }}</span></div>
+        <h1>{{ university['university_name'] }}{% if course %} — {{ course }}{% endif %}</h1>
+        <p class="lead">Review the exam details below, then start when you are ready.</p>
     </div>
-
 </div>
 
-</body>
-</html>
+{% set total_available = counts.values()|sum %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card anim-rise">
+            <div class="card-header"><i class="bi bi-list-check me-2 text-primary"></i>Subjects in this exam</div>
+            <div class="card-body">
+                {% for s in subjects %}
+                <div class="d-flex align-items-center gap-3 py-2 {% if not loop.last %}border-bottom{% endif %}">
+                    <span class="pn-stat-icon tint-gold" style="width:38px;height:38px;font-size:1rem"><i class="bi {{ subject_icon(s) }}"></i></span>
+                    <div class="flex-grow-1"><div class="fw-semibold">{{ s }}</div><div class="small text-muted">{{ counts[s] }} question{{ '' if counts[s] == 1 else 's' }} available</div></div>
+                    {% if counts[s] > 0 %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<span class="badge bg-secondary">Empty</span>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card anim-rise d1">
+            <div class="card-body">
+                <h3 class="h6 text-uppercase text-muted ls-1 mb-3">Exam summary</h3>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><div class="pn-kpi"><b>{{ university['duration'] }}</b><small>minutes</small></div></div>
+                    <div class="col-6"><div class="pn-kpi"><b>{{ [university['total_questions'], total_available]|min }}</b><small>questions</small></div></div>
+                </div>
+                <ul class="small text-muted ps-3 mb-3">
+                    <li>The timer starts immediately and runs on our server.</li>
+                    <li>You can move between questions freely and flag any for review.</li>
+                    <li>Answers are saved automatically; submit when done.</li>
+                </ul>
+                {% if total_available > 0 %}
+                <form method="POST" action="{{ url_for('start_post_utme') }}" data-once>
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <input type="hidden" name="university" value="{{ university['university_name'] }}">
+                    <input type="hidden" name="course" value="{{ course }}">
+                    <button class="btn btn-primary btn-lg w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ university['university_name'] }} screening mock now?"><i class="bi bi-play-fill"></i> Start exam</button>
+                </form>
+                {% else %}
+                <button class="btn btn-outline-secondary w-100" disabled>No questions available yet</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

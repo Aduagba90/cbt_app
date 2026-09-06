@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block flashes %}{% endblock %}
+{% set pages = {
+    "verify_required": ("tint-blue", "bi-envelope-paper", "Check your inbox",
+        "We sent a verification link to <b>" ~ (email or "your email address") ~ "</b>. Open it to activate your account and start your 7-day free trial.",
+        "The link expires in 24 hours. Check your spam or promotions folder if you cannot find it."),
+    "invalid_verification": ("tint-red", "bi-link-45deg", "This verification link is invalid",
+        "The link may have already been used or is incorrect. If you already verified your email, simply log in.", None),
+    "expired_verification": ("tint-gold", "bi-hourglass-bottom", "This verification link has expired",
+        "Verification links are valid for 24 hours. Request a fresh link below and we will send it to <b>" ~ (email or "your email") ~ "</b>.", None),
+    "reset_sent": ("tint-blue", "bi-envelope-check", "Check your email",
+        "If an account exists for <b>" ~ (email or "that address") ~ "</b>, we have sent a password reset link. It expires in 30 minutes.",
+        "Did not get it? Check your spam folder or try again in a few minutes."),
+    "invalid_reset": ("tint-red", "bi-link-45deg", "This reset link is invalid",
+        "The link may have already been used. Request a new password reset link to continue.", None),
+    "expired_reset": ("tint-gold", "bi-hourglass-bottom", "This reset link has expired",
+        "For your security, reset links are valid for 30 minutes only. Request a new one below.", None),
+    "suspended": ("tint-red", "bi-slash-circle", "Account suspended",
+        "Your account has been suspended by an administrator. If you believe this is a mistake, please contact support.", None),
+} %}
+{% set tint, icon, title, text, hint = pages[kind] %}
+{% block title %}{{ title }}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block main %}
+<div class="pn-auth">
+    {% include "_auth_side.html" %}
+    <div class="pn-auth-body">
+        <div class="pn-auth-card text-center">
+            <a class="pn-brand d-lg-none mb-4 justify-content-center" href="/"><span class="pn-logo">PN</span><span>PrepNova <span class="text-primary">CBT</span></span></a>
+            <span class="pn-stat-icon {{ tint }} mx-auto mb-3" style="width:64px;height:64px;font-size:1.7rem"><i class="bi {{ icon }}"></i></span>
+            <h1>{{ title }}</h1>
+            <p class="text-muted">{{ text|safe }}</p>
+            {% if hint %}<p class="small text-muted">{{ hint }}</p>{% endif %}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for c, m in messages %}<div class="alert alert-{{ 'success' if c == 'success' else 'info' }} text-start">{{ m }}</div>{% endfor %}
+            {% endwith %}
+
+            <div class="d-grid gap-2 mt-4">
+                {% if kind in ["verify_required", "expired_verification"] %}
+                    <form method="POST" action="{{ url_for('resend_verification') }}" data-once>
+                        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                        <input type="hidden" name="email" value="{{ email or '' }}">
+                        <button class="btn btn-primary w-100" data-loading="Sending…"><i class="bi bi-arrow-repeat me-1"></i> Resend verification email</button>
+                    </form>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">I have verified — log in</a>
+                {% elif kind in ["invalid_reset", "expired_reset"] %}
+                    <a href="{{ url_for('forgot_password') }}" class="btn btn-primary">Request a new link</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Back to login</a>
+                {% elif kind == "suspended" %}
+                    <a href="mailto:{{ support_email }}" class="btn btn-primary"><i class="bi bi-envelope me-1"></i> Contact support</a>
+                    <a href="/" class="btn btn-outline-primary">Back to home</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Go to login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Privacy policy' if page == 'privacy' else 'Terms of service' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="pn-page-head anim-rise">
+            <div>
+                <div class="pn-breadcrumb"><a href="{{ url_for('index') }}">Home</a><i class="bi bi-chevron-right"></i><span>{{ 'Privacy' if page == 'privacy' else 'Terms' }}</span></div>
+                <h1>{{ 'Privacy policy' if page == 'privacy' else 'Terms of service' }}</h1>
+                <p class="lead">Last updated: {{ current_year }}</p>
+            </div>
+        </div>
+
+        <div class="card anim-rise d1">
+            <div class="card-body p-4 p-md-5 pn-legal">
+                {% if page == 'privacy' %}
+                <h2>1. Who we are</h2>
+                <p>PrepNova CBT ("PrepNova", "we", "us") provides online computer-based test practice for JAMB UTME, WAEC and university Post-UTME screening. This policy explains what personal data we collect and how we use it.</p>
+                <h2>2. What we collect</h2>
+                <ul>
+                    <li><b>Account details</b> — your name, email address, phone number and, optionally, your school and state.</li>
+                    <li><b>Activity data</b> — exam attempts, answers, scores, bookmarks and practice history, so we can show you your progress and corrections.</li>
+                    <li><b>Security data</b> — IP address, browser type and login times, used to protect your account and enforce the single-device policy.</li>
+                    <li><b>Payment data</b> — your payments are processed by Paystack. We store only the transaction reference, plan and amount. We never see or store your card number.</li>
+                </ul>
+                <h2>3. How we use your data</h2>
+                <p>To operate your account, deliver mock exams and results, process subscriptions, prevent fraud and cheating, send transactional emails (verification, password reset, receipts) and improve the service. We do not sell your personal data.</p>
+                <h2>4. Cookies</h2>
+                <p>We use a single secure session cookie to keep you signed in. We do not use advertising cookies.</p>
+                <h2>5. Data retention &amp; your rights</h2>
+                <p>You may update your details from your profile at any time. To delete your account and data, email <a href="mailto:{{ support_email }}">{{ support_email }}</a> from your registered address and we will action it within 14 days, except where records must be kept for accounting purposes.</p>
+                <h2>6. Security</h2>
+                <p>Passwords are hashed, all traffic is encrypted in transit, and access to production data is restricted to authorised staff. No system is perfectly secure; please use a strong, unique password.</p>
+                <h2>7. Children</h2>
+                <p>PrepNova is intended for students aged 13 and above. If you are under 18, please use the service with the knowledge of a parent or guardian.</p>
+                <h2>8. Contact</h2>
+                <p>Questions about privacy: <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+                {% else %}
+                <h2>1. Acceptance</h2>
+                <p>By creating an account or using PrepNova CBT you agree to these terms. If you do not agree, please do not use the service.</p>
+                <h2>2. The service</h2>
+                <p>PrepNova provides practice questions, timed mock examinations, corrections, analytics and related study tools. PrepNova is an independent study platform and is <b>not affiliated with JAMB, WAEC or any university</b>. Scores on PrepNova are for practice only and do not represent official examination results.</p>
+                <h2>3. Your account</h2>
+                <ul>
+                    <li>You must provide accurate information and keep your password confidential.</li>
+                    <li>Accounts are personal. One active login is permitted at a time; sharing accounts may lead to suspension.</li>
+                    <li>You are responsible for all activity under your account.</li>
+                </ul>
+                <h2>4. Subscriptions &amp; payments</h2>
+                <ul>
+                    <li>New accounts receive a free trial. After it ends, full mock exams require a paid plan; limited daily practice remains free.</li>
+                    <li>Payments are processed securely by Paystack in Nigerian Naira. Plans activate automatically on successful payment and run for the stated number of days.</li>
+                    <li>Because access is granted immediately, payments are non-refundable except where required by law or where the service was not delivered due to our fault.</li>
+                </ul>
+                <h2>5. Acceptable use</h2>
+                <p>You agree not to copy, scrape, redistribute or sell our question bank; attempt to bypass timers, security controls or payment; or use the service for any unlawful purpose. We may suspend accounts that breach these rules.</p>
+                <h2>6. Intellectual property</h2>
+                <p>All questions, explanations, software and branding are owned by or licensed to PrepNova and are protected by copyright. You receive a limited, personal, non-transferable licence to use them for your own study.</p>
+                <h2>7. Availability &amp; liability</h2>
+                <p>We aim for high availability but do not guarantee uninterrupted service. To the fullest extent permitted by law, PrepNova is not liable for indirect losses, including examination outcomes.</p>
+                <h2>8. Changes</h2>
+                <p>We may update these terms; continued use after changes constitutes acceptance. Material changes will be announced on the platform.</p>
+                <h2>9. Contact</h2>
+                <p><a href="mailto:{{ support_email }}">{{ support_email }}</a> · WhatsApp <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">+{{ support_whatsapp }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-3 mt-3 small"><a href="{{ url_for('terms') }}">Terms of service</a><a href="{{ url_for('privacy') }}">Privacy policy</a></div>
+    </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@
 
 <title>Delete Student</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+<link href="/static/vendor/bootstrap/bootstrap.min.css"
       rel="stylesheet">
 
 </head>
@@ -49,12 +49,7 @@
 
             </table>
 
-            <a href="/confirm_delete_student/{{ student[0] }}"
-               class="btn btn-danger">
-
-                Yes, Delete Student
-
-            </a>
+            <form method="POST" action="/confirm_delete_student/{{ student[0] }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-danger">Yes, Delete Student</button></form>
 
             <a href="/view_student/{{ student[0] }}"
                class="btn btn-secondary">

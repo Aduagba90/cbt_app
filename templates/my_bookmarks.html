@@ -1,84 +1,55 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% block title %}My bookmarks{% endblock %}
 
-<head>
-
-    <title>My Bookmarks</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-</head>
-
-<body class="bg-light">
-
-<div class="container mt-5">
-
-    <h2 class="mb-4">
-
-        ⭐ My Bookmarked Questions
-
-    </h2>
-
-    {% if bookmarks %}
-
-        {% for bookmark in bookmarks %}
-
-            <div class="card mb-3">
-
-                <div class="card-body">
-
-                    <h5>
-
-                        {{ bookmark[1] }}
-
-                        -
-
-                        {{ bookmark[2] }}
-
-                    </h5>
-
-                    <p>
-
-                        {{ bookmark[3] }}
-
-                    </p>
-
-                    <a
-                        href="/practice_questions/{{ bookmark[1] }}/{{ bookmark[2] }}"
-                        class="btn btn-primary">
-
-                        Practice Again
-
-                    </a>
-
-                    <a
-                        href="/delete_bookmark/{{ bookmark[0] }}"
-                        class="btn btn-danger">
-
-                        Remove
-
-                    </a>
-
-                </div>
-
-            </div>
-
-        {% endfor %}
-
-    {% else %}
-
-        <div class="alert alert-info">
-
-            You have not bookmarked any questions yet.
-
-        </div>
-
-    {% endif %}
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Bookmarks</span></div>
+        <h1>Saved questions</h1>
+        <p class="lead">Questions you bookmarked during practice. Tap “Show answer” to reveal the solution.</p>
+    </div>
+    {% if items %}<span class="badge bg-primary fs-6">{{ items|length }} saved</span>{% endif %}
 </div>
 
-</body>
+{% if items %}
+<div class="row g-3">
+    {% for it in items %}
+    <div class="col-12">
+        <div class="pn-review-item reveal">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div class="pn-qnum"><span class="badge bg-light text-dark border me-1">{{ it.exam_type or '—' }}</span>{{ it.subject or it.q.topic or 'General' }}<span class="text-muted fw-normal small ms-2">· saved {{ it.date|nicedate('%d %b %Y') }}</span></div>
+                <form method="POST" action="{{ url_for('delete_bookmark', bookmark_id=it.id) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger" data-confirm="Remove this bookmark?" title="Remove"><i class="bi bi-trash"></i></button></form>
+            </div>
+            {% if it.q.passage %}<div class="pn-passage">{{ it.q.passage }}</div>{% endif %}
+            <div class="pn-qtext">{{ it.q.text }}</div>
+            <div class="bm-options" data-correct="{{ it.q.correct }}">
+                {% for k, v in it.q.options.items() %}
+                <div class="pn-option locked" data-key="{{ k }}"><span class="key">{{ k }}</span><span class="txt">{{ v }}</span><i class="bi bi-check-circle-fill text-success ms-auto d-none"></i></div>
+                {% endfor %}
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <button class="btn btn-sm btn-outline-primary bm-reveal" type="button"><i class="bi bi-eye"></i> Show answer</button>
+            </div>
+            <div class="pn-explain mt-2 d-none"><h5><i class="bi bi-lightbulb me-1"></i>Explanation</h5><div style="white-space:pre-line">{{ it.q.explanation or 'No explanation available for this question yet.' }}</div></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="pn-empty card anim-rise"><span class="ico"><i class="bi bi-bookmark-star"></i></span><h3>No bookmarks yet</h3><p>While practising, tap the bookmark button on any tricky question to save it here.</p><a href="{{ url_for('practice') }}" class="btn btn-primary">Start practising</a></div>
+{% endif %}
+{% endblock %}
 
-</html>
+{% block scripts %}
+<script>
+document.querySelectorAll('.bm-reveal').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        var item = btn.closest('.pn-review-item'), wrap = item.querySelector('.bm-options'), correct = wrap.dataset.correct;
+        var opt = wrap.querySelector('.pn-option[data-key="'+correct+'"]');
+        if (opt) { opt.classList.add('correct'); opt.querySelector('i').classList.remove('d-none'); }
+        item.querySelector('.pn-explain').classList.remove('d-none');
+        btn.remove();
+    });
+});
+</script>
+{% endblock %}

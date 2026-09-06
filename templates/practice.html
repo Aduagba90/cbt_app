@@ -1,60 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
+{% block title %}Practice mode{% endblock %}
 
-    <title>Practice Mode</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-</head>
-
-<body class="bg-light">
-
-<div class="container mt-5">
-
-    <h2 class="mb-4">
-        📘 Practice Mode
-    </h2>
-
-    <p class="text-muted">
-        Select the type of exam you want to practice.
-    </p>
-
-    <div class="list-group mt-4">
-
-        <a href="/practice_waec"
-           class="list-group-item list-group-item-action">
-
-            WAEC Practice
-
-        </a>
-
-        <a href="/practice_jamb"
-           class="list-group-item list-group-item-action">
-
-            JAMB Practice
-
-        </a>
-
-        <a href="/practice_post_utme"
-           class="list-group-item list-group-item-action">
-
-            POST-UTME Practice
-
-        </a>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Practice</span></div>
+        <h1>Practice mode</h1>
+        <p class="lead">Untimed drills. Answer a question, see the correct option and a full explanation immediately.</p>
     </div>
-
-    <a href="/dashboard"
-       class="btn btn-secondary mt-4">
-
-        ← Back to Dashboard
-
-    </a>
-
+    {% if remaining is not none %}
+    <div class="alert alert-info mb-0 py-2 px-3 small"><i class="bi bi-info-circle me-1"></i><b>{{ remaining }}</b> free practice question{{ '' if remaining == 1 else 's' }} left today. <a href="{{ url_for('subscribe') }}" class="fw-bold">Go unlimited</a></div>
+    {% endif %}
 </div>
 
-</body>
-</html>
+<ul class="nav nav-pills gap-2 mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#jambTab" type="button"><i class="bi bi-mortarboard me-1"></i> JAMB ({{ jamb|length }})</button></li>
+    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#waecTab" type="button"><i class="bi bi-journal-text me-1"></i> WAEC ({{ waec|length }})</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="jambTab">
+        {% if jamb %}
+        <div class="row g-3">
+            {% for name, count in jamb %}
+            <div class="col-sm-6 col-lg-4">
+                <a href="{{ url_for('practice_question', exam_type='JAMB', subject=name) }}" class="pn-subject-link anim-rise d{{ loop.index0 % 4 }}">
+                    <span class="pn-stat-icon tint-green"><i class="bi {{ subject_icon(name) }}"></i></span>
+                    <span>{{ name }}<small>{{ count }} questions</small></span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No JAMB subjects yet</h3></div>{% endif %}
+    </div>
+    <div class="tab-pane fade" id="waecTab">
+        {% if waec %}
+        <div class="row g-3">
+            {% for name, count in waec %}
+            <div class="col-sm-6 col-lg-4">
+                <a href="{{ url_for('practice_question', exam_type='WAEC', subject=name) }}" class="pn-subject-link anim-rise d{{ loop.index0 % 4 }}">
+                    <span class="pn-stat-icon tint-blue"><i class="bi {{ subject_icon(name) }}"></i></span>
+                    <span>{{ name }}<small>{{ count }} questions</small></span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No WAEC subjects yet</h3></div>{% endif %}
+    </div>
+</div>
+{% endblock %}

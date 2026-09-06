@@ -1,173 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Select Exam</title>
+{% extends "base.html" %}
+{% block title %}Choose an exam{% endblock %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-
-        body{
-            background: #f4f7fc;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .container-box{
-            max-width: 1200px;
-            margin: auto;
-            margin-top: 80px;
-            margin-bottom: 50px;
-        }
-
-        .title{
-            text-align: center;
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
-        .subtitle{
-            text-align: center;
-            color: #6c757d;
-            margin-bottom: 50px;
-        }
-
-        .exam-card{
-            background: white;
-            border-radius: 25px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
-            transition: 0.3s;
-            height: 100%;
-        }
-
-        .exam-card:hover{
-            transform: translateY(-8px);
-        }
-
-        .icon{
-            font-size: 55px;
-            margin-bottom: 20px;
-        }
-
-        .exam-card h2{
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
-        .exam-card p{
-            color: #6c757d;
-            min-height: 60px;
-        }
-
-        .btn-custom{
-            padding: 12px 30px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="container container-box">
-
-    <h1 class="title">
-        Choose Examination
-    </h1>
-
-    <p class="subtitle">
-        Select the examination you want to prepare for.
-    </p>
-
-    <div class="row g-4">
-
-        <!-- WAEC -->
-        <div class="col-lg-4 col-md-6">
-
-            <div class="exam-card">
-
-                <div class="icon">
-                    🎓
-                </div>
-
-                <h2>WAEC CBT</h2>
-
-                <p>
-                    Practice WAEC subjects with instant feedback and analysis.
-                </p>
-
-                <a href="/waec_subjects"
-                   class="btn btn-success btn-custom">
-
-                    Start WAEC
-
-                </a>
-
-            </div>
-
-        </div>
-
-        <!-- JAMB -->
-        <div class="col-lg-4 col-md-6">
-
-            <div class="exam-card">
-
-                <div class="icon">
-                    📝
-                </div>
-
-                <h2>JAMB CBT</h2>
-
-                <p>
-                    Practice real JAMB questions with automatic subject combinations.
-                </p>
-
-                <a href="/jamb_courses"
-                   class="btn btn-primary btn-custom">
-
-                    Start JAMB
-
-                </a>
-
-            </div>
-
-        </div>
-
-        <!-- POST-UTME -->
-        <div class="col-lg-4 col-md-6">
-
-            <div class="exam-card">
-
-                <div class="icon">
-                    🏛️
-                </div>
-
-                <h2>POST-UTME CBT</h2>
-
-                <p>
-                    Prepare for university screening examinations and admission tests.
-                </p>
-
-                <a href="/post_utme"
-                   class="btn btn-warning btn-custom">
-
-                    Start POST-UTME
-
-                </a>
-
-            </div>
-
-        </div>
-
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Mock exams</span></div>
+        <h1>Choose your examination</h1>
+        <p class="lead">Every mock runs in a realistic CBT environment with a live timer and question palette.</p>
     </div>
-
 </div>
 
-</body>
-</html>
+{% if open_attempt %}
+<div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div><i class="bi bi-hourglass-split me-2"></i><b>Exam in progress:</b> {{ open_attempt['exam_type'] }} — {{ open_attempt['exam_name'] }}. You must resume or discard it before starting a new one.</div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('exam_room', attempt_id=open_attempt['id']) }}" class="btn btn-warning btn-sm fw-bold"><i class="bi bi-play-fill"></i> Resume</a>
+        <form method="POST" action="{{ url_for('abandon_exam') }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-outline-secondary btn-sm" data-confirm="Discard this unfinished exam? It will not be graded.">Discard</button></form>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="pn-tile anim-rise">
+            <span class="pn-tile-icon tint-green"><i class="bi bi-mortarboard"></i></span>
+            <h3>JAMB UTME</h3>
+            <p>Full 4-subject mock exactly like the real UTME: Use of English (60 questions) plus three course subjects (40 each). 2 hours.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 120 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 180 questions</span><span class="pn-subject-chip"><i class="bi bi-award"></i> /400 score</span></div>
+            <a href="{{ url_for('jamb_courses') }}" class="btn btn-primary w-100">Choose course <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="pn-tile anim-rise d1">
+            <span class="pn-tile-icon tint-blue"><i class="bi bi-journal-text"></i></span>
+            <h3>WAEC / SSCE</h3>
+            <p>Subject-by-subject objective paper. 50 randomised questions per session with detailed corrections at the end.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 60 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 50 questions</span><span class="pn-subject-chip"><i class="bi bi-book"></i> Any subject</span></div>
+            <a href="{{ url_for('waec_subjects') }}" class="btn btn-primary w-100" style="background:#1d4ed8;border-color:#1d4ed8">Choose subject <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="pn-tile anim-rise d2">
+            <span class="pn-tile-icon tint-gold"><i class="bi bi-building"></i></span>
+            <h3>Post-UTME</h3>
+            <p>University screening practice in the format your school uses — CBT with course subjects, aptitude tests or current affairs.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 30 min</span><span class="pn-subject-chip"><i class="bi bi-bank"></i> 9 universities</span></div>
+            <a href="{{ url_for('post_utme') }}" class="btn btn-accent w-100">Choose university <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4 anim-rise d3">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3"><span class="pn-stat-icon tint-purple"><i class="bi bi-lightning-charge"></i></span><div><div class="fw-bold">Not ready for a full mock?</div><div class="small text-muted">Try practice mode — untimed, with an explanation after every question.</div></div></div>
+        <a href="{{ url_for('practice') }}" class="btn btn-outline-primary">Open practice mode</a>
+    </div>
+</div>
+{% endblock %}
