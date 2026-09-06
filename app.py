@@ -15,7 +15,7 @@ import logging
 import os
 import secrets
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 from dotenv import load_dotenv
@@ -40,6 +40,11 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("prepnova")
+
+
+def utcnow():
+    """Naive UTC timestamp (matches SQLite CURRENT_TIMESTAMP)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 # ---------------------------------------------------------------------------
 # App & configuration
@@ -177,7 +182,7 @@ def _before():
         idle_limit = EXAM_IDLE_MINUTES if request.endpoint in ("exam_room", "exam_state", "exam_answer", "exam_submit", "exam_event") else SESSION_IDLE_MINUTES
         try:
             last = datetime.strptime(row["last_activity"], "%Y-%m-%d %H:%M:%S")
-            if datetime.utcnow() - last > timedelta(minutes=idle_limit):
+            if utcnow() - last > timedelta(minutes=idle_limit):
                 conn.execute("UPDATE user_sessions SET is_active = 0 WHERE id = ?", (row["id"],))
                 conn.commit()
                 conn.close()
@@ -271,7 +276,7 @@ def home():
 
 @app.route("/health")
 def health():
-    return jsonify({"ok": True, "time": datetime.utcnow().isoformat() + "Z"})
+    return jsonify({"ok": True, "time": utcnow().isoformat() + "Z"})
 
 
 @app.route("/privacy")
@@ -334,7 +339,7 @@ def _send_verification(cur, email, name):
     cur.execute("UPDATE email_verification_tokens SET used = 1 WHERE email = ? AND used = 0", (email,))
     cur.execute(
         "INSERT INTO email_verification_tokens (email, token, expires_at) VALUES (?, ?, ?)",
-        (email, token, (datetime.utcnow() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")),
+        (email, token, (utcnow() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")),
     )
     link = f"{app_url()}/verify_email/{token}"
     body = (f"Hello {name},\n\nWelcome to PrepNova CBT! Please verify your email address by opening this link:\n\n{link}\n\n"
@@ -446,11 +451,11 @@ def verify_email(token):
     try:
         expires = datetime.fromisoformat(str(row["expires_at"]))
     except ValueError:
-        expires = datetime.utcnow() - timedelta(seconds=1)
+        expires = utcnow() - timedelta(seconds=1)
     if row["used"]:
         conn.close()
         return render_template("auth_message.html", kind="invalid_verification")
-    if datetime.utcnow() > expires:
+    if utcnow() > expires:
         conn.close()
         return render_template("auth_message.html", kind="expired_verification", email=row["email"])
     cur.execute("UPDATE users SET email_verified = 1 WHERE email = ?", (row["email"],))
@@ -534,7 +539,7 @@ def forgot_password():
                 token = secrets.token_urlsafe(32)
                 cur.execute(
                     "INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)",
-                    (email, token, (datetime.utcnow() + timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")),
+                    (email, token, (utcnow() + timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")),
                 )
                 conn.commit()
                 link = f"{app_url()}/reset_password/{token}"
@@ -562,8 +567,8 @@ def reset_password(token):
     try:
         expires = datetime.fromisoformat(str(row["expires_at"]))
     except ValueError:
-        expires = datetime.utcnow() - timedelta(seconds=1)
-    if datetime.utcnow() > expires:
+        expires = utcnow() - timedelta(seconds=1)
+    if utcnow() > expires:
         conn.close()
         return render_template("auth_message.html", kind="expired_reset")
 
