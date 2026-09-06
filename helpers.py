@@ -438,3 +438,37 @@ def app_url():
 
 def dumps(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+
+
+def activate_subscription(cur, username, plan_id, plan_name, duration_days, amount, currency, reference):
+    """Mark a plan paid & active for a user. If a plan is still running, the new duration is ADDED on top (no lost days)."""
+    now = datetime.now()
+    existing = cur.execute("SELECT end_date FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1", (username,)).fetchone()
+    new_end = now + timedelta(days=int(duration_days))
+    if existing and existing["end_date"]:
+        try:
+            current_end = datetime.strptime(existing["end_date"], "%Y-%m-%d %H:%M:%S")
+            if current_end > now:
+                new_end = current_end + timedelta(days=int(duration_days))
+        except ValueError:
+            pass
+    if existing:
+        cur.execute(
+            """
+            UPDATE subscriptions SET plan_id = ?, plan_name = ?, start_date = ?, end_date = ?, payment_reference = ?, payment_status = 'SUCCESS',
+                                     is_active = 1, amount_paid = ?, currency = ?
+            WHERE username = ?
+            """,
+            (plan_id, plan_name, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reference, amount, currency, username),
+        )
+    else:
+        cur.execute(
+            """
+            INSERT INTO subscriptions (username, plan_id, plan_name, start_date, end_date, payment_reference, payment_status, is_active, amount_paid, currency)
+            VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', 1, ?, ?)
+            """,
+            (username, plan_id, plan_name, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reference, amount, currency),
+        )
+    return now, new_end
+
+

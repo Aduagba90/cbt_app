@@ -38,6 +38,7 @@
       <a href="{{ url_for('admin_bp.manage_topics') }}" class="{{ 'active' if ep in ['manage_topics','add_topic','edit_topic'] }}"><i class="bi bi-diagram-3"></i> Topics</a>
       <a href="{{ url_for('admin_bp.manage_post_utme_universities') }}" class="{{ 'active' if 'post_utme' in ep or 'subject_combination' in ep }}"><i class="bi bi-building"></i> Post-UTME</a>
       <a href="{{ url_for('admin_bp.manage_results') }}" class="{{ 'active' if ep in ['manage_results','view_result','review_result'] }}"><i class="bi bi-bar-chart-line"></i> Results</a>
+      <a href="{{ url_for('admin_bp.manage_subscriptions') }}" class="{{ 'active' if ep in ['manage_subscriptions','activate_subscription','deactivate_subscription'] }}"><i class="bi bi-credit-card-2-front"></i> Subscriptions</a>
     </nav>
     <div class="right">
       <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View site</a>

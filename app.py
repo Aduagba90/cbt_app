@@ -27,7 +27,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import exam_engine as engine
 from admin_routes import admin_bp
 from db import connect, init_db
-from helpers import (COURSE_ICONS, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, LEGACY_TO_V2,
+from helpers import (activate_subscription, COURSE_ICONS, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, LEGACY_TO_V2,
                      TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
@@ -111,8 +111,20 @@ if IS_PRODUCTION and not (ADMIN_EMAIL and ADMIN_PASSWORD_HASH):
     log.warning("ADMIN_EMAIL/ADMIN_PASSWORD not set — the admin console is disabled until they are configured.")
 del _ADMIN_PASSWORD_PLAIN
 
-PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "")
-PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "")
+PAYSTACK_PUBLIC_KEY = (os.getenv("PAYSTACK_PUBLIC_KEY") or "").strip()
+PAYSTACK_SECRET_KEY = (os.getenv("PAYSTACK_SECRET_KEY") or "").strip()
+# Placeholders from .env.example must not count as "configured"
+if not PAYSTACK_SECRET_KEY.startswith(("sk_test_", "sk_live_")) or PAYSTACK_SECRET_KEY.endswith("_xxx") or len(PAYSTACK_SECRET_KEY) < 20:
+    if PAYSTACK_SECRET_KEY:
+        log.warning("PAYSTACK_SECRET_KEY looks like a placeholder — online payment disabled until a real key is set.")
+    PAYSTACK_SECRET_KEY = ""
+if not PAYSTACK_PUBLIC_KEY.startswith(("pk_test_", "pk_live_")) or PAYSTACK_PUBLIC_KEY.endswith("_xxx"):
+    PAYSTACK_PUBLIC_KEY = ""
+if PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY[3:8] != PAYSTACK_PUBLIC_KEY[3:8]:
+    log.warning("Paystack keys are mixed: one is test and one is live. Use a matching pair from the same mode.")
+if IS_PRODUCTION and PAYSTACK_SECRET_KEY.startswith("sk_test_"):
+    log.warning("Paystack is in TEST mode — real cards will be declined. Switch to sk_live_/pk_live_ keys before launch.")
+app.config["PAYSTACK_READY"] = bool(PAYSTACK_SECRET_KEY)
 SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@prepnova.ng")
 SUPPORT_WHATSAPP = os.getenv("SUPPORT_WHATSAPP", "")
 SESSION_IDLE_MINUTES = int(os.getenv("SESSION_IDLE_MINUTES", "60"))
@@ -1497,37 +1509,6 @@ def initialize_payment(plan_id):
     return redirect(payload["data"]["authorization_url"])
 
 
-def _activate_subscription(cur, username, plan_id, plan_name, duration_days, amount, currency, reference):
-    now = datetime.now()
-    existing = cur.execute("SELECT end_date FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1", (username,)).fetchone()
-    new_end = now + timedelta(days=int(duration_days))
-    if existing and existing["end_date"]:
-        try:
-            current_end = datetime.strptime(existing["end_date"], "%Y-%m-%d %H:%M:%S")
-            if current_end > now:
-                new_end = current_end + timedelta(days=int(duration_days))
-        except ValueError:
-            pass
-    if existing:
-        cur.execute(
-            """
-            UPDATE subscriptions SET plan_id = ?, plan_name = ?, start_date = ?, end_date = ?, payment_reference = ?, payment_status = 'SUCCESS',
-                                     is_active = 1, amount_paid = ?, currency = ?
-            WHERE username = ?
-            """,
-            (plan_id, plan_name, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reference, amount, currency, username),
-        )
-    else:
-        cur.execute(
-            """
-            INSERT INTO subscriptions (username, plan_id, plan_name, start_date, end_date, payment_reference, payment_status, is_active, amount_paid, currency)
-            VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', 1, ?, ?)
-            """,
-            (username, plan_id, plan_name, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reference, amount, currency),
-        )
-    return now, new_end
-
-
 def _process_paystack_payment(reference, payment_data):
     """Verify amount/currency against our pending record, mark paid and extend the subscription. Idempotent."""
     conn = connect()
@@ -1560,7 +1541,7 @@ def _process_paystack_payment(reference, payment_data):
             (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200], payment_data.get("channel"),
              payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference),
         )
-        start, end = _activate_subscription(cur, record["username"], record["plan_id"], record["plan_name"], record["duration_days"],
+        start, end = activate_subscription(cur, record["username"], record["plan_id"], record["plan_name"], record["duration_days"],
                                             record["amount"], "NGN", reference)
         student = cur.execute("SELECT name FROM users WHERE email = ?", (record["username"],)).fetchone()
         conn.commit()

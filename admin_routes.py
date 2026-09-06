@@ -23,6 +23,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from db import connect, DB_PATH
+from helpers import activate_subscription as grant_plan
 from security import admin_required
 import sqlite3
 
@@ -64,6 +65,11 @@ def _admin_chrome(response):
         body = body.replace("</body>", '<script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script></body>', 1)
     response.set_data(body)
     return response
+
+
+def _paystack_ready():
+    from flask import current_app
+    return bool(current_app.config.get("PAYSTACK_READY"))
 
 
 def _audit(action, target=None):
@@ -1459,6 +1465,109 @@ def confirm_delete_student(user_id):
     conn.close()
 
     return redirect("/manage_students")
+
+
+@admin_bp.route("/manage_subscriptions")
+def manage_subscriptions():
+    """Subscriptions & payments overview + manual activation (bank transfer / support cases)."""
+    q = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "all").strip().lower()
+    conn = connect()
+    cur = conn.cursor()
+    params = []
+    sql = """
+        SELECT u.id AS user_id, u.name, u.email, u.phone,
+               s.plan_name, s.start_date, s.end_date, s.is_active, s.payment_status, s.amount_paid, s.payment_reference
+        FROM users u
+        LEFT JOIN subscriptions s ON s.id = (SELECT id FROM subscriptions WHERE username = u.email ORDER BY id DESC LIMIT 1)
+    """
+    where = []
+    if q:
+        where.append("(u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)")
+        params += [f"%{q}%"] * 3
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY u.id DESC"
+    rows = []
+    now = datetime.now()
+    for r in cur.execute(sql, params).fetchall():
+        end = None
+        try:
+            end = datetime.strptime(r["end_date"], "%Y-%m-%d %H:%M:%S") if r["end_date"] else None
+        except ValueError:
+            end = None
+        if r["plan_name"] and r["is_active"] and end and end > now:
+            state = "trial" if r["payment_status"] == "FREE_TRIAL" else "active"
+        elif r["plan_name"]:
+            state = "expired"
+        else:
+            state = "none"
+        if status != "all" and state != status:
+            continue
+        rows.append({**dict(r), "state": state, "end": end, "days_left": max(0, (end - now).days) if end and end > now else 0})
+    plans = cur.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days").fetchall()
+    payments = cur.execute(
+        """SELECT p.username, u.name, p.plan_name, p.amount, p.payment_status, p.transaction_reference, p.payment_method, p.created_at, p.paid_at
+           FROM payments p LEFT JOIN users u ON u.email = p.username ORDER BY p.id DESC LIMIT 40"""
+    ).fetchall()
+    counts = {
+        "active": sum(1 for r in rows if r["state"] == "active"), "trial": sum(1 for r in rows if r["state"] == "trial"),
+        "expired": sum(1 for r in rows if r["state"] == "expired"), "none": sum(1 for r in rows if r["state"] == "none"),
+    }
+    revenue = cur.execute("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payment_status = 'SUCCESS'").fetchone()[0]
+    pending = cur.execute("SELECT COUNT(*) FROM payments WHERE payment_status = 'PENDING'").fetchone()[0]
+    conn.close()
+    return render_template("manage_subscriptions.html", rows=rows, plans=plans, payments=payments, q=q, status=status,
+                           counts=counts, revenue=revenue, pending=pending, paystack_ready=_paystack_ready())
+
+
+@admin_bp.route("/activate_subscription", methods=["POST"])
+def activate_subscription():
+    """Manually activate/extend a plan (e.g. paid by bank transfer or cash). Adds on top of any active time left."""
+    email = (request.form.get("email") or "").strip().lower()
+    note = (request.form.get("note") or "").strip()[:120]
+    try:
+        plan_id = int(request.form.get("plan_id") or 0)
+    except ValueError:
+        plan_id = 0
+    conn = connect()
+    cur = conn.cursor()
+    user = cur.execute("SELECT id, name, email FROM users WHERE lower(email) = ?", (email,)).fetchone()
+    plan = cur.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE id = ? AND is_active = 1", (plan_id,)).fetchone()
+    if not user or not plan:
+        conn.close()
+        flash("Student e-mail or plan not recognised.", "danger")
+        return redirect(url_for("admin_bp.manage_subscriptions", q=email))
+    import secrets as _secrets
+    reference = f"MANUAL-{datetime.now():%Y%m%d}-{_secrets.token_hex(4).upper()}"
+    cur.execute(
+        """INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status,
+                                 payment_method, paid_at, currency, gateway_response)
+           VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', 'manual', CURRENT_TIMESTAMP, 'NGN', ?)""",
+        (user["email"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference,
+         f"Activated by {session.get('admin')}" + (f": {note}" if note else "")),
+    )
+    start, end = grant_plan(cur, user["email"], plan["id"], plan["plan_name"], plan["duration_days"], plan["price"], "NGN", reference)
+    conn.commit()
+    conn.close()
+    _audit("activate_subscription", f"{user['email']} {plan['plan_name']} until {end:%Y-%m-%d}")
+    flash(f"{plan['plan_name']} plan activated for {user['name'] or user['email']} — expires {end:%d %b %Y}.", "success")
+    return redirect(url_for("admin_bp.manage_subscriptions", q=user["email"]))
+
+
+@admin_bp.route("/deactivate_subscription/<int:user_id>", methods=["POST"])
+def deactivate_subscription(user_id):
+    conn = connect()
+    user = conn.execute("SELECT email, name FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        abort(404)
+    conn.execute("UPDATE subscriptions SET is_active = 0 WHERE username = ?", (user["email"],))
+    conn.commit()
+    conn.close()
+    _audit("deactivate_subscription", user["email"])
+    flash(f"Subscription deactivated for {user['name'] or user['email']}.", "info")
+    return redirect(url_for("admin_bp.manage_subscriptions", q=user["email"]))
 
 
 @admin_bp.route("/manage_results")

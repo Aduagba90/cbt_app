@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Subscriptions &amp; payments — PrepNova Admin</title>
+<link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<style>
+  .sub-stat { border: 1px solid #e6e9f0; border-radius: 14px; padding: .9rem 1.1rem; background: #fff; }
+  .sub-stat b { font-size: 1.35rem; display: block; line-height: 1.1; }
+  .sub-stat span { font-size: .78rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .state { font-size: .72rem; font-weight: 700; padding: .2rem .55rem; border-radius: 999px; }
+  .state-active { background: #e3f6ec; color: #0b7a4b; } .state-trial { background: #fff4d6; color: #8a6100; }
+  .state-expired { background: #fde8e8; color: #b42318; } .state-none { background: #eef1f5; color: #6b7280; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="container-xl my-4">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+      <h2 class="mb-1">💳 Subscriptions &amp; payments</h2>
+      <p class="text-muted mb-0">Who has access, who paid, and manual activation for bank-transfer or support cases.</p>
+    </div>
+    {% if not paystack_ready %}
+    <div class="alert alert-warning py-2 px-3 mb-0 small">
+      <b>Online payment is OFF</b> — <code>PAYSTACK_SECRET_KEY</code> is not set, so students see “contact support”. Add your Paystack keys to <code>.env</code> and restart. Until then, activate plans manually below.
+    </div>
+    {% else %}
+    <div class="alert alert-success py-2 px-3 mb-0 small"><b>Online payment is ON</b> — Paystack keys detected. Students pay by card / transfer / USSD and are activated automatically.</div>
+    {% endif %}
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-2"><div class="sub-stat"><b class="text-success">{{ counts.active }}</b><span>Paid &amp; active</span></div></div>
+    <div class="col-6 col-md-2"><div class="sub-stat"><b class="text-warning">{{ counts.trial }}</b><span>On free trial</span></div></div>
+    <div class="col-6 col-md-2"><div class="sub-stat"><b class="text-danger">{{ counts.expired }}</b><span>Expired</span></div></div>
+    <div class="col-6 col-md-2"><div class="sub-stat"><b>{{ counts.none }}</b><span>Never subscribed</span></div></div>
+    <div class="col-6 col-md-2"><div class="sub-stat"><b>₦{{ '{:,.0f}'.format(revenue) }}</b><span>Total revenue</span></div></div>
+    <div class="col-6 col-md-2"><div class="sub-stat"><b>{{ pending }}</b><span>Abandoned checkouts</span></div></div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title mb-1">✅ Activate a plan manually</h5>
+      <p class="text-muted small mb-3">Use this when a student pays by bank transfer, cash or POS, or when support needs to fix an account. The plan is <b>added on top</b> of any time still remaining, and the action is recorded in the audit log.</p>
+      <form method="POST" action="{{ url_for('admin_bp.activate_subscription') }}" class="row g-2 align-items-end">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+        <div class="col-md-4"><label class="form-label small fw-bold">Student e-mail</label><input type="email" name="email" class="form-control" required placeholder="student@example.com" value="{{ q if '@' in q else '' }}"></div>
+        <div class="col-md-3"><label class="form-label small fw-bold">Plan</label>
+          <select name="plan_id" class="form-select" required>
+            {% for p in plans %}<option value="{{ p['id'] }}">{{ p['plan_name'] }} — ₦{{ '{:,.0f}'.format(p['price']) }} / {{ p['duration_days'] }} days</option>{% endfor %}
+          </select></div>
+        <div class="col-md-3"><label class="form-label small fw-bold">Note (optional)</label><input type="text" name="note" class="form-control" maxlength="120" placeholder="e.g. GTBank transfer 06/09, ref 1234"></div>
+        <div class="col-md-2"><button class="btn btn-success w-100" data-confirm="Activate this plan for the student now?">Activate</button></div>
+      </form>
+    </div>
+  </div>
+
+  <form method="GET" class="row g-2 mb-3">
+    <div class="col-md-5"><input type="search" name="q" class="form-control" placeholder="Search name, e-mail or phone…" value="{{ q }}"></div>
+    <div class="col-md-3">
+      <select name="status" class="form-select" onchange="this.form.submit()">
+        {% for k, label in [('all','All students'),('active','Paid & active'),('trial','Free trial'),('expired','Expired'),('none','Never subscribed')] %}
+        <option value="{{ k }}" {{ 'selected' if status == k }}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100">Search</button></div>
+    <div class="col-md-2"><a href="{{ url_for('admin_bp.manage_subscriptions') }}" class="btn btn-outline-secondary w-100">Reset</a></div>
+  </form>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Student</th><th>Plan</th><th>Status</th><th>Expires</th><th>Paid</th><th>Reference</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        {% for r in rows %}
+          <tr>
+            <td><div class="fw-semibold">{{ r.name or '—' }}</div><div class="small text-muted">{{ r.email }}{% if r.phone %} · {{ r.phone }}{% endif %}</div></td>
+            <td>{{ r.plan_name or '—' }}</td>
+            <td><span class="state state-{{ r.state }}">{{ {'active':'Active','trial':'Free trial','expired':'Expired','none':'None'}[r.state] }}</span></td>
+            <td>{% if r.end %}{{ r.end.strftime('%d %b %Y') }}{% if r.days_left %} <span class="small text-muted">({{ r.days_left }}d left)</span>{% endif %}{% else %}—{% endif %}</td>
+            <td>{% if r.amount_paid %}₦{{ '{:,.0f}'.format(r.amount_paid) }}{% else %}—{% endif %}</td>
+            <td class="mono">{{ r.payment_reference or '—' }}</td>
+            <td class="text-end text-nowrap">
+              <a href="{{ url_for('admin_bp.view_student', user_id=r.user_id) }}" class="btn btn-sm btn-outline-secondary">View</a>
+              {% if r.state in ['active','trial'] %}
+              <form method="POST" action="{{ url_for('admin_bp.deactivate_subscription', user_id=r.user_id) }}" class="d-inline">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" data-confirm="Deactivate this student's plan?">Deactivate</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No students match.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h5 class="mb-2">🧾 Recent payments</h5>
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>When</th><th>Student</th><th>Plan</th><th>Amount</th><th>Status</th><th>Method</th><th>Reference</th></tr></thead>
+        <tbody>
+        {% for p in payments %}
+          <tr>
+            <td class="small text-nowrap">{{ (p['paid_at'] or p['created_at'] or '')[:16] }}</td>
+            <td><div class="small fw-semibold">{{ p['name'] or '—' }}</div><div class="small text-muted">{{ p['username'] }}</div></td>
+            <td>{{ p['plan_name'] }}</td>
+            <td>₦{{ '{:,.0f}'.format(p['amount'] or 0) }}</td>
+            <td><span class="badge {{ 'text-bg-success' if p['payment_status'] == 'SUCCESS' else ('text-bg-secondary' if p['payment_status'] == 'PENDING' else 'text-bg-danger') }}">{{ p['payment_status'] }}</span></td>
+            <td class="small">{{ p['payment_method'] or ('paystack' if p['payment_status'] != 'PENDING' else '—') }}</td>
+            <td class="mono">{{ p['transaction_reference'] }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No payments yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted small mt-2 mb-0">“Abandoned checkouts” are students who clicked Pay but did not finish on Paystack — nothing was charged.</p>
+</div>
+<script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/js/prepnova.js?v=2"></script>
+</body>
+</html>

@@ -68,6 +68,25 @@ Optional: `python -m venv .venv && .venv\Scripts\activate` (Windows) or `source 
    and switch to live keys.
 5. Start command is in `Procfile` (`gunicorn app:app`).
 
+## Payments (Paystack)
+
+Students see "Online payment is being set up" until Paystack keys are configured.
+
+1. Create a free account at <https://paystack.com>, then Settings → API Keys & Webhooks.
+2. Put the keys in `.env` (test keys while testing, live keys after Paystack approves your business):
+   ```
+   PAYSTACK_PUBLIC_KEY=pk_test_...
+   PAYSTACK_SECRET_KEY=sk_test_...
+   ```
+   and restart the app. The **Pay** buttons appear automatically.
+3. Test with Paystack's test card `4084 0840 8408 4081`, CVV `408`, any future expiry, OTP `123456`.
+4. When live: set the webhook URL to `https://your-domain/paystack/webhook` in the Paystack
+   dashboard so payments are confirmed even if the student closes the browser, and switch to
+   `pk_live_` / `sk_live_` keys.
+
+Manual activation (bank transfer, cash, POS): Admin → **Subscriptions** → *Activate a plan
+manually*. This records a payment, extends any remaining time, and is written to the audit log.
+
 ## Question bank
 
 Import questions from the admin panel (`Import` → Excel template at
