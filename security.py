@@ -17,7 +17,7 @@ import time
 from collections import defaultdict, deque
 from functools import wraps
 
-from flask import abort, flash, redirect, request, session, url_for
+from flask import jsonify, abort, flash, redirect, request, session, url_for
 
 # ----------------------------------------------------------------------------
 # CSRF
@@ -44,6 +44,10 @@ def validate_csrf():
     expected = session.get(CSRF_SESSION_KEY)
     supplied = request.form.get(CSRF_FORM_FIELD) or request.headers.get(CSRF_HEADER)
     if not expected or not supplied or not hmac.compare_digest(str(expected), str(supplied)):
+        # JSON clients (exam room) with no server session at all were signed out elsewhere —
+        # tell them so, instead of a generic CSRF error they would keep retrying.
+        if not expected and request.headers.get(CSRF_HEADER) and "user" not in session:
+            abort(401, description="Your session has ended. Please log in again.")
         abort(400, description="Your session has expired or the form is invalid. Please refresh the page and try again.")
 
 
@@ -164,10 +168,23 @@ def normalise_phone(phone):
 # Auth decorators
 # ----------------------------------------------------------------------------
 
+def wants_json_response():
+    """True for fetch/XHR clients (exam room autosave, state polls) that expect JSON, not HTML redirects."""
+    return bool(request.is_json or request.headers.get("X-CSRFToken")
+                or "application/json" in (request.headers.get("Accept") or "")
+                and "text/html" not in (request.headers.get("Accept") or ""))
+
+
+def json_login_required(message="Your session has ended. Please log in again."):
+    return jsonify({"ok": False, "login_required": True, "redirect": url_for("login"), "message": message}), 401
+
+
 def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if "user" not in session:
+            if wants_json_response():
+                return json_login_required()
             if request.method == "GET":
                 session["next_url"] = request.full_path.rstrip("?")[:300]
             flash("Please log in to continue.", "warning")

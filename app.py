@@ -32,8 +32,9 @@ from helpers import (COURSE_ICONS, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DUR
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon)
-from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, login_required,
-                      normalise_phone, password_problems, rate_limit, valid_email, validate_csrf)
+from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, json_login_required,
+                      login_required, normalise_phone, password_problems, rate_limit, valid_email, validate_csrf,
+                      wants_json_response)
 
 load_dotenv()
 
@@ -158,6 +159,8 @@ def _before():
         token = session.get("session_token")
         if not token:
             session.clear()
+            if wants_json_response():
+                return json_login_required()
             return redirect(url_for("login"))
         conn = connect()
         row = conn.execute(
@@ -167,6 +170,8 @@ def _before():
         if not row or not row["is_active"]:
             conn.close()
             session.clear()
+            if wants_json_response():
+                return json_login_required("You were signed out because your account was used on another device.")
             flash("You were signed out because your account was used on another device.", "warning")
             return redirect(url_for("login"))
         idle_limit = EXAM_IDLE_MINUTES if request.endpoint in ("exam_room", "exam_state", "exam_answer", "exam_submit", "exam_event") else SESSION_IDLE_MINUTES
@@ -177,6 +182,8 @@ def _before():
                 conn.commit()
                 conn.close()
                 session.clear()
+                if wants_json_response():
+                    return json_login_required("Your session expired after a period of inactivity.")
                 flash("Your session expired after a period of inactivity. Please log in again.", "warning")
                 return redirect(url_for("login"))
         except (TypeError, ValueError):
@@ -206,6 +213,7 @@ def _after(response):
 # ---------------------------------------------------------------------------
 
 @app.errorhandler(400)
+@app.errorhandler(401)
 @app.errorhandler(403)
 @app.errorhandler(404)
 @app.errorhandler(405)
@@ -214,10 +222,11 @@ def _after(response):
 @app.errorhandler(500)
 def _error(err):
     code = getattr(err, "code", 500)
-    titles = {400: "Bad request", 403: "Access denied", 404: "Page not found", 405: "Method not allowed",
+    titles = {400: "Bad request", 401: "Signed out", 403: "Access denied", 404: "Page not found", 405: "Method not allowed",
               413: "File too large", 429: "Slow down", 500: "Something went wrong"}
     messages = {
         400: getattr(err, "description", None) or "The request could not be processed.",
+        401: getattr(err, "description", None) or "Please log in to continue.",
         403: "You do not have permission to view this page.",
         404: "The page you are looking for does not exist or has been moved.",
         405: "That action is not allowed on this page.",
@@ -227,8 +236,14 @@ def _error(err):
     }
     if code == 500:
         log.exception("Unhandled error on %s", request.path)
-    if request.path.startswith("/api/") or request.headers.get("Accept", "").startswith("application/json"):
-        return jsonify({"ok": False, "error": messages.get(code)}), code
+    wants_json = (request.path.startswith("/api/") or request.headers.get("Accept", "").startswith("application/json")
+                  or request.is_json or request.headers.get("X-CSRFToken"))
+    if wants_json:
+        body = {"ok": False, "error": messages.get(code), "message": messages.get(code)}
+        if code == 401:
+            body["login_required"] = True
+            body["redirect"] = url_for("login")
+        return jsonify(body), code
     return render_template("error.html", code=code, title=titles.get(code, "Error"), message=messages.get(code)), code
 
 
@@ -819,6 +834,7 @@ def start_jamb(course):
     if (r := _require_subscription()):
         return r
     if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
+        flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
         attempt_id = engine.create_jamb_attempt(session["user"], course, client_ip(), request.headers.get("User-Agent"))
@@ -836,6 +852,7 @@ def start_waec(subject):
     if (r := _require_subscription()):
         return r
     if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
+        flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
         attempt_id = engine.create_waec_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"))
@@ -926,6 +943,7 @@ def start_post_utme():
         flash("No subjects are configured for this selection yet.", "warning")
         return redirect(url_for("post_utme"))
     if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
+        flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
         attempt_id = engine.create_post_utme_attempt(
@@ -973,6 +991,8 @@ def exam_answer(attempt_id):
     ok, msg = engine.save_answer(attempt_id, session["user"], position, answer, flagged)
     if not ok and msg == "TIME_UP":
         return jsonify({"ok": False, "time_up": True, "redirect": url_for("exam_finish", attempt_id=attempt_id)}), 409
+    if not ok and msg == "Attempt not found.":
+        return jsonify({"ok": False, "message": msg}), 404
     return jsonify({"ok": ok, "message": msg}), (200 if ok else 400)
 
 

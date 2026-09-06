@@ -245,6 +245,7 @@
                 .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
                 .then(function (res) {
                     if (res.status === 409 && res.body.time_up) { timeUp(); return; }
+                    if (res.status === 401 || res.body.login_required) { signedOut(); return; }
                     if (!res.body.ok) throw new Error(res.body.error || res.body.message || "Save failed");
                     setStatus("Saved", "bi-cloud-check", "text-success");
                 })
@@ -333,6 +334,12 @@
         remaining--;
     }
     tick(); var timerId = setInterval(tick, 1000);
+    function signedOut() {
+        if (submitted) return; submitted = true;
+        clearInterval(timerId);
+        alert("You were signed out because your account was opened on another device. Your saved answers are safe — log in again to continue this exam.");
+        window.location.href = "/login";
+    }
     function timeUp() {
         if (submitted) return;
         clearInterval(timerId);
@@ -342,7 +349,8 @@
     }
     // Re-sync with server every 60 s so a paused tab or clock change cannot cheat the timer
     setInterval(function () {
-        fetch(BASE + "/state", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (j) {
+        fetch(BASE + "/state", { credentials: "same-origin", headers: { "X-CSRFToken": CSRF } }).then(function (r) { return r.json(); }).then(function (j) {
+            if (j.login_required) { signedOut(); return; }
             if (!j.ok) return;
             if (j.status !== "IN_PROGRESS") { window.location.href = "/dashboard"; return; }
             remaining = j.remaining; lastSync = Date.now();
@@ -350,7 +358,7 @@
     }, 60000);
     document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === "visible") {
-            fetch(BASE + "/state", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) remaining = j.remaining; }).catch(function () {});
+            fetch(BASE + "/state", { credentials: "same-origin", headers: { "X-CSRFToken": CSRF } }).then(function (r) { return r.json(); }).then(function (j) { if (j.login_required) { signedOut(); return; } if (j.ok) remaining = j.remaining; }).catch(function () {});
         }
     });
 
