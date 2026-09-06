@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.getenv("DATABASE_PATH", os.path.join(BASE_DIR, "database.db"))
+DB_PATH = (os.getenv("DATABASE_PATH") or "").strip() or os.path.join(BASE_DIR, "database.db")
 
 
 def connect():

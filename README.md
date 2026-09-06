@@ -41,19 +41,22 @@ static/           prepnova.css / prepnova.js design system, vendored Bootstrap 5
 scripts/          One-off data maintenance utilities (see scripts/README.md)
 ```
 
-## Running locally
+## Running locally (no configuration needed)
 
 ```bash
-python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                                    # then edit values
-FLASK_ENV=development python app.py                     # http://127.0.0.1:5000
+python app.py
 ```
 
-- Without SMTP credentials, e-mail is disabled and new accounts are auto-verified.
-- Admin panel: `/admin_login` using `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`.
-- Set `DATABASE_PATH` to keep the database outside the repo (recommended in production —
-  the committed `database.db` is the seed question bank).
+Open <http://localhost:5000>. Admin console: <http://localhost:5000/admin_login> with
+`admin@gmail.com` / `admin123` (development default only).
+
+`python app.py` runs in **development mode**: a temporary secret key is generated,
+secure-cookie enforcement is relaxed for plain http, and e-mail is disabled so new
+accounts are auto-verified. The `database.db` in the repo is the seed question bank.
+
+Windows: if `python`/`pip` are not found use `py app.py` / `py -m pip install -r requirements.txt`.
+Optional: `python -m venv .venv && .venv\Scripts\activate` (Windows) or `source .venv/bin/activate` first.
 
 ## Deploying (Render / Railway / Heroku-style)
 

@@ -53,12 +53,24 @@ def utcnow():
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-IS_PRODUCTION = os.getenv("FLASK_ENV", "production").lower() == "production" and os.getenv("FLASK_DEBUG", "0") != "1"
+# Mode: `python app.py` on a laptop = development (no config needed).
+# Under gunicorn / a hosting platform (Render, Railway, Heroku...) = production, where a
+# real SECRET_KEY and a non-default admin password are mandatory.
+_env = (os.getenv("FLASK_ENV") or "").strip().lower()
+if not _env:
+    _env = "development" if (__name__ == "__main__" and not os.getenv("DYNO") and not os.getenv("RENDER")
+                             and not os.getenv("RAILWAY_ENVIRONMENT")) else "production"
+IS_PRODUCTION = _env == "production" and os.getenv("FLASK_DEBUG", "0") != "1"
 
-_secret = os.getenv("SECRET_KEY", "")
-if not _secret or _secret == "replace_with_a_long_random_secret":
+_secret = (os.getenv("SECRET_KEY") or "").strip()
+if not _secret or _secret.startswith("#") or _secret == "replace_with_a_long_random_secret" or len(_secret) < 32:
     if IS_PRODUCTION:
-        raise RuntimeError("SECRET_KEY is not set. Generate one with:  python -c \"import secrets; print(secrets.token_hex(32))\"")
+        raise RuntimeError(
+            "SECRET_KEY is missing or too short (need 32+ random characters).\n"
+            "  Generate one:   python -c \"import secrets; print(secrets.token_hex(32))\"\n"
+            "  Then put it in .env as  SECRET_KEY=<that value>  (or set the environment variable).\n"
+            "  Just testing on your own computer? Run:  python app.py  (development mode needs no SECRET_KEY)."
+        )
     _secret = secrets.token_hex(32)
     log.warning("SECRET_KEY not configured — using a temporary key (sessions reset on restart).")
 
@@ -84,13 +96,19 @@ app.config.update(
 mail = Mail(app)
 
 ADMIN_EMAIL = (os.getenv("ADMIN_EMAIL") or "").strip().lower()
-ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH", "").strip()
-_ADMIN_PASSWORD_PLAIN = os.getenv("ADMIN_PASSWORD", "")
+ADMIN_PASSWORD_HASH = (os.getenv("ADMIN_PASSWORD_HASH") or "").strip()
+_ADMIN_PASSWORD_PLAIN = (os.getenv("ADMIN_PASSWORD") or "").strip()
+if not ADMIN_EMAIL and not IS_PRODUCTION:
+    # Development convenience so the admin console is reachable out of the box.
+    ADMIN_EMAIL, _ADMIN_PASSWORD_PLAIN = "admin@gmail.com", _ADMIN_PASSWORD_PLAIN or "admin123"
+    log.warning("ADMIN_EMAIL/ADMIN_PASSWORD not configured — using the development default admin@gmail.com / admin123.")
 if not ADMIN_PASSWORD_HASH and _ADMIN_PASSWORD_PLAIN:
     # Support plain password in .env for convenience, but hash it in memory immediately.
     ADMIN_PASSWORD_HASH = generate_password_hash(_ADMIN_PASSWORD_PLAIN)
-    if IS_PRODUCTION and _ADMIN_PASSWORD_PLAIN in ("admin123", "admin", "password"):
-        raise RuntimeError("ADMIN_PASSWORD is a default/weak value. Set a strong ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH).")
+    if IS_PRODUCTION and (_ADMIN_PASSWORD_PLAIN in ("admin123", "admin", "password") or len(_ADMIN_PASSWORD_PLAIN) < 10):
+        raise RuntimeError("ADMIN_PASSWORD is a default/weak value. Set a strong ADMIN_PASSWORD of 10+ characters (or ADMIN_PASSWORD_HASH).")
+if IS_PRODUCTION and not (ADMIN_EMAIL and ADMIN_PASSWORD_HASH):
+    log.warning("ADMIN_EMAIL/ADMIN_PASSWORD not set — the admin console is disabled until they are configured.")
 del _ADMIN_PASSWORD_PLAIN
 
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "")
