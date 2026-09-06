@@ -4,13 +4,20 @@
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
+        {% if admin_view %}
+        <div class="pn-breadcrumb"><a href="{{ url_for('admin_bp.manage_results') }}">Results</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('admin_bp.view_result', result_id=r['id']) }}">Result #{{ r['id'] }}</a><i class="bi bi-chevron-right"></i><span>Corrections</span></div>
+        <h1>Corrections &amp; explanations <span class="badge text-bg-secondary align-middle" style="font-size:.7rem">Admin view</span></h1>
+        <p class="lead">{{ r['username'] }} · {{ r['exam_type'] }} · {{ r['exam_name'] }} · scored {{ r['score'] }}/{{ r['total'] }}</p>
+        {% else %}
         <div class="pn-breadcrumb"><a href="{{ url_for('my_results') }}">My results</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('result_details', result_id=r['id']) }}">Result #{{ r['id'] }}</a><i class="bi bi-chevron-right"></i><span>Corrections</span></div>
         <h1>Corrections &amp; explanations</h1>
         <p class="lead">{{ r['exam_type'] }} · {{ r['exam_name'] }} · scored {{ r['score'] }}/{{ r['total'] }}</p>
+        {% endif %}
     </div>
     <div class="btn-group" role="group">
-        <a href="{{ url_for('review_answers', result_id=r['id'], show='all') }}" class="btn btn-outline-primary {{ 'active' if show != 'wrong' }}">All</a>
-        <a href="{{ url_for('review_answers', result_id=r['id'], show='wrong') }}" class="btn btn-outline-primary {{ 'active' if show == 'wrong' }}">Wrong only</a>
+        {% set review_ep = 'admin_bp.admin_review_answers' if admin_view else 'review_answers' %}
+        <a href="{{ url_for(review_ep, result_id=r['id'], show='all') }}" class="btn btn-outline-primary {{ 'active' if show != 'wrong' }}">All</a>
+        <a href="{{ url_for(review_ep, result_id=r['id'], show='wrong') }}" class="btn btn-outline-primary {{ 'active' if show == 'wrong' }}">Wrong only</a>
     </div>
 </div>
 

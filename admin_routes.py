@@ -4713,38 +4713,8 @@ def get_topics(subject_id):
 
 @admin_bp.route("/download_template")
 def download_template():
-    columns = [
-        "exam_type",
-        "subject",
-        "question_text",
-        "option_a",
-        "option_b",
-        "option_c",
-        "option_d",
-        "correct_answer",
-        "explanation"
-    ]
-
-    df = pd.DataFrame(columns=columns)
-
-    output = io.BytesIO()
-
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(
-            writer,
-            index=False,
-            sheet_name="Questions"
-        )
-
-    output.seek(0)
-
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name="questions_template.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
+    """Legacy template link — the v2 template is the single source of truth for import columns."""
+    return redirect(url_for("admin_bp.download_question_template"))
 
 @admin_bp.route("/manage_questions")
 def manage_questions():
@@ -5217,163 +5187,22 @@ def download_result(result_id):
 
 @admin_bp.route("/admin/review_answers/<int:result_id>")
 def admin_review_answers(result_id):
-    conn = sqlite3.connect(DB_PATH, timeout=15)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            subject,
-            question_text,
-            selected_answer,
-            correct_answer,
-            explanation,
-            is_correct
-        FROM review_answers
-        WHERE result_id=?
-    """, (result_id,))
-
-    answers = cursor.fetchall()
-
-    conn.close()
-
-    return render_template(
-        "review_answers.html",
-        answers=answers
-    )
+    """Admin view of a student's corrections (same renderer as the student page)."""
+    import exam_engine as engine
+    r, items = engine.load_review(result_id)  # no username filter: admins may view any result
+    if not r:
+        abort(404)
+    show = request.args.get("show", "all")
+    if show == "wrong":
+        items = [i for i in items if not i["is_correct"]]
+    subjects = sorted({i["subject"] for i in items})
+    return render_template("review_answers.html", r=r, items=items, show=show, subjects=subjects, admin_view=True)
 
 
 @admin_bp.route("/upload_questions", methods=["GET", "POST"])
 def upload_questions():
-    if request.method == "POST":
-
-        file = request.files.get("file")
-
-        if not file:
-            return "No file selected."
-
-        try:
-
-            # Read file
-            if file.filename.endswith(".csv"):
-                df = pd.read_csv(file)
-
-            elif file.filename.endswith(".xlsx"):
-                df = pd.read_excel(file)
-
-            else:
-                return "Only CSV and XLSX files are allowed."
-
-            conn = sqlite3.connect(DB_PATH, timeout=15)
-            cursor = conn.cursor()
-
-            imported = 0
-            duplicates = 0
-            errors = []
-
-            for index, row in df.iterrows():
-
-                try:
-
-                    exam_type = str(row["exam_type"]).strip()
-                    subject = str(row["subject"]).strip()
-                    question_text = str(row["question_text"]).strip()
-
-                    # Validate required fields
-                    if not exam_type:
-                        raise ValueError("Exam type is missing")
-
-                    if not subject:
-                        raise ValueError("Subject is missing")
-
-                    if not question_text:
-                        raise ValueError("Question text is missing")
-
-                    correct_answer = str(
-                        row["correct_answer"]
-                    ).strip().upper()
-
-                    if correct_answer not in ["A", "B", "C", "D"]:
-                        raise ValueError(
-                            "Correct answer must be A, B, C or D"
-                        )
-
-                    # Check if question already exists
-                    cursor.execute(
-                        """
-                        SELECT id
-                        FROM questions
-                        WHERE exam_type=?
-                        AND subject=?
-                        AND question_text=?
-                        """,
-                        (
-                            exam_type,
-                            subject,
-                            question_text
-                        )
-                    )
-
-                    existing = cursor.fetchone()
-
-                    if existing:
-                        duplicates += 1
-                        continue
-
-                    # Insert question
-                    cursor.execute(
-                        """
-                        INSERT INTO questions
-                        (
-                            exam_type,
-                            subject,
-                            question_text,
-                            option_a,
-                            option_b,
-                            option_c,
-                            option_d,
-                            correct_answer,
-                            explanation
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        (
-                            exam_type,
-                            subject,
-                            question_text,
-                            str(row["option_a"]).strip(),
-                            str(row["option_b"]).strip(),
-                            str(row["option_c"]).strip(),
-                            str(row["option_d"]).strip(),
-                            correct_answer,
-                            str(row["explanation"]).strip()
-                        )
-                    )
-
-                    imported += 1
-
-                except Exception as e:
-
-                    errors.append(
-                        f"Row {index + 2}: {str(e)}"
-                    )
-
-            conn.commit()
-            conn.close()
-
-            error_text = "<br>".join(errors)
-
-            return f"""
-            ✅ {imported} questions imported successfully.<br>
-            ⚠️ {duplicates} duplicate questions skipped.<br>
-            ❌ {len(errors)} rows had errors.<br><br>
-            {error_text}
-            """
-
-        except Exception as e:
-
-            return f"Error: {e}"
-
-    return render_template("upload_questions.html")
+    """Legacy uploader — superseded by the v2 importer (matching template, duplicate detection, import history)."""
+    return redirect(url_for("admin_bp.import_questions_v2"))
 
 
 @admin_bp.route("/add_post_utme_question", methods=["GET", "POST"])
