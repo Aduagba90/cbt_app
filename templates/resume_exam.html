@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Exam</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body{
+            background: #f4f7fb;
+            font-family: Arial, sans-serif;
+        }
+
+        .resume-card{
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .resume-card h2{
+            color: #0d6efd;
+            margin-bottom: 20px;
+        }
+
+        .exam-box{
+            background: #eef5ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+
+        .btn{
+            min-width: 170px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="resume-card">
+
+    <h2>
+        📚 Unfinished Exam Found
+    </h2>
+
+    <p>
+        You already have an exam in progress.
+    </p>
+
+    <div class="exam-box">
+
+        <h4>
+            {{ exam_type }}
+        </h4>
+
+        <p>
+            Subject:
+            <strong>{{ subject }}</strong>
+        </p>
+
+    </div>
+
+    <div class="mt-4">
+
+        <a href="/resume_exam"
+           class="btn btn-primary me-2">
+
+            ▶ Resume Exam
+
+        </a>
+
+        <a href="/start_new_exam"
+           class="btn btn-danger">
+
+            🗑 Start New Exam
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

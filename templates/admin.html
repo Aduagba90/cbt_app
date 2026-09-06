@@ -122,10 +122,104 @@
         </h2>
 
         <p class="subtitle">
-            Add professional JAMB & WAEC CBT questions for students practice.
+                Add professional JAMB & WAEC CBT questions for students practice.
         </p>
 
-        <form method="POST">
+        <!-- Admin Actions -->
+                <div class="mb-4 text-center">
+
+                    <a href="/upload_questions"
+                    class="btn btn-success me-2">
+
+                        📤 Bulk Upload Questions
+
+                    </a>
+
+                    <a href="/download_template"
+                    class="btn btn-outline-primary me-2">
+
+                        📥 Download Excel Template
+
+                    </a>
+
+                    <a href="/manage_questions"
+                    class="btn btn-dark me-2">
+
+                        📋 Manage Questions
+
+                    </a>
+
+                    <a href="/export_questions"
+                    class="btn btn-info">
+
+                        📥 Export Questions
+
+                    </a>
+
+                </div>
+
+                <hr>
+
+            <div class="section-title">
+                🎓 POST-UTME Management
+            </div>
+
+            <div class="text-center mb-4">
+
+                <a href="/add_post_utme_question"
+                class="btn btn-warning me-2">
+
+                    ➕ Add POST-UTME Question
+
+                </a>
+
+                <a href="/manage_post_utme_universities"
+                class="btn btn-primary me-2">
+
+                    🏫 Manage Universities
+
+                </a>
+
+                <a href="/manage_post_utme_courses"
+                class="btn btn-success me-2">
+
+                    📚 Manage Courses
+
+                </a>
+
+                <a href="/manage_subject_combinations"
+                class="btn btn-info">
+
+                    📖 Manage Subject Combinations
+
+                </a>
+
+                <a href="/manage_students"
+                    class="btn btn-dark">
+
+                    👨‍🎓 Manage Students
+
+                </a>
+
+                <a href="/manage_subjects"
+                    class="btn btn-primary me-2">
+
+                    📚 Manage Subjects
+
+                </a>
+
+                <a href="/manage_topics"
+                    class="btn btn-info me-2">
+
+                    📖 Manage Topics
+
+                </a>
+
+            </div>
+
+            <hr>
+
+            <form method="POST">
 
             <!-- Exam Type -->
             <div class="mb-4">
@@ -203,7 +297,7 @@
                         CRS
                     </option>
 
-                    <option value="CRS">
+                    <option value="IRS">
                         IRS
                     </option>
 
@@ -362,12 +456,12 @@
             </div>
 
             <!-- Submit -->
-            <button class="btn btn-primary btn-submit">
+            <button type="submit"
+                    class="btn btn-primary btn-submit">
 
-                Add Question To CBT Database
+                ➕ Add Question to Database
 
             </button>
-
         </form>
 
     </div>

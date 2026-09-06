@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Edit Subject Combination</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h3>
+                ✏️ Edit Subject Combination
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="mb-3">
+
+                    <label>
+                        Course
+                    </label>
+
+                    <select
+                        name="course_name"
+                        class="form-control"
+                        required>
+
+                        {% for c in courses %}
+
+                        <option
+                            value="{{ c[0] }}"
+                            {% if c[0] == combination[1] %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ c[0] }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>
+                        Subject
+                    </label>
+
+                    <input
+                        type="text"
+                        name="subject_name"
+                        class="form-control"
+                        value="{{ combination[2] }}"
+                        required>
+
+                </div>
+
+                <button
+                    class="btn btn-success">
+
+                    💾 Save Changes
+
+                </button>
+
+                <a href="/manage_subject_combinations"
+                   class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Manage Results</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">
+        📊 Results Management
+    </h2>
+
+    <a href="/admin"
+       class="btn btn-secondary mb-3">
+
+        ← Back to Dashboard
+
+    </a>
+
+    <form method="GET"
+          class="row g-3 mb-4">
+
+        <div class="col-md-6">
+
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Search by student or exam name..."
+                   value="{{ search }}">
+
+        </div>
+
+        <div class="col-md-4">
+
+            <select name="exam_type"
+                    class="form-control">
+
+                <option value="">
+                    All Exam Types
+                </option>
+
+                <option value="WAEC"
+                    {% if exam_type == "WAEC" %}selected{% endif %}>
+                    WAEC
+                </option>
+
+                <option value="JAMB"
+                    {% if exam_type == "JAMB" %}selected{% endif %}>
+                    JAMB
+                </option>
+
+                <option value="POST_UTME"
+                    {% if exam_type == "POST_UTME" %}selected{% endif %}>
+                    POST-UTME
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="col-md-2">
+
+            <button class="btn btn-primary w-100">
+
+                🔍 Filter
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <table class="table table-bordered table-striped">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>ID</th>
+                <th>Student</th>
+                <th>Exam Type</th>
+                <th>Exam Name</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for r in results %}
+
+            <tr>
+
+                <td>{{ r[0] }}</td>
+
+                <td>{{ r[1] }}</td>
+
+                <td>{{ r[2] }}</td>
+
+                <td>{{ r[7] }}</td>
+
+                <td>{{ r[3] }}/{{ r[4] }}</td>
+
+                <td>{{ r[5] }}%</td>
+
+                <td>{{ r[9] }}</td>
+
+                <td>{{ r[6] }}</td>
+
+                <td>
+
+                    <a href="/view_result/{{ r[0] }}"
+                       class="btn btn-info btn-sm">
+
+                        👁 View
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+</html>

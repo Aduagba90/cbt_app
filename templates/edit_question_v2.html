@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Edit Question</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+
+    <!-- ========================================== -->
+    <!-- FLASH MESSAGES -->
+    <!-- ========================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- ========================================== -->
+    <!-- HEADER -->
+    <!-- ========================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>✏️ Edit Question</h2>
+
+        <a
+            href="/manage_questions_v2"
+            class="btn btn-secondary">
+
+            ← Back to Questions
+
+        </a>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- EDIT FORM -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form
+                method="POST"
+                action="/edit_question_v2/{{ question.id }}">
+
+
+                <!-- ========================================== -->
+                <!-- EXAM TYPE -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Exam Type
+                    </label>
+
+                    <select
+                        name="exam_type_id"
+                        id="exam_type"
+                        class="form-select"
+                        required>
+
+                        <option value="">
+                            Select Exam Type
+                        </option>
+
+                        {% for exam in exam_types %}
+
+                            <option
+                                value="{{ exam.id }}"
+                                {% if exam.id == question.exam_type_id %}
+                                    selected
+                                {% endif %}>
+
+                                {{ exam.exam_name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- SUBJECT -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Subject
+                    </label>
+
+                    <select
+                        name="subject_id"
+                        id="subject"
+                        class="form-select"
+                        required>
+
+                        <option value="">
+                            Select Subject
+                        </option>
+
+                        {% for subject in subjects %}
+
+                            {% if subject.exam_type_id == question.exam_type_id %}
+
+                                <option
+                                    value="{{ subject.id }}"
+                                    {% if subject.id == question.subject_id %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ subject.subject_name }}
+
+                                </option>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- TOPIC -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Topic
+                    </label>
+
+                    <select
+                        name="topic_id"
+                        id="topic"
+                        class="form-select"
+                        required>
+
+                        <option value="">
+                            Select Topic
+                        </option>
+
+                        {% for topic in topics %}
+
+                            {% if topic.subject_id == question.subject_id %}
+
+                                <option
+                                    value="{{ topic.id }}"
+                                    {% if topic.id == question.topic_id %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ topic.topic_name }}
+
+                                </option>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- QUESTION TYPE -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Question Type
+                    </label>
+
+                    <select
+                        name="question_type"
+                        class="form-select">
+
+                        <option
+                            value="Objective"
+                            {% if question.question_type == "Objective" %}
+                                selected
+                            {% endif %}>
+
+                            Objective
+
+                        </option>
+
+                        <option
+                            value="Theory"
+                            {% if question.question_type == "Theory" %}
+                                selected
+                            {% endif %}>
+
+                            Theory
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- DIFFICULTY -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Difficulty
+                    </label>
+
+                    <select
+                        name="difficulty"
+                        class="form-select">
+
+                        <option
+                            value="Easy"
+                            {% if question.difficulty == "Easy" %}
+                                selected
+                            {% endif %}>
+
+                            Easy
+
+                        </option>
+
+                        <option
+                            value="Medium"
+                            {% if question.difficulty == "Medium" %}
+                                selected
+                            {% endif %}>
+
+                            Medium
+
+                        </option>
+
+                        <option
+                            value="Hard"
+                            {% if question.difficulty == "Hard" %}
+                                selected
+                            {% endif %}>
+
+                            Hard
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- QUESTION -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Question
+                    </label>
+
+                    <textarea
+                        name="question_text"
+                        class="form-control"
+                        rows="4"
+                        required>{{ question.question_text }}</textarea>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- OPTION A -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Option A
+                    </label>
+
+                    <input
+                        type="text"
+                        name="option_a"
+                        class="form-control"
+                        value="{{ question.option_a }}"
+                        required>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- OPTION B -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Option B
+                    </label>
+
+                    <input
+                        type="text"
+                        name="option_b"
+                        class="form-control"
+                        value="{{ question.option_b }}"
+                        required>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- OPTION C -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Option C
+                    </label>
+
+                    <input
+                        type="text"
+                        name="option_c"
+                        class="form-control"
+                        value="{{ question.option_c }}"
+                        required>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- OPTION D -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Option D
+                    </label>
+
+                    <input
+                        type="text"
+                        name="option_d"
+                        class="form-control"
+                        value="{{ question.option_d }}"
+                        required>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- CORRECT ANSWER -->
+                <!-- ========================================== -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Correct Answer
+                    </label>
+
+                    <select
+                        name="correct_answer"
+                        class="form-select"
+                        required>
+
+                        <option
+                            value="A"
+                            {% if question.correct_answer == "A" %}
+                                selected
+                            {% endif %}>
+
+                            A
+
+                        </option>
+
+                        <option
+                            value="B"
+                            {% if question.correct_answer == "B" %}
+                                selected
+                            {% endif %}>
+
+                            B
+
+                        </option>
+
+                        <option
+                            value="C"
+                            {% if question.correct_answer == "C" %}
+                                selected
+                            {% endif %}>
+
+                            C
+
+                        </option>
+
+                        <option
+                            value="D"
+                            {% if question.correct_answer == "D" %}
+                                selected
+                            {% endif %}>
+
+                            D
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- EXPLANATION -->
+                <!-- ========================================== -->
+
+                <div class="mb-4">
+
+                    <label class="form-label">
+                        Explanation
+                    </label>
+
+                    <textarea
+                        name="explanation"
+                        class="form-control"
+                        rows="5">{{ question.explanation or "" }}</textarea>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- BUTTONS -->
+                <!-- ========================================== -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    💾 Update Question
+
+                </button>
+
+                <a
+                    href="/manage_questions_v2"
+                    class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================== -->
+<!-- CASCADING DROPDOWNS -->
+<!-- ========================================== -->
+
+<script>
+
+document.getElementById("exam_type").addEventListener(
+    "change",
+    function () {
+
+        let examTypeId = this.value;
+
+        let subject = document.getElementById("subject");
+
+        let topic = document.getElementById("topic");
+
+        subject.innerHTML =
+            '<option value="">Select Subject</option>';
+
+        topic.innerHTML =
+            '<option value="">Select Topic</option>';
+
+        if (!examTypeId) {
+
+            return;
+
+        }
+
+        fetch("/get_subjects/" + examTypeId)
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            data.subjects.forEach(function(item) {
+
+                subject.innerHTML +=
+                    `<option value="${item.id}">
+                        ${item.subject_name}
+                    </option>`;
+
+            });
+
+        });
+
+    }
+);
+
+
+document.getElementById("subject").addEventListener(
+    "change",
+    function () {
+
+        let subjectId = this.value;
+
+        let topic = document.getElementById("topic");
+
+        topic.innerHTML =
+            '<option value="">Select Topic</option>';
+
+        if (!subjectId) {
+
+            return;
+
+        }
+
+        fetch("/get_topics/" + subjectId)
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            data.topics.forEach(function(item) {
+
+                topic.innerHTML +=
+                    `<option value="${item.id}">
+                        ${item.topic_name}
+                    </option>`;
+
+            });
+
+        });
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

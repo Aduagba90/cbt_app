@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CBT Student Login</title>
+    <title>PrepNova CBT | Student Login</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -240,37 +240,37 @@
             <div class="brand">
 
                 <div class="logo">
-                    CBT
+                    PN
                 </div>
 
                 <h1 class="main-title">
-                    Nigeria's Smart CBT Practice Platform
+                    Nigeria's Smart Exam Preparation Platform
                 </h1>
 
                 <p class="description">
-                    Prepare for JAMB & WAEC with real CBT simulations,
-                    multiple subjects, instant scoring, and modern exam practice experience.
+                    Master your WAEC, JAMB and Post-UTME examinations with realistic CBT simulations, 
+                    detailed explanations, performance tracking, and an engaging learning experience.
                 </p>
 
                 <div class="features">
 
-                    <div class="feature-item">
-                        ✅ Real JAMB CBT Experience
-                    </div>
-
-                    <div class="feature-item">
-                        ✅ WAEC Practice Questions
-                    </div>
-
-                    <div class="feature-item">
-                        ✅ Instant Result Analysis
-                    </div>
-
-                    <div class="feature-item">
-                        ✅ Multi-Subject Exam Engine
-                    </div>
-
+                <div class="feature-item">
+                    🎓 WAEC, JAMB & Post-UTME CBT Practice
                 </div>
+
+                <div class="feature-item">
+                    📖 Instant Results with Detailed Explanations
+                </div>
+
+                <div class="feature-item">
+                    🔖 Bookmark Questions & Track Your Progress
+                </div>
+
+                <div class="feature-item">
+                    📊 Secure Accounts, PDF Results & Performance Analytics
+                </div>
+
+            </div>
 
             </div>
 
@@ -287,6 +287,109 @@
             <p class="sub-text">
                 Login to continue your CBT preparation journey.
             </p>
+
+            <!-- ========================= -->
+            <!-- SUCCESS ALERTS -->
+            <!-- ========================= -->
+
+            {% if password_changed %}
+
+            <div class="alert alert-success">
+
+                ✅ Your password has been changed successfully.
+
+                Please sign in with your new password.
+
+            </div>
+
+            {% endif %}
+
+            {% if email_verified %}
+
+            <div class="alert alert-success">
+
+                🎉 Your email has been verified successfully.
+
+                You can now log in.
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ========================= -->
+            <!-- INFORMATION ALERTS -->
+            <!-- ========================= -->
+
+            {% if verification_sent %}
+
+            <div class="alert alert-info">
+
+                📧 A verification email has been sent.
+
+                Please check your inbox.
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ========================= -->
+            <!-- WARNING ALERTS -->
+            <!-- ========================= -->
+
+            {% if logged_out %}
+
+            <div class="alert alert-warning">
+
+                ⚠️ Your account was signed in on another device.
+
+                Please log in again.
+
+            </div>
+
+            {% endif %}
+
+            {% if session_expired %}
+
+            <div class="alert alert-warning">
+
+                ⏰ Your session expired after 30 minutes of inactivity.
+
+                Please log in again.
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ========================= -->
+            <!-- ERROR ALERTS -->
+            <!-- ========================= -->
+
+            {% if account_not_verified %}
+
+            <div class="alert alert-danger">
+
+                ❌ Your email address has not been verified.
+
+                Please verify your email before logging in.
+
+            </div>
+
+            {% endif %}
+
+            {% if login_error %}
+
+            <div class="alert alert-danger">
+
+                ❌ {{ login_error }}
+
+            </div>
+
+            {% endif %}
+
+                
 
             <form method="POST" action="/login">
 
@@ -308,9 +411,20 @@
 
                 <div class="mb-4">
 
-                    <label>
-                        Password
-                    </label>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                        <label class="mb-0">
+                            Password
+                        </label>
+
+                        <a
+                            href="/forgot_password"
+                            class="text-decoration-none small fw-bold"
+                        >
+                            Forgot Password?
+                        </a>
+
+                    </div>
 
                     <input
                         type="password"
@@ -324,7 +438,7 @@
 
                 <button class="btn-login">
 
-                    Login To Dashboard
+                    Sign In to Dashboard
 
                 </button>
 
@@ -332,10 +446,10 @@
 
             <div class="bottom-text">
 
-                Don't have an account?
+                Don't have an account yet?
 
                 <a href="/register">
-                    Create Account
+                    Create an Account
                 </a>
 
             </div>

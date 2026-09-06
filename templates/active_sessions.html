@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Active Sessions</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+
+<h2 class="mb-4">
+
+📱 Active Login Sessions
+
+</h2>
+
+{% if sessions %}
+
+    {% for s in sessions %}
+
+    <div class="card shadow-sm mb-3">
+
+        <div class="card-body">
+
+            <h5>
+
+                {% if s[1] == current_session %}
+
+                    🟢 Current Device
+
+                {% else %}
+
+                    💻 Device
+
+                {% endif %}
+
+            </h5>
+
+            <hr>
+
+            <p>
+
+                <strong>Browser / Device:</strong>
+
+                {{ s[4] }}
+
+            </p>
+
+            <p>
+
+                <strong>IP Address:</strong>
+
+                {{ s[5] }}
+
+            </p>
+
+            <p>
+
+                <strong>Login Time:</strong>
+
+                {{ s[2] }}
+
+            </p>
+
+            <p>
+
+                <strong>Last Activity:</strong>
+
+                {{ s[3] }}
+
+            </p>
+
+            {% if s[1] == current_session %}
+
+                <span class="badge bg-success">
+
+                    Current Session
+
+                </span>
+
+            {% else %}
+
+                <a
+                    href="/logout_session/{{ s[0] }}"
+                    class="btn btn-danger">
+
+                    Logout This Device
+
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<div class="alert alert-info">
+
+No active sessions found.
+
+</div>
+
+{% endif %}
+
+<a
+    href="/profile"
+    class="btn btn-secondary">
+
+Back to Profile
+
+</a>
+
+</div>
+
+</body>
+
+</html>

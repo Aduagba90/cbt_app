@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Import Details</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+            📋 Import Details
+        </h2>
+
+        <a
+            href="/question_import_history"
+            class="btn btn-secondary">
+
+            ← Back to History
+
+        </a>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- FILE INFORMATION -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="card-title mb-4">
+
+                📄 {{ import_log.filename }}
+
+            </h5>
+
+            <div class="row">
+
+                <div class="col-md-4">
+
+                    <strong>
+                        Uploaded By
+                    </strong>
+
+                    <p>
+                        {{ import_log.uploaded_by }}
+                    </p>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <strong>
+                        Upload Date
+                    </strong>
+
+                    <p>
+                        {{ import_log.uploaded_at }}
+                    </p>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <strong>
+                        Import ID
+                    </strong>
+
+                    <p>
+                        #{{ import_log.id }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SUMMARY -->
+    <!-- ========================================== -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm border-success">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Imported
+                    </h6>
+
+                    <h2 class="text-success">
+
+                        {{ import_log.imported_count }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm border-warning">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Skipped
+                    </h6>
+
+                    <h2 class="text-warning">
+
+                        {{ import_log.skipped_count }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm border-danger">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Errors
+                    </h6>
+
+                    <h2 class="text-danger">
+
+                        {{ import_log.error_count }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- DETAILS -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                🔎 Import Details
+            </h5>
+
+            {% if import_log.details %}
+
+                <div
+                    class="alert alert-light border"
+                    style="white-space: pre-line;">
+
+                    {{ import_log.details }}
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-success">
+
+                    ✅ No errors or skipped rows were recorded.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Course</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f4f7fc;
+            font-family:Poppins;
+        }
+
+        .box{
+            max-width:800px;
+            margin:80px auto;
+            background:white;
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="box">
+
+        <h2 class="mb-2">
+            🎓 Select Course
+        </h2>
+
+        <p class="text-muted mb-4">
+
+            {{ university }}
+
+        </p>
+
+        <form method="GET" action="/post_utme_subjects">
+
+            <input
+                type="hidden"
+                name="university"
+                value="{{ university }}">
+
+            <select
+                name="course"
+                class="form-select mb-4"
+                required>
+
+                <option value="">
+                    Choose Course
+                </option>
+
+                {% for course in courses %}
+
+                <option value="{{ course[0] }}">
+                    {{ course[0] }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button class="btn btn-warning">
+
+                Continue →
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

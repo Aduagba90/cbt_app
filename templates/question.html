@@ -31,6 +31,18 @@
             border-radius: 22px;
             padding: 35px;
             box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
+            animation: fadeIn .4s ease;
+        }
+
+        @keyframes fadeIn{
+            from{
+                opacity:0;
+                transform:translateY(15px);
+            }
+            to{
+                opacity:1;
+                transform:translateY(0);
+            }
         }
 
         .question-title{
@@ -55,6 +67,11 @@
             background: #f0f6ff;
             border-color: #0d6efd;
             transform: translateY(-3px);
+        }
+
+        .option-box.selected{
+            background: #e7f1ff;
+            border-color: #0d6efd;
         }
 
         input[type="radio"]{
@@ -109,6 +126,7 @@
             font-size: 18px;
             font-weight: 600;
             border: none;
+            transition: 0.3s;
         }
 
         .submit-btn:hover{
@@ -169,58 +187,94 @@
     <!-- Question Card -->
     <div class="question-card">
 
-        <h3 class="question-title">
-            {{ q[3] }}
-        </h3>
+    <div class="mt-3">
+
+        <div class="d-flex justify-content-between mb-2">
+            <strong>
+                Question {{ current_question }}
+                of
+                {{ total_questions }}
+            </strong>
+
+            <strong>
+                {{ ((current_question / total_questions) * 100)|int }}%
+            </strong>
+        </div>
+
+        <div class="progress" style="height:12px;">
+
+            <div class="progress-bar"
+                 role="progressbar"
+                 style="width: {{ ((current_question / total_questions) * 100)|int }}%;">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card p-3 mb-4">
+
+    <h5>Question Palette</h5>
+
+    <div class="d-flex flex-wrap gap-2">
+
+        {% for i in range(1, total_questions + 1) %}
+
+            {% if i == current_question %}
+
+                <div class="btn btn-warning">
+                    {{ i }}
+                </div>
+
+            {% elif i < current_question %}
+
+                <div class="btn btn-success">
+                    {{ i }}
+                </div>
+
+            {% else %}
+
+                <div class="btn btn-secondary">
+                    {{ i }}
+                </div>
+
+            {% endif %}
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+    <h3 class="question-title">
+        {{ q[3] }}
+    </h3>
 
         <form method="POST" action="/check_answer">
 
-            <!-- Option A -->
             <label class="option-box d-block">
-
-                <input type="radio"
-                       name="answer"
-                       value="A"
-                       required>
-
+                <input type="radio" name="answer" value="A" required>
                 A. {{ q[4] }}
-
             </label>
 
-            <!-- Option B -->
             <label class="option-box d-block">
-
-                <input type="radio"
-                       name="answer"
-                       value="B">
-
+                <input type="radio" name="answer" value="B">
                 B. {{ q[5] }}
-
             </label>
 
-            <!-- Option C -->
             <label class="option-box d-block">
-
-                <input type="radio"
-                       name="answer"
-                       value="C">
-
+                <input type="radio" name="answer" value="C">
                 C. {{ q[6] }}
-
             </label>
 
-            <!-- Option D -->
             <label class="option-box d-block">
-
-                <input type="radio"
-                       name="answer"
-                       value="D">
-
+                <input type="radio" name="answer" value="D">
                 D. {{ q[7] }}
-
             </label>
 
-            <button class="btn btn-primary submit-btn mt-4">
+            <button
+                id="submitBtn"
+                class="btn btn-primary submit-btn mt-4">
                 Submit Answer
             </button>
 
@@ -232,38 +286,67 @@
 
 <script>
 
-    // CBT Timer
-    let timeLeft = 60;
+let timeLeft = {{ remaining }};
 
-    const timer = document.getElementById("timer");
+const timer = document.getElementById("timer");
 
-    const countdown = setInterval(function(){
+const countdown = setInterval(function(){
 
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
 
-        seconds = seconds < 10 ? "0" + seconds : seconds;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
 
-        timer.innerHTML = minutes + ":" + seconds;
+    timer.innerHTML = minutes + ":" + seconds;
 
-        // warning color
-        if(timeLeft <= 20){
-            timer.style.color = "#ff4d4d";
-        }
+    // warning color when less than 1 minute
+    if(timeLeft <= 60){
+        timer.style.color = "#ff4d4d";
+    }
 
-        timeLeft--;
+    if(timeLeft <= 0){
 
-        // auto submit
-        if(timeLeft < 0){
+        clearInterval(countdown);
 
-            clearInterval(countdown);
+        alert("Time is up!");
 
-            alert("Time is up!");
+        window.location.href = "/result";
 
-            document.querySelector("form").submit();
-        }
+        return;
+    }
 
-    }, 1000);
+    timeLeft--;
+
+}, 1000);
+
+
+// Highlight selected option
+const options = document.querySelectorAll(".option-box");
+
+options.forEach(option => {
+
+    option.addEventListener("click", function(){
+
+        options.forEach(o => {
+            o.classList.remove("selected");
+        });
+
+        this.classList.add("selected");
+
+    });
+
+});
+
+
+// Prevent double submission
+document.querySelector("form").addEventListener("submit", function(){
+
+    const btn = document.getElementById("submitBtn");
+
+    btn.disabled = true;
+    btn.innerHTML = "Submitting...";
+
+});
 
 </script>
 

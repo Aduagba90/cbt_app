@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Question Import History</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <!-- ========================================== -->
+    <!-- HEADER -->
+    <!-- ========================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+            📋 Question Import History
+        </h2>
+
+        <div>
+
+            <a
+                href="/import_questions_v2"
+                class="btn btn-primary">
+
+                📥 Import Questions
+
+            </a>
+
+            <a
+                href="/admin"
+                class="btn btn-secondary">
+
+                ← Admin Dashboard
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SUMMARY -->
+    <!-- ========================================== -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Total Imports
+                    </h6>
+
+                    <h3>
+                        {{ import_logs|length }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- HISTORY TABLE -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Filename</th>
+
+                            <th>Imported</th>
+
+                            <th>Skipped</th>
+
+                            <th>Errors</th>
+
+                            <th>Uploaded By</th>
+
+                            <th>Date</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for log in import_logs %}
+
+                        <tr>
+
+                            <td>
+                                {{ log.id }}
+                            </td>
+
+                            <td>
+
+                                📄 {{ log.filename }}
+
+                            </td>
+
+                            <td>
+
+                                {% if log.imported_count > 0 %}
+
+                                    <span class="badge bg-success">
+
+                                        {{ log.imported_count }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        0
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if log.skipped_count > 0 %}
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        {{ log.skipped_count }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        0
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if log.error_count > 0 %}
+
+                                    <span class="badge bg-danger">
+
+                                        {{ log.error_count }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-success">
+
+                                        0
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ log.uploaded_by }}
+                            </td>
+
+                            <td>
+                                {{ log.uploaded_at }}
+                            </td>
+
+                            <td>
+
+                            <a
+                                href="/question_import_details/{{ log.id }}"
+                                class="btn btn-sm btn-primary">
+
+                                👁️ View Details
+
+                            </a>
+
+                        </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="text-center text-muted py-4">
+
+                                No import history found.
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

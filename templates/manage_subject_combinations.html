@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Subject Combinations</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h2>
+        📖 Subject Combination Management
+    </h2>
+
+    <a href="/admin"
+       class="btn btn-secondary mb-3">
+
+        ← Back
+
+    </a>
+
+    <a href="/add_subject_combination"
+       class="btn btn-success mb-3">
+
+        ➕ Add Subject
+
+    </a>
+
+    <form method="GET"
+          class="mb-3">
+
+        <input type="text"
+               name="search"
+               class="form-control"
+               placeholder="Search..."
+               value="{{ search }}">
+
+    </form>
+
+    <table class="table table-bordered">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>ID</th>
+                <th>Course</th>
+                <th>Subject</th>
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for c in combinations %}
+
+            <tr>
+
+                <td>{{ c[0] }}</td>
+
+                <td>{{ c[1] }}</td>
+
+                <td>{{ c[2] }}</td>
+
+                <td>
+
+                    <a href="/edit_subject_combination/{{ c[0] }}"
+                    class="btn btn-warning btn-sm">
+
+                        ✏️ Edit
+
+                    </a>
+
+                    <a href="/delete_subject_combination/{{ c[0] }}"
+                    class="btn btn-danger btn-sm">
+
+                        🗑 Delete
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+</html>

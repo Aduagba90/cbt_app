@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrepNova | Result Details</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+<div class="container py-5">
+
+<div class="text-center mb-4">
+    <h1 class="display-5 fw-bold text-primary">PrepNova</h1>
+    <p class="lead mb-0">Official CBT Result Report</p>
+    <small class="text-muted">Learn Smart. Score Higher.</small>
+</div>
+
+<div class="card shadow-sm rounded-4 mb-4">
+<div class="card-body">
+<h4 class="mb-3">👤 Student Information</h4>
+<div class="row">
+<div class="col-md-6 mb-3"><strong>Name</strong><br>{{ student_name }}</div>
+<div class="col-md-6 mb-3"><strong>Email</strong><br>{{ student_email }}</div>
+<div class="col-md-6 mb-3"><strong>Exam Type</strong><br>{{ result.exam_type }}</div>
+<div class="col-md-6 mb-3"><strong>Course / Subject</strong><br>{{ result.exam_name }}</div>
+<div class="col-md-6 mb-3"><strong>Date Taken</strong><br>{{ result.date_taken }}</div>
+<div class="col-md-6 mb-3"><strong>Verification Code</strong><br><span class="badge bg-dark">{{ result.verification_code }}</span></div>
+</div>
+</div>
+</div>
+
+<div class="row g-3 mb-4">
+<div class="col-md-3">
+<div class="card shadow-sm rounded-4 text-center"><div class="card-body">
+<h6 class="text-muted">Score</h6><h2>{{ result.score }}/{{ result.total }}</h2>
+</div></div></div>
+
+<div class="col-md-3">
+<div class="card shadow-sm rounded-4 text-center"><div class="card-body">
+<h6 class="text-muted">Percentage</h6><h2>{{ result.percentage }}%</h2>
+</div></div></div>
+
+<div class="col-md-3">
+<div class="card shadow-sm rounded-4 text-center"><div class="card-body">
+<h6 class="text-muted">Time</h6><h2>{{ result.duration }}</h2>
+</div></div></div>
+
+<div class="col-md-3">
+<div class="card shadow-sm rounded-4 text-center"><div class="card-body">
+<h6 class="text-muted">Status</h6>
+{% if result.status == "PASS" %}
+<span class="badge bg-success fs-6">PASS</span>
+{% elif result.status == "AVERAGE" %}
+<span class="badge bg-warning text-dark fs-6">AVERAGE</span>
+{% else %}
+<span class="badge bg-danger fs-6">FAIL</span>
+{% endif %}
+</div></div></div>
+</div>
+
+<div class="card shadow-sm rounded-4 mb-4">
+<div class="card-body">
+<h4 class="mb-3">📚 Subject Breakdown</h4>
+<div class="table-responsive">
+<table class="table table-bordered table-hover align-middle">
+<thead class="table-dark">
+<tr>
+<th>Subject</th>
+<th>Score</th>
+<th>Total</th>
+<th>Percentage</th>
+<th>Time Spent</th>
+</tr>
+</thead>
+<tbody>
+{% for subject in subject_results %}
+<tr>
+<td>{{ subject[0] }}</td>
+<td>{{ subject[1] }}</td>
+<td>{{ subject[2] }}</td>
+<td>{{ subject[3] }}%</td>
+<td>{{ subject[4] }} sec</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 justify-content-center">
+<a href="/review_answers/{{ result.id }}" class="btn btn-success">📖 Review Answers</a>
+<a href="/download_result/{{ result.id }}" class="btn btn-primary">📄 Download PDF</a>
+<button onclick="window.print()" class="btn btn-secondary">🖨 Print</button>
+<a href="/my_results" class="btn btn-outline-primary">⬅ Back to My Results</a>
+</div>
+
+</div>
+</body>
+</html>

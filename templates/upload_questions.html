@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Questions</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body{
+            background-color: #f4f6f9;
+        }
+
+        .upload-card{
+            max-width: 700px;
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 5px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="upload-card">
+
+    <h2 class="mb-4 text-center">
+        📤 Bulk Question Upload
+    </h2>
+
+    <form method="POST"
+          enctype="multipart/form-data">
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Select Excel (.xlsx) or CSV File
+            </label>
+
+            <input type="file"
+                   name="file"
+                   class="form-control"
+                   accept=".xlsx,.csv"
+                   required>
+
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary w-100">
+
+            Upload Questions
+
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

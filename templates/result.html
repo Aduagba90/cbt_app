@@ -167,13 +167,45 @@
         <div class="details">
 
             <p>
-                <strong>Final Score:</strong>
-                {{ score }} / {{ total }}
+                <strong>Correct Answers:</strong>
+                {{ score }}
             </p>
+
+            <p>
+                <strong>Wrong Answers:</strong>
+                {{ wrong_answers }}
+            </p>
+
+            <p>
+                <strong>Total Questions:</strong>
+                {{ total }}
+            </p>
+
+            <p>
+                <strong>Percentage:</strong>
+                {{ percentage }}%
+            </p>
+
+            <hr>
 
             <p>
                 Keep practicing consistently to improve your performance.
             </p>
+
+            <hr>
+
+            <h4>Subject Breakdown</h4>
+
+            {% for subject, total in subject_totals.items() %}
+
+            <p>
+                <strong>{{ subject }}</strong> :
+                {{ subject_scores.get(subject, 0) }}
+                /
+                {{ total }}
+            </p>
+
+            {% endfor %}
 
         </div>
 

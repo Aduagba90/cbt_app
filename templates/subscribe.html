@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Subscription Required</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body style="background:#f4f7fc;">
+
+<div class="container mt-5">
+
+    <div class="card shadow">
+
+        <div class="card-body text-center p-5">
+
+            <h1 class="text-danger">
+                🔒 Subscription Required
+            </h1>
+
+            <p class="mt-4 fs-5">
+
+                Your free trial has ended.
+
+                <br><br>
+
+                Subscribe to continue enjoying unlimited CBT practice.
+
+            </p>
+
+            <hr>
+
+            <div class="row mt-4">
+
+                {% for plan in plans %}
+
+                <div class="col-md-4 mb-3">
+
+                    <div class="card h-100 shadow-sm
+                        {% if plan[1] == 'Quarterly' %}
+                            border-success
+                        {% elif plan[1] == 'Yearly' %}
+                            border-warning
+                        {% else %}
+                            border-primary
+                        {% endif %}
+                    ">
+
+                        {% if plan[1] == "Quarterly" %}
+                        <div class="card-header bg-success text-white text-center">
+                            ⭐ MOST POPULAR
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body text-center">
+
+                            <h3>{{ plan[1] }}</h3>
+
+                            <h2>
+                                ₦{{ "{:,.0f}".format(plan[2]) }}
+                            </h2>
+
+                            <p>{{ plan[3] }} Days Unlimited Access</p>
+
+                            <small class="text-muted">
+                                {{ plan[4] }}
+                            </small>
+
+                            <br><br>
+
+                            <a href="/subscribe_plan/{{ plan[0] }}"
+                            class="btn
+                            {% if plan[1]=='Quarterly' %}
+                                btn-success
+                            {% elif plan[1]=='Yearly' %}
+                                btn-warning
+                            {% else %}
+                                btn-primary
+                            {% endif %}">
+
+                                Subscribe
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            <a href="/dashboard"
+               class="btn btn-secondary mt-4">
+
+                ← Back to Dashboard
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

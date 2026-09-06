@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Delete Subject Combination</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <div class="card border-danger">
+
+        <div class="card-header bg-danger text-white">
+
+            <h3>
+                🗑 Delete Subject Combination
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <p>
+
+                Are you sure you want to delete:
+
+            </p>
+
+            <ul>
+
+                <li>
+                    <strong>Course:</strong>
+                    {{ combination[1] }}
+                </li>
+
+                <li>
+                    <strong>Subject:</strong>
+                    {{ combination[2] }}
+                </li>
+
+            </ul>
+
+            <form method="POST">
+
+                <button
+                    type="submit"
+                    class="btn btn-danger">
+
+                    Yes, Delete
+
+                </button>
+
+                <a href="/manage_subject_combinations"
+                   class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

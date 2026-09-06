@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Question Bank</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+
+<body class="bg-light">
+
+
+<!-- ========================================== -->
+<!-- FLASH MESSAGES -->
+<!-- ========================================== -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div
+                class="alert alert-{{ category }} alert-dismissible fade show m-3"
+                role="alert">
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+
+<!-- ========================================== -->
+<!-- MAIN CONTAINER -->
+<!-- ========================================== -->
+
+<div class="container-fluid py-4">
+
+
+    <!-- ========================================== -->
+    <!-- HEADER -->
+    <!-- ========================================== -->
+
+    <div
+        class="d-flex
+               justify-content-between
+               align-items-center
+               flex-wrap
+               gap-3
+               mb-4">
+
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+
+                📚 Question Bank
+
+            </h2>
+
+        
+<!-- ========================================== -->
+<!-- QUESTION BANK SUMMARY CARDS -->
+<!-- ========================================== -->
+
+<div class="row g-3 mb-4">
+
+
+    <!-- ====================================== -->
+    <!-- TOTAL QUESTIONS -->
+    <!-- ====================================== -->
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm h-100">
+
+            <div class="card-body">
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <h6 class="text-muted mb-1">
+
+                            Total Questions
+
+                        </h6>
+
+                        <h2 class="mb-0 fw-bold">
+
+                            {{ total_questions }}
+
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        class="fs-1">
+
+                        📚
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ====================================== -->
+    <!-- ACTIVE QUESTIONS -->
+    <!-- ====================================== -->
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm h-100">
+
+            <div class="card-body">
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <h6 class="text-muted mb-1">
+
+                            Active Questions
+
+                        </h6>
+
+                        <h2 class="mb-0 fw-bold">
+
+                            {{ active_questions }}
+
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        class="fs-1">
+
+                        🟢
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ====================================== -->
+    <!-- INACTIVE QUESTIONS -->
+    <!-- ====================================== -->
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm h-100">
+
+            <div class="card-body">
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <h6 class="text-muted mb-1">
+
+                            Inactive Questions
+
+                        </h6>
+
+                        <h2 class="mb-0 fw-bold">
+
+                            {{ inactive_questions }}
+
+                        </h2>
+
+                    </div>
+
+
+                    <div
+                        class="fs-1">
+
+                        🔴
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+            <p class="text-muted mb-0">
+
+                Manage JAMB, WAEC and POST-UTME questions
+
+            </p>
+
+        </div>
+
+
+
+        <div class="d-flex gap-2 flex-wrap">
+
+
+            <a
+                href="/import_questions_v2"
+                class="btn btn-success">
+
+                📥 Import Questions
+
+            </a>
+
+
+            <a
+                href="/admin"
+                class="btn btn-secondary">
+
+                ← Admin Dashboard
+
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ========================================== -->
+    <!-- QUESTION FILTERS -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+
+        <div class="card-header bg-dark text-white">
+
+            <strong>
+
+                🔍 Filter Questions
+
+            </strong>
+
+        </div>
+
+
+
+        <div class="card-body">
+
+
+            <form
+                method="GET"
+                action="/question_bank_v2">
+
+
+                <div class="row g-3">
+
+
+                    <!-- ================================= -->
+                    <!-- SEARCH -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Search
+
+                        </label>
+
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Search question, subject or topic..."
+                            value="{{ search }}">
+
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- EXAM TYPE -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Exam Type
+
+                        </label>
+
+
+                        <select
+                            name="exam_type_id"
+                            id="exam_type_id"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Exam Types
+
+                            </option>
+
+
+                            {% for exam in exam_types %}
+
+                                <option
+                                    value="{{ exam.id }}"
+                                    {% if exam_type_id|int == exam.id %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ exam.exam_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- SUBJECT -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Subject
+
+                        </label>
+
+
+                        <select
+                            name="subject_id"
+                            id="subject_id"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Subjects
+
+                            </option>
+
+
+                            {% for subject in subjects %}
+
+                                <option
+                                    value="{{ subject.id }}"
+                                    data-exam="{{ subject.exam_type_id }}"
+                                    {% if subject_id|int == subject.id %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ subject.subject_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- TOPIC -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Topic
+
+                        </label>
+
+
+                        <select
+                            name="topic_id"
+                            id="topic_id"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Topics
+
+                            </option>
+
+
+                            {% for topic in topics %}
+
+                                <option
+                                    value="{{ topic.id }}"
+                                    data-subject="{{ topic.subject_id }}"
+                                    {% if topic_id|int == topic.id %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ topic.topic_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- QUESTION TYPE -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Question Type
+
+                        </label>
+
+
+                        <select
+                            name="question_type"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Question Types
+
+                            </option>
+
+
+                            <option
+                                value="Objective"
+                                {% if question_type == "Objective" %}
+                                    selected
+                                {% endif %}>
+
+                                Objective
+
+                            </option>
+
+
+                            <option
+                                value="Theory"
+                                {% if question_type == "Theory" %}
+                                    selected
+                                {% endif %}>
+
+                                Theory
+
+                            </option>
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- DIFFICULTY -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Difficulty
+
+                        </label>
+
+
+                        <select
+                            name="difficulty"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Difficulties
+
+                            </option>
+
+
+                            <option
+                                value="Easy"
+                                {% if difficulty == "Easy" %}
+                                    selected
+                                {% endif %}>
+
+                                Easy
+
+                            </option>
+
+
+                            <option
+                                value="Medium"
+                                {% if difficulty == "Medium" %}
+                                    selected
+                                {% endif %}>
+
+                                Medium
+
+                            </option>
+
+
+                            <option
+                                value="Hard"
+                                {% if difficulty == "Hard" %}
+                                    selected
+                                {% endif %}>
+
+                                Hard
+
+                            </option>
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- STATUS -->
+                    <!-- ================================= -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            Status
+
+                        </label>
+
+
+                        <select
+                            name="status"
+                            class="form-select">
+
+
+                            <option value="">
+
+                                All Statuses
+
+                            </option>
+
+
+                            <option
+                                value="Active"
+                                {% if status == "Active" %}
+                                    selected
+                                {% endif %}>
+
+                                Active
+
+                            </option>
+
+
+                            <option
+                                value="Inactive"
+                                {% if status == "Inactive" %}
+                                    selected
+                                {% endif %}>
+
+                                Inactive
+
+                            </option>
+
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- ================================= -->
+                    <!-- FILTER BUTTONS -->
+                    <!-- ================================= -->
+
+                    <div class="col-12">
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                            🔍 Apply Filters
+
+                        </button>
+
+
+                        <a
+                            href="/question_bank_v2"
+                            class="btn btn-secondary">
+
+                            🔄 Reset
+
+                        </a>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ========================================== -->
+    <!-- RESULT SUMMARY -->
+    <!-- ========================================== -->
+
+    <div class="alert alert-info">
+
+        <strong>
+
+            {{ total_questions }}
+
+        </strong>
+
+        question(s) found.
+
+    </div>
+
+
+<!-- ========================================== -->
+<!-- QUESTIONS TABLE -->
+<!-- ========================================== -->
+
+<form
+    method="POST"
+    action="/bulk_question_action_v2"
+    id="bulkQuestionForm">
+
+
+    <div class="card shadow-sm">
+
+
+        <div class="card-body p-0">
+
+
+            <div class="table-responsive">
+
+
+                <table
+                    class="table
+                           table-hover
+                           table-bordered
+                           mb-0">
+
+
+                    <thead class="table-dark">
+
+
+                        <tr>
+
+
+                            <!-- SELECT ALL -->
+
+                            <th width="45">
+
+                                <input
+                                    type="checkbox"
+                                    id="selectAllQuestions"
+                                    class="form-check-input"
+                                    title="Select all questions">
+
+                            </th>
+
+
+                            <!-- ID -->
+
+                            <th>
+
+                                ID
+
+                            </th>
+
+
+                            <!-- EXAM -->
+
+                            <th>
+
+                                Exam
+
+                            </th>
+
+
+                            <!-- SUBJECT -->
+
+                            <th>
+
+                                Subject
+
+                            </th>
+
+
+                            <!-- TOPIC -->
+
+                            <th>
+
+                                Topic
+
+                            </th>
+
+
+                            <!-- QUESTION -->
+
+                            <th>
+
+                                Question
+
+                            </th>
+
+
+                            <!-- DIFFICULTY -->
+
+                            <th>
+
+                                Difficulty
+
+                            </th>
+
+
+                            <!-- STATUS -->
+
+                            <th>
+
+                                Status
+
+                            </th>
+
+
+                            <!-- ACTIONS -->
+
+                            <th width="180">
+
+                                Actions
+
+                            </th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                    {% for question in questions %}
+
+
+                        <tr>
+
+
+                            <!-- ================================= -->
+                            <!-- SELECT QUESTION -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                <input
+                                    type="checkbox"
+                                    name="question_ids"
+                                    value="{{ question.id }}"
+                                    class="form-check-input question-checkbox">
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- ID -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                {{ question.id }}
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- EXAM -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                {{ question.exam_name }}
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- SUBJECT -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                {{ question.subject_name }}
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- TOPIC -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                {{ question.topic_name }}
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- QUESTION -->
+                            <!-- ================================= -->
+
+                            <td>
+
+                                <div
+                                    style="max-width: 500px;">
+
+                                    {{ question.question_text }}
+
+                                </div>
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- DIFFICULTY -->
+                            <!-- ================================= -->
+
+                            <td>
+
+
+                                {% if question.difficulty == "Easy" %}
+
+
+                                    <span
+                                        class="badge bg-success">
+
+                                        Easy
+
+                                    </span>
+
+
+                                {% elif question.difficulty == "Medium" %}
+
+
+                                    <span
+                                        class="badge bg-warning text-dark">
+
+                                        Medium
+
+                                    </span>
+
+
+                                {% else %}
+
+
+                                    <span
+                                        class="badge bg-danger">
+
+                                        Hard
+
+                                    </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- STATUS -->
+                            <!-- ================================= -->
+
+                            <td>
+
+
+                                {% if question.status == "Active" %}
+
+
+                                    <span
+                                        class="badge bg-success">
+
+                                        Active
+
+                                    </span>
+
+
+                                {% else %}
+
+
+                                    <span
+                                        class="badge bg-danger">
+
+                                        Inactive
+
+                                    </span>
+
+
+                                {% endif %}
+
+
+                            </td>
+
+
+
+                            <!-- ================================= -->
+                            <!-- ACTIONS -->
+                            <!-- ================================= -->
+
+                            <td>
+
+
+                                <a
+                                    href="/view_question_v2/{{ question.id }}"
+                                    class="btn btn-sm btn-info text-white">
+
+                                    👁️ View
+
+                                </a>
+
+
+                                <a
+                                    href="/edit_question_v2/{{ question.id }}"
+                                    class="btn btn-sm btn-warning">
+
+                                    ✏️ Edit
+
+                                </a>
+
+
+                            </td>
+
+
+                        </tr>
+
+
+                    {% else %}
+
+
+                        <!-- ================================= -->
+                        <!-- NO QUESTIONS -->
+                        <!-- ================================= -->
+
+                        <tr>
+
+
+                            <td
+                                colspan="9"
+                                class="text-center py-5">
+
+
+                                <div class="text-muted">
+
+
+                                    <h5>
+
+                                        📭 No questions found
+
+                                    </h5>
+
+
+                                    <p>
+
+                                        Try changing your filters
+                                        or import new questions.
+
+                                    </p>
+
+
+                                </div>
+
+
+                            </td>
+
+
+                        </tr>
+
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</form>
+
+
+
+<!-- ========================================== -->
+<!-- BULK ACTION BAR -->
+<!-- ========================================== -->
+
+<div
+    id="bulkActionBar"
+    class="card shadow-sm mt-3 d-none">
+
+
+    <div class="card-body">
+
+
+        <div
+            class="d-flex
+                   justify-content-between
+                   align-items-center
+                   flex-wrap
+                   gap-3">
+
+
+            <!-- SELECTED COUNT -->
+
+            <div>
+
+                <strong>
+
+                    <span id="selectedQuestionCount">
+
+                        0
+
+                    </span>
+
+                    question(s) selected
+
+                </strong>
+
+            </div>
+
+
+
+            <!-- BULK ACTION BUTTONS -->
+
+            <div
+                class="d-flex
+                       gap-2
+                       flex-wrap">
+
+
+                <!-- ACTIVATE -->
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="activate"
+                    form="bulkQuestionForm"
+                    class="btn btn-success">
+
+                    🟢 Activate
+
+                </button>
+
+
+
+                <!-- DEACTIVATE -->
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="deactivate"
+                    form="bulkQuestionForm"
+                    class="btn btn-warning">
+
+                    🔴 Deactivate
+
+                </button>
+
+
+
+                <!-- DELETE -->
+
+                <button
+                    type="button"
+                    id="bulkDeleteButton"
+                    class="btn btn-danger">
+
+                    🗑️ Delete
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+    <!-- ========================================== -->
+    <!-- PAGINATION INFORMATION -->
+    <!-- ========================================== -->
+
+    {% if total_questions > 0 %}
+
+
+        {% set start_question = ((page - 1) * per_page) + 1 %}
+
+
+        {% set end_question = page * per_page %}
+
+
+        {% if end_question > total_questions %}
+
+            {% set end_question = total_questions %}
+
+        {% endif %}
+
+
+
+        <div class="text-muted mt-3 mb-2">
+
+            Showing
+
+            <strong>
+
+                {{ start_question }}
+
+            </strong>
+
+            –
+
+            <strong>
+
+                {{ end_question }}
+
+            </strong>
+
+            of
+
+            <strong>
+
+                {{ total_questions }}
+
+            </strong>
+
+            questions
+
+        </div>
+
+
+    {% endif %}
+
+
+
+    <!-- ========================================== -->
+    <!-- SMART PAGINATION -->
+    <!-- ========================================== -->
+
+    {% if total_pages > 1 %}
+
+        <nav
+            aria-label="Question bank pagination"
+            class="mt-3">
+
+            <ul
+                class="pagination
+                    justify-content-center
+                    flex-wrap">
+
+
+                <!-- ================================= -->
+                <!-- PREVIOUS -->
+                <!-- ================================= -->
+
+                <li
+                    class="page-item
+                    {% if page <= 1 %}
+                        disabled
+                    {% endif %}">
+
+                    {% if page > 1 %}
+
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'question_bank_v2',
+                                page=page-1,
+                                exam_type_id=exam_type_id,
+                                subject_id=subject_id,
+                                topic_id=topic_id,
+                                question_type=question_type,
+                                difficulty=difficulty,
+                                status=status,
+                                search=search
+                            ) }}">
+
+                            ← Previous
+
+                        </a>
+
+                    {% else %}
+
+                        <span class="page-link">
+
+                            ← Previous
+
+                        </span>
+
+                    {% endif %}
+
+                </li>
+
+
+
+                <!-- ================================= -->
+                <!-- FIRST PAGE -->
+                <!-- ================================= -->
+
+                {% if page > 3 %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'question_bank_v2',
+                                page=1,
+                                exam_type_id=exam_type_id,
+                                subject_id=subject_id,
+                                topic_id=topic_id,
+                                question_type=question_type,
+                                difficulty=difficulty,
+                                status=status,
+                                search=search
+                            ) }}">
+
+                            1
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="page-item disabled">
+
+                        <span class="page-link">
+
+                            ...
+
+                        </span>
+
+                    </li>
+
+                {% endif %}
+
+
+
+                <!-- ================================= -->
+                <!-- PAGE NUMBERS AROUND CURRENT PAGE -->
+                <!-- ================================= -->
+
+                {% for page_number in range(
+                    page - 2,
+                    page + 3
+                ) %}
+
+
+                    {% if page_number >= 1
+                        and page_number <= total_pages %}
+
+
+                        <li
+                            class="page-item
+                            {% if page_number == page %}
+                                active
+                            {% endif %}">
+
+
+                            <a
+                                class="page-link"
+                                href="{{ url_for(
+                                    'question_bank_v2',
+                                    page=page_number,
+                                    exam_type_id=exam_type_id,
+                                    subject_id=subject_id,
+                                    topic_id=topic_id,
+                                    question_type=question_type,
+                                    difficulty=difficulty,
+                                    status=status,
+                                    search=search
+                                ) }}">
+
+                                {{ page_number }}
+
+                            </a>
+
+
+                        </li>
+
+
+                    {% endif %}
+
+
+                {% endfor %}
+
+
+
+                <!-- ================================= -->
+                <!-- LAST PAGE -->
+                <!-- ================================= -->
+
+                {% if page < total_pages - 2 %}
+
+
+                    <li class="page-item disabled">
+
+                        <span class="page-link">
+
+                            ...
+
+                        </span>
+
+                    </li>
+
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'question_bank_v2',
+                                page=total_pages,
+                                exam_type_id=exam_type_id,
+                                subject_id=subject_id,
+                                topic_id=topic_id,
+                                question_type=question_type,
+                                difficulty=difficulty,
+                                status=status,
+                                search=search
+                            ) }}">
+
+                            {{ total_pages }}
+
+                        </a>
+
+                    </li>
+
+
+                {% endif %}
+
+
+
+                <!-- ================================= -->
+                <!-- NEXT -->
+                <!-- ================================= -->
+
+                <li
+                    class="page-item
+                    {% if page >= total_pages %}
+                        disabled
+                    {% endif %}">
+
+
+                    {% if page < total_pages %}
+
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'question_bank_v2',
+                                page=page+1,
+                                exam_type_id=exam_type_id,
+                                subject_id=subject_id,
+                                topic_id=topic_id,
+                                question_type=question_type,
+                                difficulty=difficulty,
+                                status=status,
+                                search=search
+                            ) }}">
+
+                            Next →
+
+                        </a>
+
+                    {% else %}
+
+                        <span class="page-link">
+
+                            Next →
+
+                        </span>
+
+                    {% endif %}
+
+
+                </li>
+
+
+            </ul>
+
+        </nav>
+
+    {% endif %}
+
+
+
+</div>
+<!-- END MAIN CONTAINER -->
+
+
+
+<!-- ========================================== -->
+<!-- DEPENDENT FILTER JAVASCRIPT -->
+<!-- ========================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+
+        // ==========================================
+        // GET ELEMENTS
+        // ==========================================
+
+        const examTypeSelect =
+            document.getElementById(
+                "exam_type_id"
+            );
+
+
+        const subjectSelect =
+            document.getElementById(
+                "subject_id"
+            );
+
+
+        const topicSelect =
+            document.getElementById(
+                "topic_id"
+            );
+
+
+
+        // ==========================================
+        // SAVE ORIGINAL SUBJECT OPTIONS
+        // ==========================================
+
+        const subjectOptions =
+            Array.from(
+                subjectSelect.options
+            ).map(function (option) {
+
+                return {
+
+                    value: option.value,
+
+                    text: option.text,
+
+                    exam:
+                        option.dataset.exam || ""
+
+                };
+
+            });
+
+
+
+        // ==========================================
+        // SAVE ORIGINAL TOPIC OPTIONS
+        // ==========================================
+
+        const topicOptions =
+            Array.from(
+                topicSelect.options
+            ).map(function (option) {
+
+                return {
+
+                    value: option.value,
+
+                    text: option.text,
+
+                    subject:
+                        option.dataset.subject || ""
+
+                };
+
+            });
+
+
+
+        // ==========================================
+        // FILTER SUBJECTS
+        // ==========================================
+
+        function filterSubjects(
+            preserveSelection = true
+        ) {
+
+
+            const selectedExam =
+                examTypeSelect.value;
+
+
+            const currentSubject =
+                preserveSelection
+                    ? subjectSelect.value
+                    : "";
+
+
+
+            // Clear subject dropdown
+
+            subjectSelect.innerHTML = "";
+
+
+
+            // Add default option
+
+            const allSubjectsOption =
+                document.createElement(
+                    "option"
+                );
+
+
+            allSubjectsOption.value = "";
+
+            allSubjectsOption.textContent =
+                "All Subjects";
+
+
+            subjectSelect.appendChild(
+                allSubjectsOption
+            );
+
+
+
+            // Add matching subjects
+
+            subjectOptions.forEach(
+                function (option) {
+
+
+                    if (!option.value) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !selectedExam
+                        ||
+                        option.exam === selectedExam
+                    ) {
+
+
+                        const newOption =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        newOption.value =
+                            option.value;
+
+
+                        newOption.textContent =
+                            option.text;
+
+
+                        newOption.dataset.exam =
+                            option.exam;
+
+
+                        subjectSelect.appendChild(
+                            newOption
+                        );
+
+                    }
+
+                }
+            );
+
+
+
+            // Restore subject
+
+            if (currentSubject) {
+
+
+                const subjectExists =
+                    Array.from(
+                        subjectSelect.options
+                    ).some(
+                        function (option) {
+
+                            return (
+                                option.value ===
+                                currentSubject
+                            );
+
+                        }
+                    );
+
+
+                if (subjectExists) {
+
+                    subjectSelect.value =
+                        currentSubject;
+
+                }
+
+            }
+
+
+
+            filterTopics(
+                preserveSelection
+            );
+
+        }
+
+
+
+        // ==========================================
+        // FILTER TOPICS
+        // ==========================================
+
+        function filterTopics(
+            preserveSelection = true
+        ) {
+
+
+            const selectedSubject =
+                subjectSelect.value;
+
+
+            const currentTopic =
+                preserveSelection
+                    ? topicSelect.value
+                    : "";
+
+
+
+            // Clear topic dropdown
+
+            topicSelect.innerHTML = "";
+
+
+
+            // Add default option
+
+            const allTopicsOption =
+                document.createElement(
+                    "option"
+                );
+
+
+            allTopicsOption.value = "";
+
+            allTopicsOption.textContent =
+                "All Topics";
+
+
+            topicSelect.appendChild(
+                allTopicsOption
+            );
+
+
+
+            // Add matching topics
+
+            topicOptions.forEach(
+                function (option) {
+
+
+                    if (!option.value) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !selectedSubject
+                        ||
+                        option.subject ===
+                        selectedSubject
+                    ) {
+
+
+                        const newOption =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        newOption.value =
+                            option.value;
+
+
+                        newOption.textContent =
+                            option.text;
+
+
+                        newOption.dataset.subject =
+                            option.subject;
+
+
+                        topicSelect.appendChild(
+                            newOption
+                        );
+
+                    }
+
+                }
+            );
+
+
+
+            // Restore topic
+
+            if (currentTopic) {
+
+
+                const topicExists =
+                    Array.from(
+                        topicSelect.options
+                    ).some(
+                        function (option) {
+
+                            return (
+                                option.value ===
+                                currentTopic
+                            );
+
+                        }
+                    );
+
+
+                if (topicExists) {
+
+                    topicSelect.value =
+                        currentTopic;
+
+                }
+
+            }
+
+        }
+
+
+
+        // ==========================================
+        // EXAM TYPE CHANGE
+        // ==========================================
+
+        examTypeSelect.addEventListener(
+            "change",
+            function () {
+
+
+                // Reset subject
+
+                subjectSelect.value = "";
+
+
+                // Reset topic
+
+                topicSelect.value = "";
+
+
+                // Reload subjects
+
+                filterSubjects(
+                    false
+                );
+
+            }
+        );
+
+
+
+        // ==========================================
+        // SUBJECT CHANGE
+        // ==========================================
+
+        subjectSelect.addEventListener(
+            "change",
+            function () {
+
+
+                // Reset topic
+
+                topicSelect.value = "";
+
+
+                // Reload topics
+
+                filterTopics(
+                    false
+                );
+
+            }
+        );
+
+
+
+        // ==========================================
+        // INITIAL PAGE LOAD
+        // ==========================================
+
+        filterSubjects(
+            true
+        );
+
+
+    }
+);
+
+
+// ==========================================
+// BULK QUESTION SELECTION
+// ==========================================
+
+const selectAllQuestions =
+    document.getElementById(
+        "selectAllQuestions"
+    );
+
+
+const questionCheckboxes =
+    document.querySelectorAll(
+        ".question-checkbox"
+    );
+
+
+const bulkActionBar =
+    document.getElementById(
+        "bulkActionBar"
+    );
+
+
+const selectedQuestionCount =
+    document.getElementById(
+        "selectedQuestionCount"
+    );
+
+
+const bulkDeleteButton =
+    document.getElementById(
+        "bulkDeleteButton"
+    );
+
+
+const bulkQuestionForm =
+    document.getElementById(
+        "bulkQuestionForm"
+    );
+
+
+
+// ==========================================
+// UPDATE BULK ACTION BAR
+// ==========================================
+
+function updateBulkActionBar() {
+
+    const checkedBoxes =
+        document.querySelectorAll(
+            ".question-checkbox:checked"
+        );
+
+
+    const count =
+        checkedBoxes.length;
+
+
+    selectedQuestionCount.textContent =
+        count;
+
+
+    if (count > 0) {
+
+        bulkActionBar.classList.remove(
+            "d-none"
+        );
+
+    } else {
+
+        bulkActionBar.classList.add(
+            "d-none"
+        );
+
+    }
+
+
+    // Update Select All checkbox
+
+    if (
+        questionCheckboxes.length > 0
+        &&
+        count === questionCheckboxes.length
+    ) {
+
+        selectAllQuestions.checked = true;
+
+    } else {
+
+        selectAllQuestions.checked = false;
+
+    }
+
+}
+
+
+
+// ==========================================
+// SELECT ALL
+// ==========================================
+
+selectAllQuestions.addEventListener(
+    "change",
+    function () {
+
+        questionCheckboxes.forEach(
+            function (checkbox) {
+
+                checkbox.checked =
+                    selectAllQuestions.checked;
+
+            }
+        );
+
+
+        updateBulkActionBar();
+
+    }
+);
+
+
+
+// ==========================================
+// INDIVIDUAL CHECKBOXES
+// ==========================================
+
+questionCheckboxes.forEach(
+    function (checkbox) {
+
+        checkbox.addEventListener(
+            "change",
+            function () {
+
+                updateBulkActionBar();
+
+            }
+        );
+
+    }
+);
+
+
+
+// ==========================================
+// BULK DELETE CONFIRMATION
+// ==========================================
+
+bulkDeleteButton.addEventListener(
+    "click",
+    function () {
+
+        const checkedBoxes =
+            document.querySelectorAll(
+                ".question-checkbox:checked"
+            );
+
+
+        const count =
+            checkedBoxes.length;
+
+
+        if (count === 0) {
+
+            alert(
+                "Please select at least one question."
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                `⚠️ Are you sure you want to delete ${count} question(s)?\n\nThis action cannot be undone.`
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        // Create hidden action field
+
+        const actionInput =
+            document.createElement(
+                "input"
+            );
+
+
+        actionInput.type =
+            "hidden";
+
+
+        actionInput.name =
+            "action";
+
+
+        actionInput.value =
+            "delete";
+
+
+        bulkQuestionForm.appendChild(
+            actionInput
+        );
+
+
+        bulkQuestionForm.submit();
+
+    }
+);
+
+
+
+// ==========================================
+// INITIAL STATE
+// ==========================================
+
+updateBulkActionBar();
+
+</script>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>My Bookmarks</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">
+
+        ⭐ My Bookmarked Questions
+
+    </h2>
+
+    {% if bookmarks %}
+
+        {% for bookmark in bookmarks %}
+
+            <div class="card mb-3">
+
+                <div class="card-body">
+
+                    <h5>
+
+                        {{ bookmark[1] }}
+
+                        -
+
+                        {{ bookmark[2] }}
+
+                    </h5>
+
+                    <p>
+
+                        {{ bookmark[3] }}
+
+                    </p>
+
+                    <a
+                        href="/practice_questions/{{ bookmark[1] }}/{{ bookmark[2] }}"
+                        class="btn btn-primary">
+
+                        Practice Again
+
+                    </a>
+
+                    <a
+                        href="/delete_bookmark/{{ bookmark[0] }}"
+                        class="btn btn-danger">
+
+                        Remove
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="alert alert-info">
+
+            You have not bookmarked any questions yet.
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>

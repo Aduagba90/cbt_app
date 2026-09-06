@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Answer Review</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">
+
+        📝 Answer Review
+
+    </h2>
+
+    <a href="/view_result/{{ result_id }}"
+       class="btn btn-secondary mb-3">
+
+        ← Back To Result
+
+    </a>
+
+    {% for a in answers %}
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <h5>
+
+                Question {{ loop.index }}
+
+            </h5>
+
+            <p>
+
+                <strong>Subject:</strong>
+                {{ a[3] }}
+
+            </p>
+
+            <p>
+
+                <strong>Question:</strong>
+                {{ a[4] }}
+
+            </p>
+
+            <p>
+
+                <strong>Student Answer:</strong>
+                {{ a[5] }}
+
+            </p>
+
+            <p>
+
+                <strong>Correct Answer:</strong>
+                {{ a[6] }}
+
+            </p>
+
+            <p>
+
+                <strong>Explanation:</strong>
+                {{ a[7] }}
+
+            </p>
+
+            {% if a[8] == 1 %}
+
+                <span class="badge bg-success">
+
+                    ✓ Correct
+
+                </span>
+
+            {% else %}
+
+                <span class="badge bg-danger">
+
+                    ✗ Wrong
+
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

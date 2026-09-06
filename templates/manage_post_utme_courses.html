@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Manage Courses</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h2>
+        📚 POST-UTME Course Management
+    </h2>
+
+    <a href="/add_post_utme_course"
+        class="btn btn-success mb-3">
+
+            ➕ Add Course
+
+    </a>
+
+    <a href="/manage_post_utme_universities"
+       class="btn btn-secondary mb-3">
+
+        ← Back
+
+    </a>
+
+    <form method="GET"
+          class="mb-3">
+
+        <input type="text"
+               name="search"
+               class="form-control"
+               placeholder="Search course..."
+               value="{{ search }}">
+
+    </form>
+
+    <table class="table table-bordered">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>ID</th>
+                <th>University</th>
+                <th>Course</th>
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for c in courses %}
+
+            <tr>
+
+                <td>{{ c[0] }}</td>
+
+                <td>{{ c[1] }}</td>
+
+                <td>{{ c[2] }}</td>
+
+                <td>
+
+                    <a href="/edit_post_utme_course/{{ c[0] }}"
+                       class="btn btn-warning btn-sm">
+
+                        ✏️ Edit
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+</html>

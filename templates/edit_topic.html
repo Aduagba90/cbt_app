@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Add Topic</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <h2>✏️ Edit Topic</h2>
+
+    <hr>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Subject
+            </label>
+
+            <select
+                name="subject_id"
+                class="form-control"
+                required>
+
+                <option value="">
+                    Select Subject
+                </option>
+
+                {% for subject in subjects %}
+
+                <option
+                    value="{{ subject.id }}"
+                    {% if subject.id == topic.subject_id %}
+                    selected
+                    {% endif %}>
+
+                    {{ subject.exam_type }}
+                    -
+                    {{ subject.subject_name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Topic Name
+            </label>
+
+            <input
+                type="text"
+                name="topic_name"
+                class="form-control"
+                value="{{ topic.topic_name }}"
+                required>
+
+        </div>
+
+        <button
+            class="btn btn-success">
+
+            💾 Save Topic
+
+        </button>
+
+        <a
+            href="/manage_topics"
+            class="btn btn-secondary">
+
+            Cancel
+
+        </a>
+
+    </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

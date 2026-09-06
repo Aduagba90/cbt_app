@@ -49,10 +49,10 @@
         .left-side{
             background: linear-gradient(135deg, #0d6efd, #003f9e);
             color: white;
-            padding: 70px 55px;
+            padding: 50px 55px 70px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             position: relative;
             overflow: hidden;
         }
@@ -82,6 +82,7 @@
         .content{
             position: relative;
             z-index: 2;
+            margin-top: 20px;
         }
 
         .logo{
@@ -117,7 +118,7 @@
         }
 
         .benefit{
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             font-size: 15px;
             font-weight: 500;
         }
@@ -284,10 +285,26 @@
             </h2>
 
             <p class="subtitle">
-                Register now and begin practicing for your examinations.
+                Create your student profile and start preparing for success with our professional CBT platform.
             </p>
 
             <form method="POST" action="/register">
+
+                <div class="mb-4">
+
+                    <label>
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        placeholder="Enter your full name"
+                        required
+                    >
+
+                </div>
 
                 <div class="mb-4">
 
@@ -305,6 +322,23 @@
 
                 </div>
 
+                <!-- Phone Number -->
+                <div class="mb-4">
+
+                    <label>
+                        Phone Number (Optional)
+                    </label>
+
+                    <input
+                        type="text"
+                        name="phone"
+                        class="form-control"
+                        placeholder="Enter your phone number"
+                    >
+
+                </div>
+
+                <!-- Password -->
                 <div class="mb-4">
 
                     <label>
@@ -316,6 +350,23 @@
                         name="password"
                         class="form-control"
                         placeholder="Create a strong password"
+                        required
+                    >
+
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+
+                    <label>
+                        Confirm Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="confirm_password"
+                        class="form-control"
+                        placeholder="Re-enter your password"
                         required
                     >
 

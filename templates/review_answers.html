@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Review Answers</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background: #f4f7fc;
+        }
+
+        .card{
+            border-radius: 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container mt-5 mb-5">
+
+    <h2 class="mb-4">
+        📖 Review Answers
+    </h2>
+
+    {% for a in answers %}
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5>
+                {{ loop.index }}.
+                {{ a[1] }}
+            </h5>
+
+            <p>
+                <strong>Subject:</strong>
+                {{ a[0] }}
+            </p>
+
+            <p>
+
+                <strong>Your Answer:</strong>
+
+                {% if a[5] == 1 %}
+
+                    <span class="text-success">
+                        {{ a[2] }} ✅
+                    </span>
+
+                {% else %}
+
+                    <span class="text-danger">
+                        {{ a[2] }} ❌
+                    </span>
+
+                {% endif %}
+
+            </p>
+
+            <p>
+
+                <strong>Correct Answer:</strong>
+
+                {{ a[3] }}
+
+            </p>
+
+            <p>
+
+                <strong>Explanation:</strong>
+
+                {{ a[4] }}
+
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    <a href="/my_results"
+       class="btn btn-primary">
+
+        ← Back to My Results
+
+    </a>
+
+</div>
+
+</body>
+</html>

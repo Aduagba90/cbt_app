@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Manage Subjects</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+            font-family: Arial, sans-serif;
+            color: #212529;
+        }
+
+        /* ==========================================
+           MAIN CONTAINER
+        ========================================== */
+
+        .page-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+
+        /* ==========================================
+           PAGE HEADER
+        ========================================== */
+
+        .page-header {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 22px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-title {
+            font-size: 25px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+
+        /* ==========================================
+           TOOLBAR
+        ========================================== */
+
+        .toolbar {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .search-box {
+            max-width: 500px;
+        }
+
+        .search-box .form-control {
+            height: 44px;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .search-btn {
+            height: 44px;
+            border-radius: 0 8px 8px 0;
+        }
+
+
+        /* ==========================================
+           TABLE CARD
+        ========================================== */
+
+        .table-card {
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .table-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table-header h5 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            margin-bottom: 0 !important;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+            font-size: 14px;
+            padding: 14px 15px;
+            vertical-align: middle;
+        }
+
+        .table tbody td {
+            padding: 14px 15px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+
+        /* ==========================================
+           STATUS BADGES
+        ========================================== */
+
+        .status-badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+
+        /* ==========================================
+           ACTION BUTTONS
+        ========================================== */
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .action-buttons .btn {
+            white-space: nowrap;
+        }
+
+
+        /* ==========================================
+           EMPTY STATE
+        ========================================== */
+
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 42px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+
+        /* ==========================================
+           FLASH MESSAGES
+        ========================================== */
+
+        .flash-container {
+            margin-bottom: 20px;
+        }
+
+
+        /* ==========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 768px) {
+
+            .page-container {
+                margin: 20px auto;
+                padding: 0 12px;
+            }
+
+            .page-header {
+                padding: 18px;
+            }
+
+            .page-title {
+                font-size: 21px;
+            }
+
+            .page-header-content {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+
+            .toolbar {
+                padding: 15px;
+            }
+
+            .toolbar-content {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px;
+            }
+
+            .search-box {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .add-button {
+                width: 100%;
+            }
+
+            .add-button .btn {
+                width: 100%;
+            }
+
+            .table-header {
+                padding: 15px;
+            }
+
+            .table tbody td,
+            .table thead th {
+                padding: 12px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page-container">
+
+
+    <!-- ==========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    <div class="flash-container">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert alert-{{ category }} alert-dismissible fade show shadow-sm"
+                        role="alert"
+                    >
+
+                        {{ message }}
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+    </div>
+
+
+    <!-- ==========================================
+         PAGE HEADER
+    ========================================== -->
+
+    <div class="page-header">
+
+        <div
+            class="page-header-content d-flex justify-content-between align-items-center"
+        >
+
+            <div>
+
+                <h1 class="page-title">
+
+                    <i class="bi bi-book-half me-2"></i>
+
+                    Subject Management
+
+                </h1>
+
+                <div class="page-subtitle">
+
+                    Manage JAMB and WAEC subjects, status and subject codes.
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <a
+                    href="/admin"
+                    class="btn btn-outline-secondary"
+                >
+
+                    <i class="bi bi-arrow-left me-1"></i>
+
+                    Back to Admin
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         TOOLBAR
+    ========================================== -->
+
+    <div class="toolbar">
+
+        <div
+            class="toolbar-content d-flex justify-content-between align-items-center"
+        >
+
+
+            <!-- SEARCH -->
+
+            <form
+                method="GET"
+                class="search-box"
+            >
+
+                <div class="input-group">
+
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search by subject, exam type or code..."
+                        value="{{ search }}"
+                    >
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary search-btn"
+                    >
+
+                        <i class="bi bi-search me-1"></i>
+
+                        Search
+
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- ADD SUBJECT -->
+
+            <div class="add-button">
+
+                <a
+                    href="/add_subject"
+                    class="btn btn-success"
+                >
+
+                    <i class="bi bi-plus-lg me-1"></i>
+
+                    Add Subject
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         SUBJECT TABLE
+    ========================================== -->
+
+    <div class="table-card">
+
+
+        <!-- TABLE HEADER -->
+
+        <div
+            class="table-header d-flex justify-content-between align-items-center"
+        >
+
+            <h5>
+
+                <i class="bi bi-list-ul me-2"></i>
+
+                All Subjects
+
+            </h5>
+
+            <span class="text-muted small">
+
+                {{ subjects|length }} subject(s)
+
+            </span>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-bordered table-hover align-middle"
+            >
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th style="width: 70px;">
+                            ID
+                        </th>
+
+                        <th>
+                            Exam Type
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Code
+                        </th>
+
+                        <th style="width: 110px;">
+                            Status
+                        </th>
+
+                        <th style="min-width: 270px;">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                {% for subject in subjects %}
+
+                    <tr>
+
+
+                        <!-- ID -->
+
+                        <td class="fw-semibold">
+
+                            {{ subject.id }}
+
+                        </td>
+
+
+                        <!-- EXAM TYPE -->
+
+                        <td>
+
+                            {% if subject.exam_type == "JAMB" %}
+
+                                <span class="badge bg-primary">
+
+                                    JAMB
+
+                                </span>
+
+                            {% elif subject.exam_type == "WAEC" %}
+
+                                <span class="badge bg-info text-dark">
+
+                                    WAEC
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    {{ subject.exam_type }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- SUBJECT -->
+
+                        <td>
+
+                            <strong>
+                                {{ subject.subject_name }}
+                            </strong>
+
+                        </td>
+
+
+                        <!-- CODE -->
+
+                        <td>
+
+                            <span class="text-muted">
+
+                                {{ subject.subject_code }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if subject.status == "Active" %}
+
+                                <span
+                                    class="badge bg-success status-badge"
+                                >
+
+                                    <i class="bi bi-check-circle me-1"></i>
+
+                                    Active
+
+                                </span>
+
+                            {% else %}
+
+                                <span
+                                    class="badge bg-danger status-badge"
+                                >
+
+                                    <i class="bi bi-x-circle me-1"></i>
+
+                                    Inactive
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="action-buttons">
+
+
+                                <!-- EDIT -->
+
+                                <a
+                                    href="/edit_subject/{{ subject.id }}"
+                                    class="btn btn-sm btn-warning"
+                                    title="Edit subject"
+                                >
+
+                                    <i class="bi bi-pencil-square"></i>
+
+                                    Edit
+
+                                </a>
+
+
+                                <!-- ACTIVATE / DEACTIVATE -->
+
+                                {% if subject.status == "Active" %}
+
+                                    <a
+                                        href="/toggle_subject/{{ subject.id }}"
+                                        class="btn btn-sm btn-outline-danger"
+                                        title="Deactivate subject"
+                                    >
+
+                                        <i class="bi bi-toggle-off"></i>
+
+                                        Deactivate
+
+                                    </a>
+
+                                {% else %}
+
+                                    <a
+                                        href="/toggle_subject/{{ subject.id }}"
+                                        class="btn btn-sm btn-outline-success"
+                                        title="Activate subject"
+                                    >
+
+                                        <i class="bi bi-toggle-on"></i>
+
+                                        Activate
+
+                                    </a>
+
+                                {% endif %}
+
+
+                                <!-- DELETE -->
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'delete_subject',
+                                        subject_id=subject.id
+                                    ) }}"
+                                    style="display: inline;"
+                                    onsubmit="return confirm(
+                                        'Are you sure you want to delete {{ subject.subject_name }} ({{ subject.exam_type }})?'
+                                    );"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-dark"
+                                        title="Delete subject"
+                                    >
+
+                                        <i class="bi bi-trash3"></i>
+
+                                        Delete
+
+                                    </button>
+
+                                </form>
+
+
+                            </div>
+
+                        </td>
+
+
+                    </tr>
+
+
+                {% else %}
+
+
+                    <!-- EMPTY STATE -->
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty-state"
+                        >
+
+                            <i class="bi bi-inbox"></i>
+
+                            <h5>
+                                No subjects found
+                            </h5>
+
+                            <p class="mb-0">
+                                Try another search or add a new subject.
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+
+                {% endfor %}
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+></script>
+
+
+</body>
+
+</html>

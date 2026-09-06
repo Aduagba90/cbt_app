@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Manage Questions</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <!-- ========================================== -->
+    <!-- FLASH MESSAGES -->
+    <!-- ========================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }}
+                           alert-dismissible
+                           fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- ========================================== -->
+    <!-- HEADER -->
+    <!-- ========================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+            📚 Manage Questions
+        </h2>
+
+        <div>
+
+            <a
+                href="/admin_questions_v2"
+                class="btn btn-success">
+
+                ➕ Add Question
+
+            </a>
+
+            <a
+                href="/admin"
+                class="btn btn-secondary">
+
+                ← Admin Dashboard
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SEARCH AND FILTERS -->
+    <!-- ========================================== -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <form
+                method="GET"
+                action="/manage_questions_v2">
+
+                <div class="row g-3">
+
+                    <!-- SEARCH -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Search Question
+                        </label>
+
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Search question..."
+                            value="{{ search }}">
+
+                    </div>
+
+
+                    <!-- EXAM TYPE -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Exam Type
+                        </label>
+
+                        <select
+                            name="exam_type_id"
+                            id="filter_exam_type"
+                            class="form-select">
+
+                            <option value="">
+                                All Exams
+                            </option>
+
+                            {% for exam in exam_types %}
+
+                                <option
+                                    value="{{ exam.id }}"
+                                    {% if selected_exam_type|string == exam.id|string %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ exam.exam_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- SUBJECT -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Subject
+                        </label>
+
+                        <select
+                            name="subject_id"
+                            id="filter_subject"
+                            class="form-select">
+
+                            <option value="">
+                                All Subjects
+                            </option>
+
+                            {% for subject in subjects %}
+
+                                <option
+                                    value="{{ subject.id }}"
+                                    data-exam-type="{{ subject.exam_type_id }}"
+                                    {% if selected_subject|string == subject.id|string %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ subject.subject_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- TOPIC -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Topic
+                        </label>
+
+                        <select
+                            name="topic_id"
+                            id="filter_topic"
+                            class="form-select">
+
+                            <option value="">
+                                All Topics
+                            </option>
+
+                            {% for topic in topics %}
+
+                                <option
+                                    value="{{ topic.id }}"
+                                    data-subject="{{ topic.subject_id }}"
+                                    {% if selected_topic|string == topic.id|string %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ topic.topic_name }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="mt-3">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        🔎 Search / Filter
+
+                    </button>
+
+                    <a
+                        href="/manage_questions_v2"
+                        class="btn btn-outline-secondary">
+
+                        Reset
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- QUESTION COUNT -->
+    <!-- ========================================== -->
+
+    <div class="mb-3">
+
+        <strong>
+
+            {{ questions|length }}
+
+        </strong>
+
+        question(s) found.
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- QUESTIONS TABLE -->
+    <!-- ========================================== -->
+
+    <div class="table-responsive">
+
+        <table
+            class="table table-bordered table-hover align-middle">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Exam</th>
+
+                    <th>Subject</th>
+
+                    <th>Topic</th>
+
+                    <th>Question</th>
+
+                    <th>Difficulty</th>
+
+                    <th>Status</th>
+
+                    <th width="180">
+
+                        Actions
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for question in questions %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ question.id }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ question.exam_name }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ question.subject_name }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ question.topic_name }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{ question.question_text }}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if question.difficulty == "Easy" %}
+
+                                <span class="badge bg-success">
+
+                                    Easy
+
+                                </span>
+
+                            {% elif question.difficulty == "Hard" %}
+
+                                <span class="badge bg-danger">
+
+                                    Hard
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Medium
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if question.status == "Active" %}
+
+                                <span class="badge bg-success">
+
+                                    Active
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+
+                                    Inactive
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="/edit_question_v2/{{ question.id }}"
+                                class="btn btn-warning btn-sm">
+
+                                ✏️ Edit
+
+                            </a>
+
+
+                            {% if question.status == "Active" %}
+
+                                <a
+                                    href="/toggle_question_v2/{{ question.id }}"
+                                    class="btn btn-danger btn-sm">
+
+                                    Deactivate
+
+                                </a>
+
+                            {% else %}
+
+                                <a
+                                    href="/toggle_question_v2/{{ question.id }}"
+                                    class="btn btn-success btn-sm">
+
+                                    Activate
+
+                                </a>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center py-4">
+
+                            No questions found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const examType = document.getElementById("filter_exam_type");
+
+    const subject = document.getElementById("filter_subject");
+
+    const topic = document.getElementById("filter_topic");
+
+
+    // ==========================================
+    // FILTER SUBJECTS BY EXAM TYPE
+    // ==========================================
+
+    function filterSubjects() {
+
+        const selectedExam = examType.value;
+
+        let selectedSubject = subject.value;
+
+        let subjectStillValid = false;
+
+        Array.from(subject.options).forEach(function (option) {
+
+            if (option.value === "") {
+
+                option.style.display = "";
+
+                return;
+
+            }
+
+            const optionExam =
+                option.getAttribute("data-exam-type");
+
+            if (
+                !selectedExam ||
+                optionExam === selectedExam
+            ) {
+
+                option.style.display = "";
+
+                if (option.value === selectedSubject) {
+
+                    subjectStillValid = true;
+
+                }
+
+            } else {
+
+                option.style.display = "none";
+
+            }
+
+        });
+
+
+        if (!subjectStillValid && selectedExam) {
+
+            subject.value = "";
+
+        }
+
+
+        filterTopics();
+
+    }
+
+
+    // ==========================================
+    // FILTER TOPICS BY SUBJECT
+    // ==========================================
+
+    function filterTopics() {
+
+        const selectedSubject = subject.value;
+
+        let selectedTopic = topic.value;
+
+        let topicStillValid = false;
+
+        Array.from(topic.options).forEach(function (option) {
+
+            if (option.value === "") {
+
+                option.style.display = "";
+
+                return;
+
+            }
+
+            const optionSubject =
+                option.getAttribute("data-subject");
+
+            if (
+                !selectedSubject ||
+                optionSubject === selectedSubject
+            ) {
+
+                option.style.display = "";
+
+                if (option.value === selectedTopic) {
+
+                    topicStillValid = true;
+
+                }
+
+            } else {
+
+                option.style.display = "none";
+
+            }
+
+        });
+
+
+        if (!topicStillValid && selectedSubject) {
+
+            topic.value = "";
+
+        }
+
+    }
+
+
+    // ==========================================
+    // EXAM TYPE CHANGED
+    // ==========================================
+
+    examType.addEventListener(
+        "change",
+        function () {
+
+            subject.value = "";
+
+            topic.value = "";
+
+            filterSubjects();
+
+        }
+    );
+
+
+    // ==========================================
+    // SUBJECT CHANGED
+    // ==========================================
+
+    subject.addEventListener(
+        "change",
+        function () {
+
+            topic.value = "";
+
+            filterTopics();
+
+        }
+    );
+
+
+    // ==========================================
+    // INITIAL LOAD
+    // ==========================================
+
+    filterSubjects();
+
+});
+
+</script>
+
+</body>
+
+</html>

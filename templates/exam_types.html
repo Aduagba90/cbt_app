@@ -5,41 +5,74 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
 
         body{
             background: #f4f7fc;
-            font-family: Poppins;
+            font-family: 'Poppins', sans-serif;
         }
 
         .container-box{
-            max-width: 900px;
+            max-width: 1200px;
             margin: auto;
             margin-top: 80px;
-        }
-
-        .exam-card{
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
-            transition: 0.3s;
-        }
-
-        .exam-card:hover{
-            transform: translateY(-5px);
+            margin-bottom: 50px;
         }
 
         .title{
             text-align: center;
             font-size: 42px;
             font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .subtitle{
+            text-align: center;
+            color: #6c757d;
             margin-bottom: 50px;
         }
 
+        .exam-card{
+            background: white;
+            border-radius: 25px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.08);
+            transition: 0.3s;
+            height: 100%;
+        }
+
+        .exam-card:hover{
+            transform: translateY(-8px);
+        }
+
+        .icon{
+            font-size: 55px;
+            margin-bottom: 20px;
+        }
+
+        .exam-card h2{
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .exam-card p{
+            color: #6c757d;
+            min-height: 60px;
+        }
+
+        .btn-custom{
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
     </style>
+
 </head>
+
 <body>
 
 <div class="container container-box">
@@ -48,42 +81,84 @@
         Choose Examination
     </h1>
 
-    <div class="row">
+    <p class="subtitle">
+        Select the examination you want to prepare for.
+    </p>
 
-        <div class="col-md-6 mb-4">
+    <div class="row g-4">
+
+        <!-- WAEC -->
+        <div class="col-lg-4 col-md-6">
 
             <div class="exam-card">
 
-                <h2>JAMB CBT</h2>
+                <div class="icon">
+                    🎓
+                </div>
+
+                <h2>WAEC CBT</h2>
 
                 <p>
-                    Practice real JAMB questions with explanations.
+                    Practice WAEC subjects with instant feedback and analysis.
                 </p>
 
-                <a href="/jamb_courses"
-                   class="btn btn-primary">
+                <a href="/waec_subjects"
+                   class="btn btn-success btn-custom">
 
-                    Start JAMB
+                    Start WAEC
+
                 </a>
 
             </div>
 
         </div>
 
-        <div class="col-md-6 mb-4">
+        <!-- JAMB -->
+        <div class="col-lg-4 col-md-6">
 
             <div class="exam-card">
 
-                <h2>WAEC CBT</h2>
+                <div class="icon">
+                    📝
+                </div>
+
+                <h2>JAMB CBT</h2>
 
                 <p>
-                    Practice real WAEC questions with explanations.
+                    Practice real JAMB questions with automatic subject combinations.
                 </p>
 
-                <a href="/waec_subjects"
-                   class="btn btn-success">
+                <a href="/jamb_courses"
+                   class="btn btn-primary btn-custom">
 
-                    Start WAEC
+                    Start JAMB
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- POST-UTME -->
+        <div class="col-lg-4 col-md-6">
+
+            <div class="exam-card">
+
+                <div class="icon">
+                    🏛️
+                </div>
+
+                <h2>POST-UTME CBT</h2>
+
+                <p>
+                    Prepare for university screening examinations and admission tests.
+                </p>
+
+                <a href="/post_utme"
+                   class="btn btn-warning btn-custom">
+
+                    Start POST-UTME
+
                 </a>
 
             </div>

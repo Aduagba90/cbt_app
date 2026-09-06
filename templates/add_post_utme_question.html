@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Add POST-UTME Question</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f4f7fc;
+            font-family:Poppins;
+        }
+
+        .box{
+            max-width:900px;
+            margin:50px auto;
+            background:white;
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="box">
+
+        <h2 class="mb-4">
+            ➕ Add POST-UTME Question
+        </h2>
+
+        <form method="POST">
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    University
+                </label>
+
+                <select
+                    name="university"
+                    id="university"
+                    class="form-select"
+                    required>
+
+                    <option value="">
+                        Select University
+                    </option>
+
+                    {% for university in universities %}
+
+                    <option value="{{ university[0] }}">
+                        {{ university[0] }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Subject
+                </label>
+
+                <select
+                    name="subject"
+                    id="subject"
+                    class="form-select"
+                    required>
+
+                    <option value="">
+                        Select Subject
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Question
+                </label>
+
+                <textarea
+                    name="question"
+                    class="form-control"
+                    rows="3"
+                    required></textarea>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>Option A</label>
+
+                <input
+                    type="text"
+                    name="option_a"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>Option B</label>
+
+                <input
+                    type="text"
+                    name="option_b"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>Option C</label>
+
+                <input
+                    type="text"
+                    name="option_c"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>Option D</label>
+
+                <input
+                    type="text"
+                    name="option_d"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="mb-4">
+
+                <label>
+                    Correct Answer
+                </label>
+
+                <select
+                    name="correct_answer"
+                    class="form-select"
+                    required>
+
+                    <option value="">
+                        Select Correct Answer
+                    </option>
+
+                    <option value="A">
+                        Option A
+                    </option>
+
+                    <option value="B">
+                        Option B
+                    </option>
+
+                    <option value="C">
+                        Option C
+                    </option>
+
+                    <option value="D">
+                        Option D
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button
+                type="submit"
+                class="btn btn-primary">
+
+                Save Question
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById("university").addEventListener(
+    "change",
+    function(){
+
+        let university = this.value;
+
+        fetch(
+            "/get_post_utme_subjects?university="
+            + encodeURIComponent(university)
+        )
+        .then(response => response.json())
+
+        .then(data => {
+
+            let subjectSelect =
+                document.getElementById("subject");
+
+            subjectSelect.innerHTML =
+                '<option value="">Select Subject</option>';
+
+            data.subjects.forEach(subject => {
+
+                subjectSelect.innerHTML +=
+                    `<option value="${subject}">
+                        ${subject}
+                    </option>`;
+
+            });
+
+        });
+
+    }
+);
+
+</script>
+
+</body>
+</html>
