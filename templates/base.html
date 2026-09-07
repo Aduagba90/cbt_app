@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=3">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -27,7 +27,7 @@
 {% if session.get('user') %}
 <nav class="pn-navbar">
     <div class="container">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="pn-bar">
             <a class="pn-brand" href="{{ url_for('dashboard') }}">
                 <span class="pn-logo">PN</span>
                 <span>PrepNova <span class="text-primary">CBT</span><small>Practice · Prepare · Pass</small></span>
@@ -41,12 +41,12 @@
                 <li class="nav-item"><a class="nav-link {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}"><i class="bi bi-trophy"></i>Leaderboard</a></li>
             </ul>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="pn-actions">
                 <a href="{{ url_for('subscribe') }}" class="btn btn-accent btn-sm d-none d-md-inline-flex align-items-center gap-1"><i class="bi bi-gem"></i> Subscribe</a>
                 <div class="dropdown">
-                    <button class="pn-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="pn-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
                         <span class="pn-avatar">{{ initials(session.get('name')) }}</span>
-                        <span class="d-none d-sm-inline text-truncate" style="max-width:120px">{{ session.get('name', 'Student').split(' ')[0] }}</span>
+                        <span class="pn-user-name d-none d-sm-inline text-truncate" style="max-width:120px">{{ session.get('name', 'Student').split(' ')[0] }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li class="px-3 py-2 small text-muted border-bottom mb-1"><div class="fw-bold text-dark text-truncate">{{ session.get('name') }}</div><div class="text-truncate">{{ session.get('user') }}</div></li>
@@ -54,6 +54,7 @@
                         <li><a class="dropdown-item" href="{{ url_for('my_bookmarks') }}"><i class="bi bi-bookmark-star"></i> Bookmarks</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('subscribe') }}"><i class="bi bi-credit-card"></i> Subscription</a></li>
                         <li class="d-lg-none"><hr class="dropdown-divider"></li>
+                        <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('exam_types') }}"><i class="bi bi-pencil-square"></i> Mock Exams</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('practice') }}"><i class="bi bi-lightning-charge"></i> Practice</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('my_results') }}"><i class="bi bi-bar-chart-line"></i> Results</a></li>

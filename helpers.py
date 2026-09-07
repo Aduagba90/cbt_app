@@ -88,6 +88,9 @@ JAMB_OTHER_QUESTIONS = 40
 JAMB_DURATION_MIN = 120
 WAEC_QUESTIONS = 50
 WAEC_DURATION_MIN = 60
+# WAEC is shown as "coming soon" until the genuine WAEC question bank has been uploaded.
+# Flip to True (or set WAEC_ENABLED=1 in .env) to open WAEC mocks and WAEC practice again.
+WAEC_ENABLED = (os.getenv("WAEC_ENABLED") or "0").strip().lower() in ("1", "true", "yes")
 FREE_PRACTICE_PER_DAY = 10
 TRIAL_DAYS = 7
 

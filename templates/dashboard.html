@@ -67,7 +67,7 @@
 <div class="row g-3 mb-4">
     {% set actions = [
         (url_for('jamb_courses'), 'bi-mortarboard', 'tint-green', 'JAMB UTME mock', '4 subjects · 180 questions · 2 hours. Choose your course and we pick the right combination.'),
-        (url_for('waec_subjects'), 'bi-journal-text', 'tint-blue', 'WAEC subject test', 'Timed 50-question objective paper for any subject with full corrections.'),
+        (url_for('waec_subjects'), 'bi-journal-text', 'tint-blue', 'WAEC subject test', 'Coming soon — genuine WAEC questions are being added. Your plan will cover them.' if not waec_enabled else 'Timed 50-question objective paper for any subject with full corrections.'),
         (url_for('post_utme'), 'bi-building', 'tint-gold', 'Post-UTME screening', 'Practise your university\'s screening format — CBT, aptitude or current affairs.'),
         (url_for('practice'), 'bi-lightning-charge', 'tint-purple', 'Practice mode', 'Untimed drills with instant feedback and explanations after every question.'),
         (url_for('my_bookmarks'), 'bi-bookmark-star', 'tint-red', 'My bookmarks', 'Revisit questions you saved for later and master them before exam day.'),
@@ -75,11 +75,16 @@
     ] %}
     {% for href, icon, tint, title, text in actions %}
     <div class="col-md-6 col-xl-4">
-        <div class="pn-action anim-rise d{{ loop.index0 % 4 }}">
-            <span class="pn-stat-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
+        {% set soon = (title == 'WAEC subject test' and not waec_enabled) %}
+        <div class="pn-action anim-rise d{{ loop.index0 % 4 }} {% if soon %}pn-tile-soon{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="pn-stat-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
+                {% if soon %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+            </div>
             <h3>{{ title }}</h3>
             <p>{{ text }}</p>
-            <a href="{{ href }}" class="stretched-link fw-bold small">Open <i class="bi bi-arrow-right"></i></a>
+            {% if soon %}<span class="fw-bold small text-muted"><i class="bi bi-hourglass-split"></i> Questions being added</span>
+            {% else %}<a href="{{ href }}" class="stretched-link fw-bold small">Open <i class="bi bi-arrow-right"></i></a>{% endif %}
         </div>
     </div>
     {% endfor %}

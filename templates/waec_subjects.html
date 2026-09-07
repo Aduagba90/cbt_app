@@ -10,7 +10,18 @@
     </div>
 </div>
 
-{% if subjects %}
+{% if coming_soon %}
+<div class="pn-empty card anim-rise">
+    <span class="ico"><i class="bi bi-hourglass-split"></i></span>
+    <span class="badge bg-secondary mb-2">Coming soon</span>
+    <h3>WAEC questions are being added</h3>
+    <p>We are uploading genuine WAEC past questions with full explanations. WAEC mocks will open automatically once the bank is ready — your subscription covers them at no extra cost.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('jamb_courses') }}" class="btn btn-primary btn-sm"><i class="bi bi-mortarboard me-1"></i> Take a JAMB mock instead</a>
+        <a href="{{ url_for('practice') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-lightning-charge me-1"></i> Practice mode</a>
+    </div>
+</div>
+{% elif subjects %}
 <div class="row g-3">
     {% for name, count in subjects %}
     <div class="col-sm-6 col-lg-4">

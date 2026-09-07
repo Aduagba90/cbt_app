@@ -23,7 +23,10 @@
 <div class="row g-4">
     <div class="col-md-6 col-lg-4">
         <div class="pn-tile anim-rise">
-            <span class="pn-tile-icon tint-green"><i class="bi bi-mortarboard"></i></span>
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="pn-tile-icon tint-green"><i class="bi bi-mortarboard"></i></span>
+                <span class="badge bg-success">Ready</span>
+            </div>
             <h3>JAMB UTME</h3>
             <p>Full 4-subject mock exactly like the real UTME: Use of English (60 questions) plus three course subjects (40 each). 2 hours.</p>
             <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 120 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 180 questions</span><span class="pn-subject-chip"><i class="bi bi-award"></i> /400 score</span></div>
@@ -31,21 +34,35 @@
         </div>
     </div>
     <div class="col-md-6 col-lg-4">
-        <div class="pn-tile anim-rise d1">
-            <span class="pn-tile-icon tint-blue"><i class="bi bi-journal-text"></i></span>
+        <div class="pn-tile anim-rise d1 {% if not waec_enabled %}pn-tile-soon{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="pn-tile-icon tint-blue"><i class="bi bi-journal-text"></i></span>
+                {% if waec_enabled %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+            </div>
             <h3>WAEC / SSCE</h3>
             <p>Subject-by-subject objective paper. 50 randomised questions per session with detailed corrections at the end.</p>
             <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 60 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 50 questions</span><span class="pn-subject-chip"><i class="bi bi-book"></i> Any subject</span></div>
+            {% if waec_enabled %}
             <a href="{{ url_for('waec_subjects') }}" class="btn btn-primary w-100" style="background:#1d4ed8;border-color:#1d4ed8">Choose subject <i class="bi bi-arrow-right ms-1"></i></a>
+            {% else %}
+            <button class="btn btn-outline-secondary w-100 mt-auto" disabled><i class="bi bi-hourglass-split me-1"></i> Questions being added</button>
+            {% endif %}
         </div>
     </div>
     <div class="col-md-6 col-lg-4">
-        <div class="pn-tile anim-rise d2">
-            <span class="pn-tile-icon tint-gold"><i class="bi bi-building"></i></span>
+        <div class="pn-tile anim-rise d2 {% if not post_utme_ready %}pn-tile-soon{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="pn-tile-icon tint-gold"><i class="bi bi-building"></i></span>
+                {% if post_utme_ready %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+            </div>
             <h3>Post-UTME</h3>
             <p>University screening practice in the format your school uses — CBT with course subjects, aptitude tests or current affairs.</p>
             <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 30 min</span><span class="pn-subject-chip"><i class="bi bi-bank"></i> 9 universities</span></div>
+            {% if post_utme_ready %}
             <a href="{{ url_for('post_utme') }}" class="btn btn-accent w-100">Choose university <i class="bi bi-arrow-right ms-1"></i></a>
+            {% else %}
+            <button class="btn btn-outline-secondary w-100 mt-auto" disabled><i class="bi bi-hourglass-split me-1"></i> Questions being added</button>
+            {% endif %}
         </div>
     </div>
 </div>

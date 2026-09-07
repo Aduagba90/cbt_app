@@ -15,7 +15,7 @@
 
 <ul class="nav nav-pills gap-2 mb-3" role="tablist">
     <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#jambTab" type="button"><i class="bi bi-mortarboard me-1"></i> JAMB ({{ jamb|length }})</button></li>
-    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#waecTab" type="button"><i class="bi bi-journal-text me-1"></i> WAEC ({{ waec|length }})</button></li>
+    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#waecTab" type="button"><i class="bi bi-journal-text me-1"></i> WAEC {% if waec_enabled %}({{ waec|length }}){% else %}<span class="badge bg-secondary ms-1" style="font-size:.62rem">Soon</span>{% endif %}</button></li>
 </ul>
 
 <div class="tab-content">
@@ -47,7 +47,7 @@
             </div>
             {% endfor %}
         </div>
-        {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No WAEC subjects yet</h3></div>{% endif %}
+        {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-hourglass-split"></i></span><span class="badge bg-secondary mb-2">Coming soon</span><h3>WAEC questions are being added</h3><p>Genuine WAEC past questions with explanations are on the way. Practise JAMB subjects meanwhile — many topics overlap.</p><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="pill" data-bs-target="#jambTab" type="button">Switch to JAMB</button></div>{% endif %}
     </div>
 </div>
 {% endblock %}

@@ -28,7 +28,7 @@ import exam_engine as engine
 from admin_routes import admin_bp
 from db import connect, init_db
 from helpers import (activate_subscription, COURSE_ICONS, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, LEGACY_TO_V2,
-                     TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
+                     TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_ENABLED, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon)
@@ -138,6 +138,23 @@ init_db()
 # Template helpers
 # ---------------------------------------------------------------------------
 
+_POST_UTME_CACHE = {"t": 0.0, "ready": False}
+
+
+def _post_utme_ready():
+    """True once at least one Post-UTME question exists (cached 60 s). Flips automatically after an upload."""
+    now = time.time()
+    if now - _POST_UTME_CACHE["t"] > 60:
+        try:
+            conn = connect()
+            n = conn.execute("SELECT COUNT(*) FROM post_utme_questions").fetchone()[0]
+            conn.close()
+            _POST_UTME_CACHE.update(t=now, ready=n > 0)
+        except Exception:
+            _POST_UTME_CACHE.update(t=now, ready=False)
+    return _POST_UTME_CACHE["ready"]
+
+
 @app.context_processor
 def inject_globals():
     return {
@@ -146,6 +163,8 @@ def inject_globals():
         "brand": "PrepNova CBT",
         "support_email": SUPPORT_EMAIL,
         "support_whatsapp": SUPPORT_WHATSAPP,
+        "waec_enabled": WAEC_ENABLED,
+        "post_utme_ready": _post_utme_ready(),
         "current_year": datetime.now().year,
         "initials": initials,
         "subject_icon": subject_icon,
@@ -851,6 +870,8 @@ def jamb_courses():
 @app.route("/waec_subjects")
 @login_required
 def waec_subjects():
+    if not WAEC_ENABLED:
+        return render_template("waec_subjects.html", subjects=[], duration=WAEC_DURATION_MIN, per_exam=WAEC_QUESTIONS, coming_soon=True)
     avail = available_subjects("WAEC")
     subjects = sorted(avail.items(), key=lambda kv: kv[0])
     return render_template("waec_subjects.html", subjects=subjects, duration=WAEC_DURATION_MIN, per_exam=WAEC_QUESTIONS)
@@ -884,6 +905,9 @@ def start_jamb(course):
 @app.route("/start_waec/<subject>", methods=["POST"])
 @login_required
 def start_waec(subject):
+    if not WAEC_ENABLED:
+        flash("WAEC mock exams are coming soon — genuine WAEC questions are being added. JAMB mocks are fully available.", "info")
+        return redirect(url_for("exam_types"))
     if subject not in available_subjects("WAEC"):
         abort(404)
     if (r := _require_subscription()):
@@ -1103,7 +1127,7 @@ def abandon_exam():
 @login_required
 def practice():
     jamb = sorted(available_subjects("JAMB").items())
-    waec = sorted(available_subjects("WAEC").items())
+    waec = sorted(available_subjects("WAEC").items()) if WAEC_ENABLED else []
     conn = connect()
     allowed, remaining = practice_allowance(session["user"], conn.cursor())
     conn.commit()
@@ -1117,6 +1141,9 @@ def practice_question(exam_type, subject):
     exam_type = exam_type.upper()
     if exam_type not in ("JAMB", "WAEC"):
         abort(404)
+    if exam_type == "WAEC" and not WAEC_ENABLED:
+        flash("WAEC practice is coming soon — genuine WAEC questions are being added. Try a JAMB subject meanwhile.", "info")
+        return redirect(url_for("practice"))
     conn = connect()
     cur = conn.cursor()
     source, count = resolve_source(cur, exam_type, subject)

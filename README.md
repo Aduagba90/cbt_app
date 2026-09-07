@@ -89,6 +89,12 @@ manually*. This records a payment, extends any remaining time, and is written to
 
 ## Question bank
 
+**WAEC is switched off ("Coming soon") by default** until genuine WAEC questions are
+uploaded. Students — including subscribers — can only take JAMB mocks/practice meanwhile,
+and the WAEC routes are blocked server-side (not just hidden). To open WAEC: set
+`WAEC_ENABLED=1` in `.env` (or the host's environment) and restart. Post-UTME shows
+"Coming soon" automatically while its question table is empty.
+
 Import questions from the admin panel (`Import` → Excel template at
 `/download_question_template`). Full JAMB mocks need ≥10 active questions per subject
 in the combination; WAEC uses the legacy `questions` table where `questions_v2` is empty.

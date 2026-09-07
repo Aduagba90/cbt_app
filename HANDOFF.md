@@ -32,6 +32,12 @@ without re-explaining anything.
 | Data-fix scripts | `scripts/` (see `scripts/README.md`) |
 | Regression script (test client, ~65 checks) | `_work/regress.py` (not committed; recreate if needed) |
 
+## Feature switches
+
+- `WAEC_ENABLED` (env, default `0`): WAEC mocks + practice are "Coming soon" and blocked
+  server-side until set to `1` after the genuine WAEC bank is uploaded.
+- Post-UTME shows "Coming soon" automatically while `post_utme_questions` is empty.
+
 ## Run
 
 ```bash
