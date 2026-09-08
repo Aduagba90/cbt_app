@@ -1,179 +1,207 @@
-# PrepNova CBT — Go-live guide (plain language)
+# PrepNova CBT — Putting the site online (free), step by step
 
-Two jobs, in this order:
+## First, the plain-English background
 
-- **Part A – Put the site on the internet (Render).** About 30 minutes. Free to try;
-  ~$9/month (≈ ₦14,000) when real students use it.
-- **Part B – Switch Paystack to live** so real money reaches your bank account.
-  Needs Part A first, because Paystack only accepts an `https://` address.
+- **What "hosting" is.** Right now the site only exists on your laptop. For students to open
+  it at any hour it must run on a computer that is on 24/7 with fast internet. Companies rent
+  that out; the rent is the only running cost of a website. GitHub and Paystack have no
+  monthly fee (Paystack only takes 1.5% + ₦100 from each payment a student makes).
+- **The free plan we use: PythonAnywhere "Beginner".** ₦0, no card needed, keeps your
+  students / results / questions safely. Two limits:
+  1. **Online card payment does not work on the free plan** (it blocks the site from talking
+     to Paystack's servers). Students pay by bank transfer / WhatsApp and you activate them
+     in Admin — that is already built in. The moment you upgrade (about $5 ≈ ₦8,000/month)
+     card payments switch on; nothing needs rebuilding.
+  2. **Every 3 months you must click one button** ("Run until 3 months from today" on the
+     Web tab). PythonAnywhere e-mails you before it is due. If you forget, the site shows a
+     "disabled" page until you click it — nothing is lost.
+- Your address will be **`https://YOURNAME.pythonanywhere.com`** (YOURNAME = the username
+  you choose when signing up — pick something like `prepnova`). An own domain such as
+  `prepnova.ng` needs the paid plan.
 
-Then **Part C – How to update the site** whenever we change something (2 minutes each time).
-
----
-
-## Part A — Put the site online (Render.com)
-
-Render runs the app from your GitHub repo. The repo already contains a `render.yaml`
-file that tells Render everything (Python, start command, storage disk, settings),
-so you mostly click "Next".
-
-### A1. Create the account
-1. Go to <https://render.com> → **Get Started** → sign up **with GitHub** (same GitHub
-   account that owns `Aduagba90/cbt_app`). Authorise Render when GitHub asks.
-
-### A2. Create the site from the Blueprint
-1. In Render click **New +** (top right) → **Blueprint**.
-2. Find **cbt_app** in the list → **Connect**.
-   (If it isn't listed: click *Configure account* and give Render access to that repo.)
-3. Render reads `render.yaml` and shows one service, **prepnova-cbt**, with a few boxes to fill:
-
-   | Box | What to type |
-   |---|---|
-   | `ADMIN_EMAIL` | the e-mail you will log in to `/admin_login` with |
-   | `ADMIN_PASSWORD` | a **new strong password, 10+ characters** (never `admin123`) |
-   | `SUPPORT_EMAIL` | e-mail students can write to |
-   | `SUPPORT_WHATSAPP` | your WhatsApp number, digits only, e.g. `2348012345678` |
-
-   `SECRET_KEY` is generated automatically. Leave the rest as they are.
-4. Click **Apply**. Wait 3–6 minutes while it builds. It's ready when the service shows
-   a green **Live** and a link like `https://prepnova-cbt.onrender.com`.
-5. Open that link. The landing page should appear with the question bank already in
-   place (the app copies its seed questions to the storage disk on first start).
-6. Log in at `https://prepnova-cbt.onrender.com/admin_login` with your ADMIN_EMAIL / ADMIN_PASSWORD.
-
-> Free vs paid: the Blueprint uses Render's **Starter** web service ($7/month) plus a
-> 1 GB disk ($0.25/month, billed at $0.25/GB). The paid tier is needed because a
-> **persistent disk** is what keeps your students, results and payments when the site
-> restarts — the free tier has no disk and would wipe them. Add a card in
-> *Account settings → Billing*.
-
-### A3. Give the site its address (`APP_URL`)
-1. In Render open the service → **Environment** → **Add Environment Variable**:
-   `APP_URL` = `https://prepnova-cbt.onrender.com` (no slash at the end) → **Save**.
-   The site restarts by itself (about 1 minute).
-2. **Own domain (optional, recommended):** buy e.g. `prepnova.ng` / `prepnova.com.ng`
-   (Qservers, Whogohost, GO54, Namecheap…). In Render → **Settings → Custom Domains →
-   Add** → follow the two DNS lines it shows you (you paste them at the domain seller).
-   HTTPS is automatic. Then change `APP_URL` to `https://www.prepnova.ng`.
-
-### A4. Ten-minute check before telling anyone
-- Register a new student → log in → dashboard loads.
-- Practice Mode → answer a few questions.
-- Start a JAMB mock → the timer and palette work → submit → result page.
-- `/admin_login` → Import → download template (proves the admin side works); click **Backup** once to see it download.
-- Subscribe page still says "Online payment is being set up" (correct — Paystack comes next).
-
-### A5. E-mail (optional but useful)
-Without e-mail settings the site still works: new accounts are auto-verified, but
-"forgot password" cannot send links. To enable e-mail with a Gmail account:
-Google Account → Security → 2-Step Verification → **App passwords** → create one, then
-in Render → Environment add `MAIL_USERNAME` = your Gmail, `MAIL_PASSWORD` = that 16-letter
-app password.
+Do the steps below **in order, one at a time**. Each one ends with something you can see.
+If your screen does not look like the description, stop and send a screenshot.
 
 ---
 
-## Part B — Switch Paystack to live
+## Step 1 — Create the free account (3 minutes)
 
-### B1. Get your business approved (this is the only slow part: 1–3 working days)
-1. Log in at <https://dashboard.paystack.com>. If you see **"Complete your business
-   registration / Activate your business"** at the top, click it.
-2. Choose the business type:
-   - **Starter Business** – no CAC needed. You give a government ID, your **BVN** and a
-     **personal bank account in your own name**. Fastest. Limits: a lifetime collection cap
-     (Paystack states ₦8,000,000 for Nigerian Starter accounts) and no Transfers product.
-   - **Registered Business** – needs your **CAC certificate** (Business Name or Ltd) and a
-     **corporate bank account** in the business name. No cap. You can start as Starter
-     and upgrade later without changing anything in the app.
-3. Fill in business details (name shown on the student's bank statement will be your
-   business name), upload the documents, submit. Watch your e-mail for approval.
+1. Open <https://www.pythonanywhere.com/registration/register/beginner/>
+2. Fill in: **Username** (this becomes your web address — e.g. `prepnova`, lowercase, no
+   spaces), e-mail, password. Click **Register**.
+3. Open the confirmation e-mail they send and click the link.
 
-### B2. Copy the live keys
-1. Paystack dashboard → **Settings → API Keys & Webhooks**.
-2. Turn the **Test mode** switch OFF (top of the dashboard) so you see LIVE keys.
-   Live keys begin with `pk_live_` and `sk_live_`. (Test keys begin with `pk_test_`/`sk_test_`
-   and real cards are declined with them.)
-3. On the same page set:
-   - **Live Callback URL:** `https://YOUR-SITE/payment_callback`
-   - **Live Webhook URL:** `https://YOUR-SITE/paystack/webhook`
-   (replace YOUR-SITE with your real address, e.g. `prepnova-cbt.onrender.com`). Save.
-   The webhook is what confirms a payment even if the student closes the browser.
+✅ You see the PythonAnywhere **Dashboard** with tabs at the top: *Consoles, Files, Web,
+Tasks, Databases*.
 
-### B3. Put the keys in the site
-Render → your service → **Environment** → **Add Environment Variable**, twice:
+## Step 2 — Create an API token (1 minute)
 
-| Key | Value |
-|---|---|
-| `PAYSTACK_PUBLIC_KEY` | `pk_live_…` |
-| `PAYSTACK_SECRET_KEY` | `sk_live_…` |
+This lets the installer create the website for you instead of you clicking through ten forms.
 
-**Save**. Render restarts the site automatically. Refresh `/subscribe` — the "being set up"
-banner is gone and the **Pay** buttons are active.
+1. Top-right corner → **Account**.
+2. Click the tab **API Token**.
+3. Click **Create a new API token**.
 
-Rules the app enforces for you: both keys must be from the same mode (it warns if you
-mix test and live); it verifies every payment with Paystack's servers before activating a
-plan; a reference can never be used twice.
+✅ A long code appears. You do not need to copy it — leave the page.
 
-### B4. Prove it with real money (₦100 test)
-1. Admin → **Subscriptions → Plans**: temporarily create/edit a plan priced **₦100**.
-2. As a student, buy it with your own real card. Paystack's fee on that is ₦1.50
-   (local cards: 1.5% + ₦100, the ₦100 waived under ₦2,500, capped at ₦2,000).
-3. Check: student dashboard shows the active plan · Admin → Subscriptions lists the
-   payment with the Paystack reference · Paystack dashboard → Transactions shows it.
-4. Set the plan price back. Money arrives in your bank account the next working day
-   (Paystack settles automatically; see dashboard → Settlements).
+## Step 3 — Run the installer (about 5 minutes, mostly waiting)
 
-### B5. Prices and manual payments
-- Change plan prices any time in Admin → Subscriptions → Plans. Prices are read from
-  the database at checkout time, so Paystack needs no change.
-- Bank-transfer / cash / POS students: Admin → **Subscriptions → Activate a plan manually**.
-  It records the payment and extends any remaining time.
+1. Click the **Consoles** tab → under "Start a new console" click **Bash**.
+   A black window opens with a `$` prompt. (If you already had a console open before
+   Step 2, close it and open a new one so it knows about the token.)
+2. Copy this whole line, paste it into the black window (right-click → Paste, or
+   Ctrl+Shift+V), press **Enter**:
 
----
+   ```
+   curl -sL https://raw.githubusercontent.com/Aduagba90/cbt_app/main/scripts/pythonanywhere_setup.py -o setup.py && python3 setup.py
+   ```
 
-## Part C — Updating the site after every change
+3. It asks you four things, one at a time:
+   - **Admin e-mail** — what you will log in to the admin area with.
+   - **Admin password** — 10+ characters. *Typing is hidden; nothing appears as you type.
+     That is normal — type it and press Enter.*
+   - **Support WhatsApp number** — digits only, starting with 234, e.g. `2348012345678`.
+   - **Support e-mail** — press Enter to use the admin e-mail.
+4. Then it works by itself: "Downloading code" → "Installing packages (2–4 minutes)" →
+   "Creating the website" → "Reloading".
 
-Render is connected to GitHub. **Whatever is on GitHub `main` is the live site.**
-So updating is the same routine you already use, plus waiting for the green light:
+✅ It ends with a box saying **DONE. Your site is live at: https://YOURNAME.pythonanywhere.com**
 
-1. Download the new zip I give you → unzip → open PowerShell in the `cbt_app` folder.
-2. `git push origin main`
-3. Render sees the push and rebuilds by itself (**Events** tab shows *Deploy started* →
-   *Deploy live*, 3–6 minutes). Students already inside an exam are **not** affected:
-   their answers are saved to the database on every click, and the old copy keeps
-   serving until the new one is healthy.
+If it stops with a message starting `!!`, read the message — it says what to fix — and run
+the same line again (it is safe to repeat). If unsure, send a screenshot.
 
-Nothing else. Your students, results, payments and every question you uploaded live on
-the persistent disk and are **never** touched by a deploy — only the code changes.
+## Step 4 — Check the site (5 minutes)
 
-Things to know:
-- **Questions you upload through Admin → Import go straight into the live database.**
-  You do not need a deploy for them (and they are not in GitHub — see backups below).
-- **If a deploy fails** (red *Deploy failed*), the previous version stays live. Open
-  the deploy → copy the last red lines of the log → send them to me. Or click
-  **Rollback** on the last good deploy.
-- **Backups:** the **Backup** button in the admin bar (top of every admin page) gives you the whole database file
-  (students, results, payments, questions). Do it **weekly** and after every big
-  question upload; keep the files in Google Drive. To restore, send me the file — or
-  upload it to the disk yourself via Render → Shell (`/var/data/database.db`).
-- **Restarting:** Render → **Manual Deploy → Restart** (no code change needed).
-- **Logs:** Render → **Logs** — copy anything red when reporting a problem.
+1. Open **https://YOURNAME.pythonanywhere.com** on your phone or laptop.
+   ✅ The PrepNova landing page appears, with the padlock (HTTPS) in the address bar.
+2. Register a test student, log in, open **Practice** and answer a few questions, then start
+   a JAMB mock and submit it.
+3. Open **https://YOURNAME.pythonanywhere.com/admin_login** with your admin e-mail and
+   password. Click **Backup** in the admin bar once to see the database file download.
+4. Open the **Subscribe** page as the student: it says "Online payment is being set up —
+   contact support on WhatsApp", with your WhatsApp number linked. That is correct for now.
+
+## Step 5 — Do this once every 3 months
+
+**Web** tab → the green button **"Run until 3 months from today"** → click it.
+Set a phone reminder now for two and a half months from today.
 
 ---
 
-## Settings reference (Render → Environment)
+## How students pay while you are on the free plan
 
-| Key | Set by | Notes |
+1. Student picks a plan, sees "contact support on WhatsApp", messages you and transfers to
+   your bank account.
+2. You: **Admin → Subscriptions → Activate a plan manually** → type the student's e-mail,
+   choose the plan, note the transfer reference → **Activate**. Their mocks unlock instantly.
+   The payment is recorded with a `MANUAL-…` reference and shows in the reports.
+
+---
+
+## How to update the site when we change something
+
+Two commands, in this order — nothing else:
+
+1. **Send the new code to GitHub** (same as always): download the new zip → unzip →
+   PowerShell in the `cbt_app` folder → `git push origin main`.
+2. **Tell the website to fetch it**: PythonAnywhere → **Consoles** → **Bash** → paste:
+
+   ```
+   python3 setup.py
+   ```
+
+   (That is the same file from Step 3; it now runs in *update mode*: pulls the new code,
+   installs anything new, reloads the site. About 1 minute.)
+
+✅ It ends with "Code updated from GitHub and website reloaded. Data untouched."
+
+Students, results, payments and every question you uploaded live in a separate folder
+(`~/prepnova-data/`) and are never touched by an update. Questions you upload through
+Admin → Import go straight into the live site — no update needed for those.
+
+If the Bash console is gone (they expire), just open a new one: the `setup.py` file is still
+in your home folder. If it ever says `setup.py: No such file`, run the long line from Step 3
+again — it simply re-downloads it.
+
+---
+
+## Backups (please do this)
+
+Admin bar → **Backup** downloads the entire database (students, results, payments,
+questions). Do it **weekly and after every big question upload**; keep the files in Google
+Drive. If anything ever goes wrong, that file restores everything.
+
+---
+
+## Later: switching on Paystack card payments
+
+Do this when you want students to pay by card/USSD/transfer automatically.
+
+**1. Upgrade PythonAnywhere** (about $5/month "Hacker" plan): **Account → Upgrade**.
+You will need a card that works for dollar payments (most naira cards are blocked for
+foreign payments — a virtual dollar card from a fintech app works).
+
+**2. Get Paystack approved** (1–3 working days): <https://dashboard.paystack.com> → the
+banner **"Activate your business"**.
+- *Starter Business*: government ID + BVN + a bank account in your own name. Fastest.
+  Has a lifetime collection cap (Paystack states ₦8,000,000 for Nigeria).
+- *Registered Business*: CAC certificate + corporate bank account. No cap. You can start
+  as Starter and upgrade later — nothing changes in the app.
+
+**3. Copy the live keys.** Paystack dashboard → switch **Test mode OFF** (top of page) →
+**Settings → API Keys & Webhooks**. You need the two keys starting `pk_live_` and `sk_live_`.
+On that same page set:
+- **Webhook URL:** `https://YOURNAME.pythonanywhere.com/paystack/webhook`
+- **Callback URL:** `https://YOURNAME.pythonanywhere.com/payment_callback`
+
+**4. Put the keys in the settings file.** PythonAnywhere → **Files** tab → in your home
+folder open **`.prepnova.env`** (tick "show hidden files" if you cannot see it) → add two
+lines at the bottom, then **Save**:
+
+```
+PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxxxxxxxxx
+PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx
+```
+
+**5. Reload:** **Web** tab → green **Reload** button. Open the Subscribe page: the notice is
+gone and the **Pay** buttons work.
+
+**6. Prove it with ₦100:** Admin → Subscriptions → Plans → set one plan to ₦100 → buy it with
+your own card as a student → check it shows in your dashboard, in Admin → Subscriptions and
+in Paystack → Transactions → set the price back. Money reaches your bank the next working day.
+
+Rules the app enforces for you: both keys must be from the same mode (it warns if you mix
+test and live); every payment is verified with Paystack's servers before a plan is
+activated; a payment reference can never be used twice.
+
+---
+
+## Optional extras
+
+- **E-mail** (password-reset links, receipts): add to `.prepnova.env`
+  `MAIL_USERNAME=yourgmail@gmail.com` and `MAIL_PASSWORD=<a Gmail App Password>` (Google
+  Account → Security → 2-Step Verification → App passwords), then Reload. Without it the site
+  still works; new accounts are simply auto-verified.
+- **WAEC:** when genuine WAEC questions are uploaded, change `WAEC_ENABLED=0` to `1` in
+  `.prepnova.env` and Reload.
+- **Moving to another host later** (Render, a VPS…): `render.yaml` is included and any host
+  that can run `gunicorn app:app` with the same settings works. Take a Backup first and
+  restore it there — nothing is tied to PythonAnywhere.
+
+## Settings reference — `~/.prepnova.env`
+
+| Key | Set by | Meaning |
 |---|---|---|
-| `FLASK_ENV` | Blueprint | `production` |
-| `SECRET_KEY` | Blueprint (generated) | never change it while students are logged in |
-| `DATABASE_PATH` | Blueprint | `/var/data/database.db` (the persistent disk) |
-| `SESSION_COOKIE_SECURE` | Blueprint | `1` |
-| `WAEC_ENABLED` | Blueprint | `0` until genuine WAEC questions are uploaded, then `1` |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | you, at setup | admin login; password 10+ chars |
-| `SUPPORT_EMAIL` / `SUPPORT_WHATSAPP` | you, at setup | shown across the site |
-| `APP_URL` | you (A3) | `https://…` no trailing slash; used in e-mails & Paystack callback |
-| `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | you (B3) | `pk_live_` / `sk_live_` |
-| `MAIL_USERNAME` / `MAIL_PASSWORD` | you (A5) | optional e-mail |
+| `FLASK_ENV` | installer | `production` |
+| `SECRET_KEY` | installer (random) | never change while students are logged in |
+| `APP_URL` | installer | `https://YOURNAME.pythonanywhere.com` |
+| `DATABASE_PATH` | installer | `~/prepnova-data/database.db` — the live data |
+| `SQLITE_JOURNAL_MODE` | installer | `DELETE` (required on PythonAnywhere's storage) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | you (Step 3) | admin login |
+| `SUPPORT_EMAIL` / `SUPPORT_WHATSAPP` | you (Step 3) | shown across the site |
+| `SESSION_COOKIE_SECURE` | installer | `1` |
+| `WAEC_ENABLED` | installer | `0` until WAEC questions exist |
+| `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | you (later) | `pk_live_` / `sk_live_` |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | you (optional) | e-mail sending |
 
-If Render is ever not for you: any host that can run `gunicorn app:app` with the same
-environment variables works (Railway, Fly.io, a VPS). Nothing in the app is Render-specific.
+After editing this file always press **Reload** on the Web tab.

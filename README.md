@@ -60,8 +60,9 @@ Optional: `python -m venv .venv && .venv\Scripts\activate` (Windows) or `source 
 
 ## Deploying (Render / Railway / Heroku-style)
 
-**Step-by-step, non-technical guide: `docs/GO_LIVE.md`** (Render Blueprint in `render.yaml`,
-Paystack live switch, how updates and backups work).
+**Step-by-step, non-technical guide: `docs/GO_LIVE.md`** — free hosting on PythonAnywhere via
+`scripts/pythonanywhere_setup.py` (one command installs, the same command updates), the Paystack
+live switch, backups. `render.yaml` is included for Render.
 
 Summary for developers:
 

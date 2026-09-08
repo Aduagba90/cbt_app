@@ -52,8 +52,12 @@ python app.py            # http://localhost:5000  (dev mode, no .env needed)
 
 ## Deploy
 
-`docs/GO_LIVE.md` is the owner-facing guide (Render Blueprint `render.yaml`, Paystack live
-keys, update routine = `git push origin main` → Render auto-deploys, weekly Backup button).
+`docs/GO_LIVE.md` is the owner-facing guide. Chosen host: **PythonAnywhere free** via
+`scripts/pythonanywhere_setup.py` (run in a PA Bash console; first run installs + creates the
+web app through the PA API, later runs = update mode: git reset to origin/main + reload).
+Settings live in `~/.prepnova.env`, data in `~/prepnova-data/database.db` (journal mode DELETE).
+Owner update routine = `git push origin main` (Windows) then `python3 setup.py` (PA console).
+`render.yaml` kept as an alternative.
 Production: `gunicorn app:app`, `SECRET_KEY`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, `DATABASE_PATH`
 on a persistent disk (seeded from repo `database.db` on first boot), `APP_URL`, Paystack keys.
 
