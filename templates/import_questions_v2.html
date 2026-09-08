@@ -233,6 +233,13 @@
             </div>
 
 
+            {% if import_results.created_topics %}
+                <div class="alert alert-info py-2 small mt-3 mb-0">
+                    <b>{{ import_results.created_topics|length }} new topic{{ '' if import_results.created_topics|length == 1 else 's' }} created automatically:</b>
+                    {{ import_results.created_topics|join(', ') }}
+                </div>
+            {% endif %}
+
             {% if import_results.error_messages %}
 
                 <hr>

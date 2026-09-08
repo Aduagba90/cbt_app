@@ -4059,6 +4059,7 @@ def import_questions_v2():
         errors = 0
 
         error_messages = []
+        created_topics = set()
 
         # ==========================================
         # READ HEADER
@@ -4397,13 +4398,14 @@ def import_questions_v2():
                 topic = cursor.fetchone()
 
                 if not topic:
-
-                    raise ValueError(
-                        f"Topic '{topic_name}' "
-                        f"does not belong to "
-                        f"'{subject_name}' "
-                        f"or is inactive."
+                    # New topic name -> create it under this subject so bulk uploads
+                    # never fail just because a topic label is new.
+                    cursor.execute(
+                        "INSERT INTO topics (subject_id, topic_name, status) VALUES (?, ?, 'Active')",
+                        (subject_id, topic_name.strip()[:120]),
                     )
+                    topic = (cursor.lastrowid,)
+                    created_topics.add(f"{subject_name} › {topic_name.strip()}")
 
                 topic_id = topic[0]
 
@@ -4567,7 +4569,9 @@ def import_questions_v2():
 
             "errors": errors,
 
-            "error_messages": error_messages[:50]
+            "error_messages": error_messages[:50],
+
+            "created_topics": sorted(created_topics)[:60],
 
         }
 
@@ -4592,99 +4596,90 @@ def import_questions_v2():
 
 @admin_bp.route("/download_question_template")
 def download_question_template():
+    """Excel template for bulk upload. Sheet 1 = rows to fill, sheet 2 = live subjects + topics + current
+    counts (the brief for question writers), sheet 3 = rules. Generated in memory."""
     from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
 
-    workbook = Workbook()
+    headers = ["Exam Type", "Subject", "Topic", "Question", "Option A", "Option B", "Option C", "Option D",
+               "Answer", "Explanation", "Difficulty"]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Questions"
+    ws.append(headers)
+    ws.append(["JAMB", "Mathematics", "Sets", "Which of the following is a subset of {1, 2, 3}?", "{1, 2}", "{4, 5}",
+               "{2, 4}", "{5, 6}", "A", "Both 1 and 2 are elements of the original set, so {1, 2} is a subset.", "Easy"])
+    ws.append(["JAMB", "Use of English", "Lexis and Structure", "Choose the option nearest in meaning to the underlined word: The chairman was ADAMANT about the decision.",
+               "flexible", "unyielding", "confused", "cheerful", "B", "Adamant means refusing to change one's mind; unyielding is the closest in meaning.", "Medium"])
+    head_fill = PatternFill("solid", fgColor="0B7A4B")
+    for c in ws[1]:
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = head_fill
+        c.alignment = Alignment(vertical="center")
+    for col, width in zip("ABCDEFGHIJK", (11, 26, 26, 60, 22, 22, 22, 22, 9, 60, 11)):
+        ws.column_dimensions[col].width = width
+    ws.freeze_panes = "A2"
 
-    worksheet = workbook.active
+    # Sheet 2: subjects, topics and current bank sizes
+    conn = connect()
+    ws2 = wb.create_sheet("Subjects & Topics")
+    ws2.append(["Exam Type", "Subject", "Questions in bank now", "Topic", "Questions in topic"])
+    for c in ws2[1]:
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = head_fill
+    rows = conn.execute(
+        """
+        SELECT e.exam_name, s.subject_name, t.topic_name,
+               (SELECT COUNT(*) FROM questions_v2 q WHERE q.subject_id = s.id AND q.status = 'Active') AS subj_n,
+               (SELECT COUNT(*) FROM questions_v2 q WHERE q.topic_id = t.id AND q.status = 'Active') AS topic_n
+        FROM subjects s
+        JOIN exam_types e ON e.id = s.exam_type_id
+        LEFT JOIN topics t ON t.subject_id = s.id AND t.status = 'Active'
+        WHERE s.status = 'Active' AND e.status = 'Active'
+        ORDER BY e.exam_name, subj_n DESC, s.subject_name, t.topic_name
+        """
+    ).fetchall()
+    conn.close()
+    for r in rows:
+        ws2.append([r["exam_name"], r["subject_name"], r["subj_n"], r["topic_name"] or "(no topics yet — add your own)", r["topic_n"] if r["topic_name"] else ""])
+    for col, width in zip("ABCDE", (11, 28, 20, 42, 18)):
+        ws2.column_dimensions[col].width = width
+    ws2.freeze_panes = "A2"
 
-    worksheet.title = "Questions"
-
-    # ==========================================
-    # HEADERS
-    # ==========================================
-
-    headers = [
-        "Exam Type",
-        "Subject",
-        "Topic",
-        "Question",
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D",
-        "Answer",
-        "Explanation",
-        "Difficulty"
+    # Sheet 3: rules for writers
+    ws3 = wb.create_sheet("Instructions")
+    tips = [
+        "HOW TO FILL THE 'Questions' SHEET",
+        "",
+        "1. Exam Type: JAMB (WAEC / POST-UTME when those banks open). Must match the 'Subjects & Topics' sheet.",
+        "2. Subject: copy the exact spelling from the 'Subjects & Topics' sheet (e.g. 'Use of English', not 'English').",
+        "3. Topic: use an existing topic where one fits; a new topic name is accepted and created automatically.",
+        "4. Question: the full question text. For comprehension, put the passage inside the question text.",
+        "5. Options A-D: four distinct options. Do not prefix them with 'A.' or 'a)'.",
+        "6. Answer: a single letter A, B, C or D.",
+        "7. Explanation: 1-3 sentences that teach WHY the answer is right (students see this after the exam).",
+        "8. Difficulty: Easy, Medium or Hard. Aim for roughly 40% Easy, 40% Medium, 20% Hard.",
+        "",
+        "QUALITY RULES",
+        "- No duplicate questions: identical question text in the same subject is skipped on import.",
+        "- Check every answer letter twice. A wrong key is the fastest way to lose a student's trust.",
+        "- Avoid 'All of the above' / 'None of the above' unless it is a genuine past question.",
+        "- Keep the mix of correct letters balanced (not always B).",
+        "",
+        "UPLOAD: Admin > Import > choose this file. Up to a few thousand rows per file is fine.",
+        "Questions go live in mock exams and practice mode immediately after import.",
     ]
-
-    worksheet.append(headers)
-
-    # ==========================================
-    # SAMPLE QUESTION
-    # ==========================================
-
-    worksheet.append([
-        "JAMB",
-        "Mathematics",
-        "Sets",
-        "Which of the following is a subset of {1, 2, 3}?",
-        "{1, 2}",
-        "{4, 5}",
-        "{2, 4}",
-        "{5, 6}",
-        "A",
-        "Both 1 and 2 are elements of the original set, so {1, 2} is a subset.",
-        "Easy"
-    ])
-
-    # ==========================================
-    # COLUMN WIDTHS
-    # ==========================================
-
-    widths = {
-        "A": 15,
-        "B": 25,
-        "C": 25,
-        "D": 60,
-        "E": 30,
-        "F": 30,
-        "G": 30,
-        "H": 30,
-        "I": 12,
-        "J": 60,
-        "K": 15
-    }
-
-    for column, width in widths.items():
-
-        worksheet.column_dimensions[column].width = width
-
-    # ==========================================
-    # FREEZE HEADER
-    # ==========================================
-
-    worksheet.freeze_panes = "A2"
-
-    # ==========================================
-    # SAVE TEMPORARILY
-    # ==========================================
+    for t in tips:
+        ws3.append([t])
+    ws3.column_dimensions["A"].width = 110
+    ws3["A1"].font = Font(bold=True, size=12)
+    ws3["A12"].font = Font(bold=True)
 
     buf = BytesIO()
-    workbook.save(buf)
+    wb.save(buf)
     buf.seek(0)
-
-    # ==========================================
-    # SEND FILE (in-memory; nothing written to disk)
-    # ==========================================
-
-    return send_file(
-        buf,
-        as_attachment=True,
-        download_name="question_import_template.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-
+    return send_file(buf, as_attachment=True, download_name="prepnova_question_template.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @admin_bp.route("/question_import_history")
 def question_import_history():

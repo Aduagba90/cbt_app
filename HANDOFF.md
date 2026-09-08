@@ -38,6 +38,11 @@ without re-explaining anything.
   server-side until set to `1` after the genuine WAEC bank is uploaded.
 - Post-UTME shows "Coming soon" automatically while `post_utme_questions` is empty.
 
+## Growing the question bank
+
+See `docs/QUESTION_BANK_GUIDE.md` (Excel template → Admin → Import; topics auto-created;
+mocks and practice share one bank).
+
 ## Run
 
 ```bash
