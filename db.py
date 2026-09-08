@@ -57,8 +57,14 @@ def init_db():
     conn = connect()
     cur = conn.cursor()
 
+    # WAL is fastest on a local disk. PythonAnywhere keeps home directories on network
+    # storage where WAL is unsafe, so there (or wherever SQLITE_JOURNAL_MODE says so)
+    # fall back to the classic rollback journal.
+    journal = (os.getenv("SQLITE_JOURNAL_MODE") or ("DELETE" if os.getenv("PYTHONANYWHERE_DOMAIN") else "WAL")).upper()
+    if journal not in ("WAL", "DELETE", "TRUNCATE", "PERSIST"):
+        journal = "WAL"
     try:
-        cur.execute("PRAGMA journal_mode = WAL")
+        cur.execute(f"PRAGMA journal_mode = {journal}")
     except sqlite3.DatabaseError:
         pass
 

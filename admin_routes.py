@@ -13,7 +13,6 @@ import time
 from datetime import datetime, timedelta
 from io import BytesIO
 
-import pandas as pd
 import qrcode
 from flask import (Blueprint, abort, flash, redirect, render_template, request, send_file, session, url_for)
 from openpyxl import load_workbook
@@ -5058,29 +5057,29 @@ def admin_backup():
 
 @admin_bp.route("/export_questions")
 def export_questions():
-    conn = sqlite3.connect(DB_PATH, timeout=15)
+    """Excel export of the legacy question table (kept for old data); the v2 bank has its own export."""
+    from openpyxl import Workbook
 
-    query = """
-        SELECT
-            exam_type,
-            subject,
-            question_text,
-            option_a,
-            option_b,
-            option_c,
-            option_d,
-            correct_answer,
-            explanation
+    conn = sqlite3.connect(DB_PATH, timeout=15)
+    rows = conn.execute(
+        """
+        SELECT exam_type, subject, question_text, option_a, option_b, option_c, option_d,
+               correct_answer, explanation
         FROM questions
         ORDER BY id DESC
-    """
-
-    df = pd.read_sql_query(query, conn)
-
+        """
+    ).fetchall()
     conn.close()
 
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Questions"
+    ws.append(["exam_type", "subject", "question_text", "option_a", "option_b", "option_c", "option_d",
+               "correct_answer", "explanation"])
+    for r in rows:
+        ws.append(list(r))
     buf = BytesIO()
-    df.to_excel(buf, index=False)
+    wb.save(buf)
     buf.seek(0)
 
     return send_file(
