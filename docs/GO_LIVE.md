@@ -7,11 +7,11 @@
   that out; the rent is the only running cost of a website. GitHub and Paystack have no
   monthly fee (Paystack only takes 1.5% + ₦100 from each payment a student makes).
 - **The free plan we use: PythonAnywhere "Beginner".** ₦0, no card needed, keeps your
-  students / results / questions safely. Two limits:
-  1. **Online card payment does not work on the free plan** (it blocks the site from talking
-     to Paystack's servers). Students pay by bank transfer / WhatsApp and you activate them
-     in Admin — that is already built in. The moment you upgrade (about $5 ≈ ₦8,000/month)
-     card payments switch on; nothing needs rebuilding.
+  students / results / questions safely, and Paystack works on it (PythonAnywhere allows
+  `api.paystack.co` for free accounts). Two limits:
+  1. One small server: fine for tens of testers, slow if hundreds arrive at once. An own
+     domain such as `prepnova.ng` needs the paid plan (about $5/month) — upgrading keeps
+     everything, nothing is rebuilt.
   2. **Every 3 months you must click one button** ("Run until 3 months from today" on the
      Web tab). PythonAnywhere e-mails you before it is due. If you forget, the site shows a
      "disabled" page until you click it — nothing is lost.
@@ -79,7 +79,8 @@ the same line again (it is safe to repeat). If unsure, send a screenshot.
 3. Open **https://YOURNAME.pythonanywhere.com/admin_login** with your admin e-mail and
    password. Click **Backup** in the admin bar once to see the database file download.
 4. Open the **Subscribe** page as the student: it says "Online payment is being set up —
-   contact support on WhatsApp", with your WhatsApp number linked. That is correct for now.
+   contact support on WhatsApp", with your WhatsApp number linked. That is correct until
+   Step 6.
 
 ## Step 5 — Do this once every 3 months
 
@@ -88,13 +89,38 @@ Set a phone reminder now for two and a half months from today.
 
 ---
 
-## How students pay while you are on the free plan
+## Step 6 — Switch on Paystack in TEST mode (pretend money, for testers)
 
-1. Student picks a plan, sees "contact support on WhatsApp", messages you and transfers to
-   your bank account.
-2. You: **Admin → Subscriptions → Activate a plan manually** → type the student's e-mail,
-   choose the plan, note the transfer reference → **Activate**. Their mocks unlock instantly.
-   The payment is recorded with a `MANUAL-…` reference and shows in the reports.
+Test mode lets your friends "pay" with Paystack's pretend card, so the whole subscription
+flow gets tested without anyone spending a kobo. Real cards are refused in test mode.
+
+1. Log in at <https://dashboard.paystack.com>. Make sure the **Test mode** switch (top of the
+   page) is **ON**.
+2. **Settings → API Keys & Webhooks** → you see a **Test Public Key** (`pk_test_…`) and a
+   **Test Secret Key** (`sk_test_…`). Keep this page open.
+3. PythonAnywhere → **Consoles** → **Bash** → paste:
+
+   ```
+   python3 setup.py paystack
+   ```
+
+   It asks for the public key (paste it, Enter) and the secret key (paste it — typing is
+   hidden — Enter). It checks that both are test keys, saves them on the server and reloads.
+
+✅ It ends with "Paystack TEST keys saved" and shows the test card details.
+Open the Subscribe page as a student: the notice is gone and **Pay** buttons are active.
+
+**Give your testers this:**
+
+> To subscribe on the test site use Paystack's pretend card:
+> Card **4084 0840 8408 4081** · CVV **408** · expiry any future date · PIN **0000** if asked ·
+> OTP **123456**. No real money moves. After paying, the mock exams unlock immediately.
+
+The keys never go into GitHub or the code folder — they live in `~/.prepnova.env` on the
+server, which only you can read. **Never paste the secret key into WhatsApp or a chat.**
+
+Manual activation still works alongside: **Admin → Subscriptions → Activate a plan
+manually** (e-mail, plan, note) — useful to give a tester more days without "paying".
 
 ---
 
@@ -133,46 +159,43 @@ Drive. If anything ever goes wrong, that file restores everything.
 
 ---
 
-## Later: switching on Paystack card payments
+## Later: switching Paystack to LIVE (real money)
 
-Do this when you want students to pay by card/USSD/transfer automatically.
-
-**1. Upgrade PythonAnywhere** (about $5/month "Hacker" plan): **Account → Upgrade**.
-You will need a card that works for dollar payments (most naira cards are blocked for
-foreign payments — a virtual dollar card from a fintech app works).
-
-**2. Get Paystack approved** (1–3 working days): <https://dashboard.paystack.com> → the
+**1. Get Paystack approved** (1–3 working days): <https://dashboard.paystack.com> → the
 banner **"Activate your business"**.
 - *Starter Business*: government ID + BVN + a bank account in your own name. Fastest.
   Has a lifetime collection cap (Paystack states ₦8,000,000 for Nigeria).
 - *Registered Business*: CAC certificate + corporate bank account. No cap. You can start
   as Starter and upgrade later — nothing changes in the app.
 
-**3. Copy the live keys.** Paystack dashboard → switch **Test mode OFF** (top of page) →
-**Settings → API Keys & Webhooks**. You need the two keys starting `pk_live_` and `sk_live_`.
+**2. Copy the live keys.** Paystack dashboard → switch **Test mode OFF** →
+**Settings → API Keys & Webhooks** → the keys now start with `pk_live_` and `sk_live_`.
 On that same page set:
 - **Webhook URL:** `https://YOURNAME.pythonanywhere.com/paystack/webhook`
 - **Callback URL:** `https://YOURNAME.pythonanywhere.com/payment_callback`
 
-**4. Put the keys in the settings file.** PythonAnywhere → **Files** tab → in your home
-folder open **`.prepnova.env`** (tick "show hidden files" if you cannot see it) → add two
-lines at the bottom, then **Save**:
+**3. Put them on the server** — same command as Step 6, with the live keys:
 
 ```
-PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxxxxxxxxx
-PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx
+python3 setup.py paystack
 ```
 
-**5. Reload:** **Web** tab → green **Reload** button. Open the Subscribe page: the notice is
-gone and the **Pay** buttons work.
+It refuses a mixed pair (one test, one live) so you cannot half-switch by mistake.
 
-**6. Prove it with ₦100:** Admin → Subscriptions → Plans → set one plan to ₦100 → buy it with
+**4. Clean the test data.** Test-mode "payments" and trial accounts are in your database.
+Before real launch, delete tester accounts in **Admin → Students** (their payments and
+results go with them), or ask your developer for a fresh database with only the questions.
+
+**5. Prove it with ₦100:** Admin → Subscriptions → Plans → set one plan to ₦100 → buy it with
 your own card as a student → check it shows in your dashboard, in Admin → Subscriptions and
-in Paystack → Transactions → set the price back. Money reaches your bank the next working day.
+in Paystack → Transactions → set the price back. Money reaches your bank the next working day
+(Paystack's fee: 1.5% + ₦100, the ₦100 waived under ₦2,500, capped at ₦2,000).
 
-Rules the app enforces for you: both keys must be from the same mode (it warns if you mix
-test and live); every payment is verified with Paystack's servers before a plan is
-activated; a payment reference can never be used twice.
+Rules the app enforces for you: both keys must be from the same mode; every payment is
+verified with Paystack's servers before a plan is activated; a payment reference can never
+be used twice.
+
+To switch payments off again at any time: `python3 setup.py paystack off`.
 
 ---
 
@@ -187,6 +210,8 @@ activated; a payment reference can never be used twice.
 - **Moving to another host later** (Render, a VPS…): `render.yaml` is included and any host
   that can run `gunicorn app:app` with the same settings works. Take a Backup first and
   restore it there — nothing is tied to PythonAnywhere.
+- **Other installer commands:** `python3 setup.py` (update code + reload) ·
+  `python3 setup.py reload` (just reload) · `python3 setup.py paystack` / `paystack off`.
 
 ## Settings reference — `~/.prepnova.env`
 
@@ -201,7 +226,7 @@ activated; a payment reference can never be used twice.
 | `SUPPORT_EMAIL` / `SUPPORT_WHATSAPP` | you (Step 3) | shown across the site |
 | `SESSION_COOKIE_SECURE` | installer | `1` |
 | `WAEC_ENABLED` | installer | `0` until WAEC questions exist |
-| `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | you (later) | `pk_live_` / `sk_live_` |
+| `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | `python3 setup.py paystack` | test keys while testing, live keys at launch |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | you (optional) | e-mail sending |
 
 After editing this file always press **Reload** on the Web tab.

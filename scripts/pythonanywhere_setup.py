@@ -13,6 +13,11 @@ Later runs → "update mode": pulls the latest code from GitHub and reloads the 
              Students, results, payments and uploaded questions are never touched
              (the live database lives outside the code folder, in ~/prepnova-data/).
 
+Other commands:
+    python3 setup.py paystack        # add / replace Paystack keys (test or live) and reload
+    python3 setup.py paystack off    # remove Paystack keys (site falls back to manual activation)
+    python3 setup.py reload          # just reload the website
+
 Everything it does is idempotent: running it twice is safe.
 """
 import getpass
@@ -226,7 +231,55 @@ def reload_site():
     return ok
 
 
+def cmd_paystack(turn_off=False):
+    env = read_env()
+    if not env:
+        die("Run  python3 setup.py  first (the site has not been installed yet).")
+    if turn_off:
+        env.pop("PAYSTACK_PUBLIC_KEY", None)
+        env.pop("PAYSTACK_SECRET_KEY", None)
+        write_env(env)
+        reload_site()
+        print("\nPaystack keys removed. Students now see 'contact support on WhatsApp' and you activate plans in Admin.\n")
+        return
+    say("Paystack keys  (Paystack dashboard → Settings → API Keys & Webhooks)")
+    print("   TEST keys start with pk_test_/sk_test_  → pretend money, for testing.")
+    print("   LIVE keys start with pk_live_/sk_live_  → real money, after Paystack approves your business.")
+    pub = ask("Public key", validate=lambda v: None if re.match(r"^pk_(test|live)_[A-Za-z0-9]{20,}$", v) else "Should start with pk_test_ or pk_live_ followed by the long code.")
+    sec = ask("Secret key (typing is hidden)", secret=True,
+              validate=lambda v: None if re.match(r"^sk_(test|live)_[A-Za-z0-9]{20,}$", v) else "Should start with sk_test_ or sk_live_ followed by the long code.")
+    if pub[3:7] != sec[3:7]:
+        die("One key is TEST and the other is LIVE. Copy both from the same mode (the Test-mode switch at the top of the Paystack dashboard).")
+    env["PAYSTACK_PUBLIC_KEY"] = pub
+    env["PAYSTACK_SECRET_KEY"] = sec
+    write_env(env)
+    reload_site()
+    mode = "TEST" if pub.startswith("pk_test_") else "LIVE"
+    domain = env.get("APP_URL", f"https://{DOMAIN}")
+    print("\n" + "=" * 64)
+    print(f"  Paystack {mode} keys saved and the website reloaded.")
+    print(f"  Open {domain}/subscribe — the Pay buttons are now active.")
+    if mode == "TEST":
+        print("  Test card: 4084 0840 8408 4081, CVV 408, any future expiry,")
+        print("  PIN 0000 if asked, OTP 123456.  No real money moves.")
+    else:
+        print(f"  In Paystack set Webhook URL to {domain}/paystack/webhook")
+        print(f"  and Callback URL to {domain}/payment_callback.")
+    print("=" * 64 + "\n")
+
+
 def main():
+    args = sys.argv[1:]
+    if args:
+        check_token()
+        if args[0] == "paystack":
+            cmd_paystack(turn_off=(len(args) > 1 and args[1].lower() == "off"))
+        elif args[0] == "reload":
+            ok = reload_site()
+            print("Reloaded." if ok else "Reloaded, but /health did not answer yet — wait a minute and open the site.")
+        else:
+            die(f"Unknown command '{args[0]}'. Use:  python3 setup.py  |  python3 setup.py paystack  |  python3 setup.py paystack off  |  python3 setup.py reload")
+        return
     if "PYTHONANYWHERE_DOMAIN" not in os.environ and "PYTHONANYWHERE_SITE" not in os.environ:
         die("Run this inside a PythonAnywhere Bash console (Consoles tab → Bash).")
     check_token()
