@@ -5029,6 +5029,33 @@ def delete_question(question_id):
     )
 
 
+@admin_bp.route("/admin_backup")
+def admin_backup():
+    """Download a consistent copy of the whole live database (users, results, payments, questions)."""
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+    tmp.close()
+    try:
+        src = connect()
+        dst = sqlite3.connect(tmp.name)
+        try:
+            src.backup(dst)
+        finally:
+            dst.close()
+            src.close()
+        with open(tmp.name, "rb") as fh:
+            buf = BytesIO(fh.read())
+    finally:
+        try:
+            os.remove(tmp.name)
+        except OSError:
+            pass
+    buf.seek(0)
+    _audit("backup_download")
+    return send_file(buf, as_attachment=True, mimetype="application/octet-stream",
+                     download_name=f"prepnova-backup-{datetime.now():%Y%m%d-%H%M}.db")
+
+
 @admin_bp.route("/export_questions")
 def export_questions():
     conn = sqlite3.connect(DB_PATH, timeout=15)

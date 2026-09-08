@@ -7,6 +7,7 @@ so the old "visit /create_xxx_table" routes are no longer required (or exposed).
 
 import os
 import sqlite3
+import shutil
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,7 +32,28 @@ def _add_column(cursor, table, column, ddl):
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 
 
+def _seed_if_missing():
+    """First start on a hosting platform: DATABASE_PATH points at an empty persistent disk.
+
+    Copy the seed question bank shipped in the repo there, so the live site never starts
+    with zero questions.  Never touches an existing database.
+    """
+    seed = os.path.join(BASE_DIR, "database.db")
+    target = os.path.abspath(DB_PATH)
+    if target == os.path.abspath(seed) or os.path.exists(target) or not os.path.exists(seed):
+        return
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    src = sqlite3.connect(seed)
+    dst = sqlite3.connect(target)
+    try:
+        src.backup(dst)          # includes anything still in the WAL file
+    finally:
+        dst.close()
+        src.close()
+
+
 def init_db():
+    _seed_if_missing()
     conn = connect()
     cur = conn.cursor()
 

@@ -52,9 +52,10 @@ python app.py            # http://localhost:5000  (dev mode, no .env needed)
 
 ## Deploy
 
-See README → "Deploying". Summary: `gunicorn app:app`, set `SECRET_KEY`, `ADMIN_EMAIL`,
-`ADMIN_PASSWORD` (10+ chars), `PAYSTACK_PUBLIC_KEY`/`PAYSTACK_SECRET_KEY`, `APP_URL`,
-`SUPPORT_WHATSAPP`; register `https://<domain>/paystack/webhook` in Paystack.
+`docs/GO_LIVE.md` is the owner-facing guide (Render Blueprint `render.yaml`, Paystack live
+keys, update routine = `git push origin main` → Render auto-deploys, weekly Backup button).
+Production: `gunicorn app:app`, `SECRET_KEY`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, `DATABASE_PATH`
+on a persistent disk (seeded from repo `database.db` on first boot), `APP_URL`, Paystack keys.
 
 ## Commit history of the rebuild
 

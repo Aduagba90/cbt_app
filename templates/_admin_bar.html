@@ -41,6 +41,7 @@
       <a href="{{ url_for('admin_bp.manage_subscriptions') }}" class="{{ 'active' if ep in ['manage_subscriptions','activate_subscription','deactivate_subscription'] }}"><i class="bi bi-credit-card-2-front"></i> Subscriptions</a>
     </nav>
     <div class="right">
+      <a href="{{ url_for('admin_bp.admin_backup') }}" class="btn btn-sm btn-outline-light" title="Download the complete live database (students, results, payments, questions). Keep a copy in Google Drive weekly."><i class="bi bi-download"></i> Backup</a>
       <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-light" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View site</a>
       <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-accent"><i class="bi bi-box-arrow-right"></i> Logout</a>
     </div>

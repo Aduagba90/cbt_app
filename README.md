@@ -60,13 +60,20 @@ Optional: `python -m venv .venv && .venv\Scripts\activate` (Windows) or `source 
 
 ## Deploying (Render / Railway / Heroku-style)
 
+**Step-by-step, non-technical guide: `docs/GO_LIVE.md`** (Render Blueprint in `render.yaml`,
+Paystack live switch, how updates and backups work).
+
+Summary for developers:
+
 1. Set every variable from `.env.example` in the host's environment (never commit `.env`).
    Generate `SECRET_KEY` with `python -c "import secrets; print(secrets.token_hex(32))"`.
 2. `FLASK_ENV=production`, `SESSION_COOKIE_SECURE=1`, `APP_URL=https://your-domain`.
-3. Mount a persistent disk and point `DATABASE_PATH` at it.
+3. Mount a persistent disk and point `DATABASE_PATH` at it. On first start the app copies the
+   seed `database.db` there; afterwards the disk copy is authoritative and never overwritten.
 4. In the Paystack dashboard set the webhook URL to `https://your-domain/paystack/webhook`
    and switch to live keys.
-5. Start command is in `Procfile` (`gunicorn app:app`).
+5. Start command is in `Procfile` (`gunicorn app:app`). `/health` is the health-check URL.
+6. Backups: Admin bar → **Backup** downloads a consistent copy of the live database.
 
 ## Payments (Paystack)
 
