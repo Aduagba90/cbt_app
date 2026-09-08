@@ -30,6 +30,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 REPO = "https://github.com/Aduagba90/cbt_app.git"
@@ -62,10 +63,20 @@ def run(cmd, **kw):
     return r.stdout
 
 
-def api(method, path, data=None):
-    body = json.dumps(data).encode() if data is not None else None
-    req = urllib.request.Request(f"{API}{path}", data=body, method=method,
-                                 headers={"Authorization": f"Token {TOKEN}", "Content-Type": "application/json"})
+def api(method, path, data=None, as_json=False):
+    """Call the PythonAnywhere API. Their endpoints expect classic form-encoded parameters
+    (that is what their own examples use); a few newer ones accept JSON."""
+    headers = {"Authorization": f"Token {TOKEN}"}
+    body = None
+    if data:
+        if as_json:
+            body = json.dumps(data).encode()
+            headers["Content-Type"] = "application/json"
+        else:
+            form = {k: ("true" if v is True else "false" if v is False else v) for k, v in data.items()}
+            body = urllib.parse.urlencode(form).encode()
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+    req = urllib.request.Request(f"{API}{path}", data=body, method=method, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             raw = resp.read().decode() or "{}"
@@ -193,17 +204,23 @@ from app import app as application  # noqa: E402
 
 
 def ensure_webapp():
+    """Create the web app if needed and apply its settings. Returns True if it was just created."""
     status, apps = api("GET", "/webapps/")
     if status != 200:
         die(f"Could not talk to PythonAnywhere ({status}): {apps}")
     existing = [a for a in apps if a.get("domain_name") == DOMAIN]
-    pyver = "python" + python_version().replace(".", "")
+    created = False
     if not existing:
+        if apps:
+            others = ", ".join(a.get("domain_name", "?") for a in apps)
+            die(f"You already have a website ({others}) and free accounts allow only one.\n"
+                f"  Web tab → that website → 'Delete' at the very bottom, then run  python3 setup.py  again.")
         say(f"Creating the website https://{DOMAIN}")
+        pyver = "python" + python_version().replace(".", "")
         status, out = api("POST", "/webapps/", {"domain_name": DOMAIN, "python_version": pyver})
         if status not in (200, 201):
-            die(f"Could not create the website ({status}): {out}\n"
-                "  If you already have a different website on the Web tab, delete it first (free accounts allow one).")
+            die(f"Could not create the website ({status}): {out}")
+        created = True
         time.sleep(2)
     say("Applying website settings (code folder, environment, HTTPS)")
     status, out = api("PATCH", f"/webapps/{DOMAIN}/", {"source_directory": CODE, "virtualenv_path": VENV, "force_https": True})
@@ -213,12 +230,15 @@ def ensure_webapp():
     # Static files served directly by the web server (faster, no Python needed)
     status, mappings = api("GET", f"/webapps/{DOMAIN}/static_files/")
     if status == 200 and not any(m.get("url") == "/static/" for m in mappings):
-        api("POST", f"/webapps/{DOMAIN}/static_files/", {"url": "/static/", "path": os.path.join(CODE, "static")})
+        st, out = api("POST", f"/webapps/{DOMAIN}/static_files/", {"url": "/static/", "path": os.path.join(CODE, "static")})
+        if st not in (200, 201):
+            api("POST", f"/webapps/{DOMAIN}/static_files/", {"url": "/static/", "path": os.path.join(CODE, "static")}, as_json=True)
+    return created
 
 
 def reload_site():
     say("Reloading the website")
-    status, out = api("POST", f"/webapps/{DOMAIN}/reload/", {})
+    status, out = api("POST", f"/webapps/{DOMAIN}/reload/")
     if status not in (200, 201):
         die(f"Reload failed ({status}): {out}")
     time.sleep(4)
@@ -288,7 +308,7 @@ def main():
     env, first = ensure_env()
     ensure_code()
     ensure_venv()
-    ensure_webapp()
+    created = ensure_webapp()
     ok = reload_site()
 
     print("\n" + "=" * 64)
@@ -298,7 +318,7 @@ def main():
         print(f"  Finished, but https://{DOMAIN}/health did not answer yet.")
         print("  Wait one minute and open the address. If it still fails, open the")
         print("  Web tab → 'Error log' and send the last red lines to your developer.")
-    if first:
+    if first or created:
         print(f"  Admin login:  https://{DOMAIN}/admin_login   ({env['ADMIN_EMAIL']})")
         print(f"  Settings file: {ENV_FILE}   (Paystack keys go here later)")
         print(f"  Database:      {env['DATABASE_PATH']}   (back it up from Admin → Backup)")
