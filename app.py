@@ -11,6 +11,7 @@ Administration routes live in admin_routes.py.
 import hashlib
 import hmac
 import json
+from urllib.parse import urlparse
 import logging
 import os
 import secrets
@@ -21,6 +22,7 @@ import requests
 from dotenv import load_dotenv
 from flask import (Flask, abort, flash, g, jsonify, make_response, redirect, render_template, request, session, url_for)
 from flask_mail import Mail
+from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -197,6 +199,24 @@ def _duration(v):
 # Request lifecycle: CSRF, session validation, security headers
 # ---------------------------------------------------------------------------
 
+def _stale_form_redirect():
+    """A form was submitted with an expired/missing security token (page left open too long, or the
+    user logged in/out in another tab). Nothing was saved — send them back to try again politely."""
+    flash("That page had been open for a while, so the form was reset for your safety. Nothing was changed — please try again.", "warning")
+    ref = request.referrer or ""
+    try:
+        same_site = urlparse(ref).netloc == request.host
+    except ValueError:
+        same_site = False
+    if same_site and urlparse(ref).path != request.path:
+        return redirect(ref)
+    if request.url_rule is not None and "GET" in (request.url_rule.methods or ()):
+        return redirect(request.path)
+    if session.get("admin") and request.path.startswith(("/admin", "/manage", "/access_codes")):
+        return redirect(url_for("admin_bp.admin"))
+    return redirect(url_for("dashboard") if "user" in session else url_for("home"))
+
+
 @app.before_request
 def _before():
     g.request_started = time.time()
@@ -208,7 +228,13 @@ def _before():
     # CSRF on every state-changing request (forms + JSON)
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         if request.endpoint != "paystack_webhook":
-            validate_csrf()
+            try:
+                validate_csrf()
+            except BadRequest:
+                # JSON clients (exam room) keep the strict 400; ordinary forms get a friendly retry.
+                if request.is_json or wants_json_response() or request.headers.get("X-CSRFToken"):
+                    raise
+                return _stale_form_redirect()
 
     # Validate student sessions against the server-side session table
     if "user" in session:
