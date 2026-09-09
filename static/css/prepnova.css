@@ -720,3 +720,14 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
 .pn-ref-banner b { display: block; font-size: .9rem; }
 .pn-ref-banner small { display: block; font-size: .78rem; }
 .pn-share-card { border-left: 4px solid #25d366; }
+
+/* ===== Growth pack 2: PIN box, fix-mistakes, target ===== */
+.pn-pin-card { border-left: 4px solid var(--pn-accent); }
+.pn-pin-input { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; min-width: 190px; }
+.pn-boost-fix { background: linear-gradient(120deg, #7c2d12 0%, #dc2626 100%); }
+.pn-boost-fix.done { background: linear-gradient(120deg, #334155 0%, #64748b 100%); }
+.pn-fix-hero { border-top: 4px solid var(--pn-danger); }
+.pn-target { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.pn-target-form { min-width: 200px; }
+.pn-target-form .input-group { max-width: 230px; }
+@media (max-width: 767.98px) { .pn-target { width: 100%; padding-top: .75rem; border-top: 1px solid rgba(15, 31, 61, .08); } .pn-target-ring { display: none; } }

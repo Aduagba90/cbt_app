@@ -215,13 +215,17 @@
         </div>
         <div class="row g-3 g-lg-4">
             {% set only = [
-                ("bi-fire", "tint-red", "Daily Challenge", "5 fresh questions every day — the same set for every student in Nigeria. Finish it to keep your streak alive and see how many students you beat."),
-                ("bi-whatsapp", "tint-green", "Share-to-WhatsApp result slips", "One tap posts your score to your class group with a verification link, so nobody can say you edited the screenshot."),
-                ("bi-gift", "tint-gold", "Invite a friend, both get free days", "Your invite link gives you and your friend bonus days once they finish their first mock. Study partners pay less."),
-                ("bi-shield-check", "tint-blue", "Anti-cheat mock exams", "Tab switches are counted and shown on your slip, exactly like the pressure of the real hall — so your practice score is a score you can trust."),
+                ("bi-bandaid", "tint-red", "Fix my mistakes", "Every question you miss is saved. Re-answer it correctly and it leaves your list — the fastest known way to add marks."),
+                ("bi-graph-up-arrow", "tint-blue", "Projected UTME score & target", "Set your target (say 280). After each full mock we project your /400 score from your last three and show the gap to close."),
+                ("bi-fire", "tint-gold", "Daily Challenge & streaks", "5 fresh questions every day, same set for every student in Nigeria. Keep your streak alive and see how many students you beat."),
+                ("bi-speedometer2", "tint-purple", "Pace meter", "Your result slip shows seconds per question against what JAMB allows, so you never run out of time in the real hall."),
+                ("bi-whatsapp", "tint-green", "WhatsApp result slips", "One tap posts your score to your class group with a verification link — nobody can say you edited the screenshot."),
+                ("bi-gift", "tint-cyan", "Invite a friend, both get free days", "Your invite link gives you and your friend bonus days once they finish their first mock. Study partners pay less."),
+                ("bi-ticket-perforated", "tint-navy", "School & scholarship PINs", "Schools, tutorial centres and sponsors can buy Access PINs in bulk — students unlock full access with one code, no card needed."),
+                ("bi-shield-check", "tint-red", "Anti-cheat mock exams", "Tab switches are counted and shown on your slip, exactly like the pressure of the real hall — a score you can trust."),
             ] %}
             {% for icon, tint, title, text in only %}
-            <div class="col-sm-6 col-lg-3 reveal" data-delay="{{ loop.index0 }}">
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="{{ loop.index0 % 4 }}">
                 <div class="pn-only-card">
                     <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
                     <h3>{{ title }}</h3>

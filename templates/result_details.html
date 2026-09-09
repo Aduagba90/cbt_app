@@ -32,6 +32,21 @@
                 </div>
             </div>
         </div>
+        {% if pace or projection %}
+        <div class="card mt-3 anim-rise d1">
+            <div class="card-body small">
+                {% if pace %}
+                <div class="d-flex align-items-center gap-2 mb-1"><i class="bi bi-speedometer2 {{ 'text-success' if pace.ok else 'text-danger' }}"></i><b>Pace: {{ pace.per_q }} sec per question</b></div>
+                <div class="text-muted">{% if pace.ok %}Within the {{ pace.allowed }} sec the real exam allows. Good time management.{% else %}The real exam allows about {{ pace.allowed }} sec per question — practise answering faster or you may run out of time.{% endif %}</div>
+                {% endif %}
+                {% if projection %}
+                <hr class="my-2">
+                <div class="d-flex align-items-center gap-2 mb-1"><i class="bi bi-graph-up-arrow text-primary"></i><b>Projected UTME score: {{ projection }}/400</b></div>
+                <div class="text-muted">Average of your last three full mocks.{% if target %} Target: <b>{{ target }}</b> — {% if projection >= target %}you are there, keep it up! 🎯{% else %}{{ target - projection }} marks to go.{% endif %}{% endif %}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         <div class="card mt-3 anim-rise d1 pn-share-card">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-megaphone-fill text-primary"></i><b>{{ 'Share your score' if pct >= 50 else 'Invite a study partner' }}</b></div>

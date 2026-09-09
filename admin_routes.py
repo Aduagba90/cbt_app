@@ -23,6 +23,7 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 
 from db import connect, DB_PATH
 from helpers import activate_subscription as grant_plan
+from helpers import generate_access_codes, pretty_code
 from security import admin_required
 import sqlite3
 
@@ -1567,6 +1568,89 @@ def deactivate_subscription(user_id):
     _audit("deactivate_subscription", user["email"])
     flash(f"Subscription deactivated for {user['name'] or user['email']}.", "info")
     return redirect(url_for("admin_bp.manage_subscriptions", q=user["email"]))
+
+
+# ---------------------------------------------------------------------------
+# Access PINs (vouchers)
+# ---------------------------------------------------------------------------
+
+def _codes_page(new_codes=None, new_days=None):
+    conn = connect()
+    cur = conn.cursor()
+    rows = cur.execute(
+        """SELECT c.*, (SELECT r.username FROM access_code_redemptions r WHERE r.code_id = c.id ORDER BY r.id DESC LIMIT 1) AS last_user
+           FROM access_codes c ORDER BY c.id DESC LIMIT 300"""
+    ).fetchall()
+    now = datetime.now()
+    codes = []
+    for r in rows:
+        expired = False
+        if r["expires_at"]:
+            try:
+                expired = datetime.strptime(r["expires_at"], "%Y-%m-%d %H:%M:%S") < now
+            except ValueError:
+                expired = False
+        if not r["is_active"] or expired:
+            state = "off"
+        elif r["uses"] >= r["max_uses"]:
+            state = "used"
+        else:
+            state = "live"
+        codes.append({**dict(r), "pretty": pretty_code(r["code"]), "state": state})
+    stats = {"live": sum(1 for c in codes if c["state"] == "live"),
+             "redeemed": cur.execute("SELECT COUNT(*) FROM access_code_redemptions").fetchone()[0]}
+    conn.close()
+    return render_template("access_codes.html", codes=codes, stats=stats, new_codes=[pretty_code(c) for c in (new_codes or [])], new_days=new_days)
+
+
+@admin_bp.route("/access_codes")
+def access_codes():
+    return _codes_page()
+
+
+@admin_bp.route("/access_codes/create", methods=["POST"])
+def create_access_codes():
+    try:
+        count = max(1, min(200, int(request.form.get("count") or 1)))
+        days = max(1, min(730, int(request.form.get("days") or 30)))
+        max_uses = max(1, min(10000, int(request.form.get("max_uses") or 1)))
+    except ValueError:
+        flash("Please enter whole numbers for count, days and uses.", "danger")
+        return redirect(url_for("admin_bp.access_codes"))
+    label = (request.form.get("label") or "").strip()[:40] or "Access PIN"
+    custom = (request.form.get("custom") or "").strip()
+    expires_raw = (request.form.get("expires") or "").strip()
+    expires_at = None
+    if expires_raw:
+        try:
+            expires_at = datetime.strptime(expires_raw, "%Y-%m-%d").replace(hour=23, minute=59, second=59).strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            flash("The expiry date was not understood — PINs were not created.", "danger")
+            return redirect(url_for("admin_bp.access_codes"))
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        made = generate_access_codes(cur, count, days, label, max_uses, expires_at, session.get("admin"), custom=custom or None)
+        conn.commit()
+    except ValueError as exc:
+        conn.close()
+        flash(str(exc), "danger")
+        return redirect(url_for("admin_bp.access_codes"))
+    conn.close()
+    _audit("create_access_codes", f"{len(made)} x {days}d '{label}' uses={max_uses}")
+    return _codes_page(new_codes=made, new_days=days)
+
+
+@admin_bp.route("/access_codes/<int:code_id>/toggle", methods=["POST"])
+def toggle_access_code(code_id):
+    conn = connect()
+    row = conn.execute("SELECT is_active, code FROM access_codes WHERE id = ?", (code_id,)).fetchone()
+    if row:
+        conn.execute("UPDATE access_codes SET is_active = ? WHERE id = ?", (0 if row["is_active"] else 1, code_id))
+        conn.commit()
+        _audit("toggle_access_code", f"{row['code']} -> {'off' if row['is_active'] else 'on'}")
+    conn.close()
+    return redirect(url_for("admin_bp.access_codes"))
 
 
 @admin_bp.route("/manage_results")

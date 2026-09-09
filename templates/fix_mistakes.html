@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Fix my mistakes{% endblock %}
+
+{% block content %}
+{% set answered = feedback is not none %}
+<div class="pn-page-head anim-rise mb-3">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('mistakes') }}">Fix my mistakes</a><i class="bi bi-chevron-right"></i><span>{{ subject or 'Mixed drill' }}</span></div>
+        <h1 class="h3"><i class="bi bi-bandaid-fill text-danger me-1"></i>{{ subject or 'Mixed drill' }}</h1>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="pn-kpi py-2 px-3"><b class="fs-6 text-success">{{ state.fixed }}/{{ state.tried }}</b><small>fixed this session</small></div>
+        <div class="pn-kpi py-2 px-3"><b class="fs-6 text-danger">{{ summary.open }}</b><small>left</small></div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="pn-qcard">
+            <div class="pn-qhead">
+                <div class="pn-qnum">
+                    {% if item %}<span class="badge bg-danger me-1"><i class="bi bi-x-octagon me-1"></i>Missed {{ item['times_wrong'] }}×</span>{% endif %}
+                    {% if q.topic %}<span class="text-muted fw-semibold">{{ q.topic }}</span>{% endif %}
+                    {% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}
+                </div>
+            </div>
+            {% if q.passage %}<div class="pn-passage">{{ q.passage }}</div>{% endif %}
+            <div class="pn-qtext">{{ q.text }}</div>
+
+            {% if not answered %}
+            <form method="POST" action="{{ url_for('fix_mistakes', subject=subject) }}" id="practiceForm" data-once>
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <input type="hidden" name="question_id" value="{{ q.id }}">
+                <input type="hidden" name="source" value="{{ q.source }}">
+                {% for k, v in q.options.items() %}
+                <label class="pn-option" data-key="{{ k }}">
+                    <input type="radio" name="answer" value="{{ k }}" required>
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                </label>
+                {% endfor %}
+                <div class="pn-qactions">
+                    <div class="left"><a href="{{ url_for('mistakes') }}" class="btn btn-outline-secondary"><i class="bi bi-grid"></i> Subjects</a></div>
+                    <div class="right"><button class="btn btn-danger" type="submit" id="checkBtn" disabled data-loading="Checking…">Check answer <i class="bi bi-check2-circle"></i></button></div>
+                </div>
+            </form>
+            {% else %}
+                {% for k, v in q.options.items() %}
+                <div class="pn-option locked {% if k == feedback.q.correct %}correct{% elif k == feedback.chosen %}wrong{% endif %}">
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                    {% if k == feedback.q.correct %}<i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>{% elif k == feedback.chosen %}<i class="bi bi-x-circle-fill text-danger ms-auto fs-5"></i>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="pn-explain {{ '' if feedback.is_correct else 'wrong' }}">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        {% if feedback.is_correct %}<i class="bi bi-patch-check-fill text-success fs-4"></i><b class="text-success">Fixed! This question leaves your list.</b>{% else %}<i class="bi bi-arrow-repeat text-warning fs-4"></i><b class="text-danger">Still not right.</b> <span>The correct answer is <b>{{ feedback.q.correct }}</b> — it stays on your list until you get it.</span>{% endif %}
+                    </div>
+                    <h5>Explanation</h5>
+                    <div style="white-space:pre-line">{{ feedback.q.explanation }}</div>
+                </div>
+                <div class="pn-qactions">
+                    <div class="left"><a href="{{ url_for('mistakes') }}" class="btn btn-outline-secondary"><i class="bi bi-grid"></i> Subjects</a></div>
+                    <div class="right"><a href="{{ url_for('fix_mistakes', subject=subject) }}" class="btn btn-danger" id="nextQ">{{ 'Next mistake' if summary.open else 'Finish' }} <i class="bi bi-arrow-right"></i></a></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="h6 text-uppercase text-muted ls-1 mb-3">Why this works</h3>
+                <p class="small text-muted mb-2">Re-answering a question you got wrong — after reading the explanation — is the single most effective revision technique. Each fix is one more mark on exam day.</p>
+                <div class="progress mb-2" style="height:10px"><div class="progress-bar bg-success" style="width:{{ (100 * summary.fixed_total / (summary.fixed_total + summary.open))|int if (summary.fixed_total + summary.open) else 0 }}%"></div></div>
+                <div class="small text-muted">{{ summary.fixed_total }} fixed · {{ summary.open }} still open</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var form = document.getElementById('practiceForm'); if (!form) { var n = document.getElementById('nextQ'); document.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === 'ArrowRight') { n.click(); } }); return; }
+    var opts = form.querySelectorAll('.pn-option'), btn = document.getElementById('checkBtn');
+    function pick(o){ opts.forEach(function(x){ x.classList.remove('selected'); }); o.classList.add('selected'); o.querySelector('input').checked = true; btn.disabled = false; }
+    opts.forEach(function(o){ o.addEventListener('click', function(){ pick(o); }); });
+    document.addEventListener('keydown', function(e){
+        var k = e.key.toUpperCase();
+        if (['A','B','C','D'].indexOf(k) > -1) { var o = form.querySelector('.pn-option[data-key="'+k+'"]'); if (o) pick(o); }
+        else if (e.key === 'Enter' && !btn.disabled) { form.requestSubmit(); }
+    });
+})();
+</script>
+{% endblock %}

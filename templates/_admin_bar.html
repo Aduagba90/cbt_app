@@ -39,6 +39,7 @@
       <a href="{{ url_for('admin_bp.manage_post_utme_universities') }}" class="{{ 'active' if 'post_utme' in ep or 'subject_combination' in ep }}"><i class="bi bi-building"></i> Post-UTME</a>
       <a href="{{ url_for('admin_bp.manage_results') }}" class="{{ 'active' if ep in ['manage_results','view_result','review_result'] }}"><i class="bi bi-bar-chart-line"></i> Results</a>
       <a href="{{ url_for('admin_bp.manage_subscriptions') }}" class="{{ 'active' if ep in ['manage_subscriptions','activate_subscription','deactivate_subscription'] }}"><i class="bi bi-credit-card-2-front"></i> Subscriptions</a>
+      <a href="{{ url_for('admin_bp.access_codes') }}" class="{{ 'active' if ep in ['access_codes','create_access_codes','toggle_access_code'] }}"><i class="bi bi-ticket-perforated"></i> Access PINs</a>
     </nav>
     <div class="right">
       <a href="{{ url_for('admin_bp.admin_backup') }}" class="btn btn-sm btn-outline-light" title="Download the complete live database (students, results, payments, questions). Keep a copy in Google Drive weekly."><i class="bi bi-download"></i> Backup</a>

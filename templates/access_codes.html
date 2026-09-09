@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Access PINs — PrepNova Admin</title>
+<link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<style>
+  .pin { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 800; letter-spacing: .08em; font-size: 1.05rem; }
+  .pin-new { background: #e3f6ec; border: 1px dashed #0b7a4b; border-radius: 12px; padding: .6rem .9rem; display: inline-block; margin: .2rem; }
+  .state { font-size: .72rem; font-weight: 700; padding: .2rem .55rem; border-radius: 999px; }
+  .state-live { background: #e3f6ec; color: #0b7a4b; } .state-used { background: #eef1f5; color: #6b7280; } .state-off { background: #fde8e8; color: #b42318; }
+</style>
+</head>
+<body>
+<div class="container-xl my-4">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+      <h2 class="mb-1">🎟️ Access PINs</h2>
+      <p class="text-muted mb-0">Create PINs that give full access without paying online — for testers, scholarships, schools, tutorial centres or bank-transfer buyers. Students enter the PIN at <b>Subscribe → “I have a PIN”</b>.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <div class="border rounded-3 px-3 py-2 bg-white"><b>{{ stats.live }}</b> <span class="small text-muted">live</span></div>
+      <div class="border rounded-3 px-3 py-2 bg-white"><b>{{ stats.redeemed }}</b> <span class="small text-muted">redemptions</span></div>
+    </div>
+  </div>
+
+  {% if new_codes %}
+  <div class="card border-0 shadow-sm mb-4" style="border-left: 5px solid #0b7a4b !important">
+    <div class="card-body">
+      <h5 class="card-title mb-1">✅ {{ new_codes|length }} PIN{{ '' if new_codes|length == 1 else 's' }} created</h5>
+      <p class="small text-muted mb-2">Copy them now and send them to your testers (WhatsApp is fine). Each PIN works on <b>{{ new_days }} days</b> of full access.</p>
+      <div class="mb-2">{% for c in new_codes %}<span class="pin-new pin">{{ c }}</span>{% endfor %}</div>
+      <button class="btn btn-sm btn-outline-primary" data-copy="{{ new_codes|join('\n') }}" data-copied="All PINs copied">Copy all PINs</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title mb-1">➕ Create PINs</h5>
+      <form method="POST" action="{{ url_for('admin_bp.create_access_codes') }}" class="row g-2 align-items-end">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+        <div class="col-md-2"><label class="form-label small fw-bold">How many</label><input type="number" name="count" class="form-control" min="1" max="200" value="10"></div>
+        <div class="col-md-2"><label class="form-label small fw-bold">Days each</label><input type="number" name="days" class="form-control" min="1" max="730" value="30" required></div>
+        <div class="col-md-2"><label class="form-label small fw-bold">Uses per PIN</label><input type="number" name="max_uses" class="form-control" min="1" max="10000" value="1"></div>
+        <div class="col-md-3"><label class="form-label small fw-bold">Label</label><input type="text" name="label" class="form-control" maxlength="40" placeholder="e.g. Tester PIN, Kings College" value="Tester PIN"></div>
+        <div class="col-md-3"><label class="form-label small fw-bold">Custom PIN (optional)</label><input type="text" name="custom" class="form-control" maxlength="24" placeholder="e.g. MYSCHOOL2026"></div>
+        <div class="col-md-3"><label class="form-label small fw-bold">PIN stops working on (optional)</label><input type="date" name="expires" class="form-control"></div>
+        <div class="col-md-3"><button class="btn btn-success w-100">Create PINs</button></div>
+        <div class="col-12"><p class="small text-muted mb-0">Tip for testers: create <b>1 custom PIN</b> like <code>PREPNOVATEST</code> with <b>uses = 50</b> and <b>days = 30</b>, then send that one word to everybody. Tip for a school: label it with the school name and give each student their own PIN.</p></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>PIN</th><th>Label</th><th class="text-center">Days</th><th class="text-center">Used</th><th>Expires</th><th>Status</th><th>Last used by</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        {% for c in codes %}
+          <tr>
+            <td class="pin">{{ c.pretty }}</td>
+            <td>{{ c.label or '—' }}</td>
+            <td class="text-center">{{ c.days }}</td>
+            <td class="text-center">{{ c.uses }} / {{ c.max_uses }}</td>
+            <td>{{ c.expires_at[:10] if c.expires_at else '—' }}</td>
+            <td><span class="state state-{{ c.state }}">{{ {'live':'Live','used':'Used up','off':'Disabled'}[c.state] }}</span></td>
+            <td class="small text-muted">{{ c.last_user or '—' }}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-sm btn-outline-secondary" data-copy="{{ c.pretty }}" data-copied="Copied">Copy</button>
+              <form method="POST" action="{{ url_for('admin_bp.toggle_access_code', code_id=c.id) }}" class="d-inline">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <button class="btn btn-sm {{ 'btn-outline-danger' if c.is_active else 'btn-outline-success' }}">{{ 'Disable' if c.is_active else 'Enable' }}</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No PINs yet. Create some above.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/js/prepnova.js?v=4"></script>
+</body>
+</html>

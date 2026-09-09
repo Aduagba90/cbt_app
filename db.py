@@ -88,7 +88,7 @@ def init_db():
         ("date_joined", "TIMESTAMP"), ("is_active", "INTEGER DEFAULT 1"),
         ("profile_picture", "TEXT"), ("email_verified", "INTEGER DEFAULT 0"),
         ("last_login", "TEXT"), ("state_of_origin", "TEXT"), ("school", "TEXT"),
-        ("referral_code", "TEXT"), ("referred_by", "TEXT"),
+        ("referral_code", "TEXT"), ("referred_by", "TEXT"), ("target_score", "INTEGER"),
     ]:
         _add_column(cur, "users", col, ddl)
     cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
@@ -540,6 +540,48 @@ def init_db():
             UNIQUE(username, day)
         )
     """)
+
+    # ------------------------------------------------------------ growth: access PINs (vouchers)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS access_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            label TEXT,
+            days INTEGER NOT NULL,
+            max_uses INTEGER NOT NULL DEFAULT 1,
+            uses INTEGER NOT NULL DEFAULT 0,
+            expires_at TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_by TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS access_code_redemptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(code_id, username)
+        )
+    """)
+
+    # ------------------------------------------------------------ growth: "Fix my mistakes" pool
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS mistakes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            question_source TEXT NOT NULL,
+            question_id INTEGER NOT NULL,
+            subject TEXT,
+            exam_type TEXT,
+            times_wrong INTEGER DEFAULT 1,
+            last_wrong_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            cleared_at TIMESTAMP,
+            UNIQUE(username, question_source, question_id)
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_mistakes_user ON mistakes(username, cleared_at)")
 
     conn.commit()
     conn.close()

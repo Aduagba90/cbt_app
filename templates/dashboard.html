@@ -28,10 +28,22 @@
                         <a href="{{ url_for('practice') }}" class="btn btn-outline-primary"><i class="bi bi-lightning-charge me-1"></i> Quick practice</a>
                     </div>
                 </div>
-                <div class="d-none d-md-block text-end">
-                    <div class="pn-score-ring" style="--p:{{ average }};--c:{{ 'var(--pn-success)' if average >= 70 else ('var(--pn-warning)' if average >= 50 else 'var(--pn-danger)') }};width:120px;height:120px">
-                        <div><b style="font-size:1.5rem">{{ average }}%</b><small>average</small></div>
+                <div class="pn-target">
+                    {% if projection %}
+                    <div class="pn-target-ring pn-score-ring" style="--p:{{ (100 * projection / (target or 400))|int if (target or 400) else 0 }};--c:{{ 'var(--pn-success)' if (target and projection >= target) or (not target and projection >= 280) else ('var(--pn-warning)' if projection >= 200 else 'var(--pn-danger)') }};width:112px;height:112px">
+                        <div><b style="font-size:1.35rem">{{ projection }}</b><small>projected /400</small></div>
                     </div>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('set_target') }}" class="pn-target-form">
+                        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                        <label class="small text-muted fw-semibold" for="targetInput">{% if target %}My target{% else %}Set my UTME target{% endif %}</label>
+                        <div class="input-group input-group-sm">
+                            <input id="targetInput" type="number" class="form-control" name="target" min="100" max="400" step="5" value="{{ target or 280 }}" inputmode="numeric">
+                            <span class="input-group-text">/400</span>
+                            <button class="btn btn-outline-primary" type="submit">{{ 'Update' if target else 'Save' }}</button>
+                        </div>
+                        {% if target and projection %}<div class="small mt-1 {{ 'text-success' if projection >= target else 'text-muted' }}">{% if projection >= target %}On target 🎯{% else %}{{ target - projection }} marks to go — projection = last 3 mocks.{% endif %}</div>{% elif target %}<div class="small mt-1 text-muted">Write a full JAMB mock to see your projection.</div>{% endif %}
+                    </form>
                 </div>
             </div>
         </div>
@@ -54,9 +66,19 @@
     </div>
 </div>
 
-<!-- Daily challenge + invite -->
+<!-- Daily challenge + fix mistakes + invite -->
 <div class="row g-3 mb-4">
-    <div class="col-md-7">
+    <div class="col-md-6 col-xl-4">
+        <a href="{{ url_for('mistakes') }}" class="pn-boost pn-boost-fix anim-rise {{ 'done' if not mistakes.open else '' }}">
+            <span class="pn-boost-icon"><i class="bi bi-bandaid"></i></span>
+            <span class="pn-boost-body">
+                <b>{% if mistakes.open %}Fix my mistakes: {{ mistakes.open }} waiting{% else %}No mistakes to fix{% endif %}</b>
+                <small>{% if mistakes.open %}Questions you missed — clear them one by one.{% elif mistakes.fixed_total %}{{ mistakes.fixed_total }} fixed so far. Write a mock to find more.{% else %}Missed questions from mocks and practice collect here.{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">{{ 'Fix' if mistakes.open else 'Open' }} <i class="bi bi-arrow-right"></i></span>
+        </a>
+    </div>
+    <div class="col-md-6 col-xl-4">
         <a href="{{ url_for('daily_challenge') }}" class="pn-boost pn-boost-challenge anim-rise d1 {{ 'done' if challenge_done else '' }}">
             <span class="pn-boost-icon"><i class="bi bi-fire"></i></span>
             <span class="pn-boost-body">
@@ -66,7 +88,7 @@
             <span class="pn-boost-cta">{{ 'Review' if challenge_done else 'Start' }} <i class="bi bi-arrow-right"></i></span>
         </a>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-12 col-xl-4">
         <a href="{{ url_for('invite') }}" class="pn-boost pn-boost-invite anim-rise d2">
             <span class="pn-boost-icon"><i class="bi bi-gift"></i></span>
             <span class="pn-boost-body">

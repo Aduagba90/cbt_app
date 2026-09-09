@@ -42,7 +42,7 @@
 
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <h5 class="card-title mb-1">✅ Activate a plan manually</h5>
+      <h5 class="card-title mb-1">✅ Activate a plan manually <a href="{{ url_for('admin_bp.access_codes') }}" class="btn btn-sm btn-outline-primary ms-2">🎟️ Or create Access PINs for testers &amp; schools</a></h5>
       <p class="text-muted small mb-3">Use this when a student pays by bank transfer, cash or POS, or when support needs to fix an account. The plan is <b>added on top</b> of any time still remaining, and the action is recorded in the audit log.</p>
       <form method="POST" action="{{ url_for('admin_bp.activate_subscription') }}" class="row g-2 align-items-end">
         <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">

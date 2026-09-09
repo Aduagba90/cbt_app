@@ -22,6 +22,22 @@
 <div class="alert alert-danger d-flex align-items-center gap-3 anim-rise"><span class="pn-stat-icon tint-red"><i class="bi bi-exclamation-octagon"></i></span><div><b>Your {{ sub.plan }} plan has expired.</b> Renew below to continue taking mock exams.</div></div>
 {% endif %}
 
+<div class="card anim-rise mb-4 pn-pin-card" id="pin">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="pn-stat-icon tint-gold"><i class="bi bi-ticket-perforated-fill"></i></span>
+                <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship or the PrepNova team. Enter it to unlock full access instantly — no card needed.</div></div>
+            </div>
+            <form method="POST" action="{{ url_for('redeem_pin') }}" class="d-flex gap-2 flex-grow-1 flex-sm-grow-0" data-once>
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <input class="form-control pn-pin-input" name="pin" placeholder="PN-XXXX-XXXX" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" required {% if pin_open %}autofocus{% endif %}>
+                <button class="btn btn-accent fw-bold text-nowrap" data-loading="Checking…">Use PIN</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% if not paystack_ready %}
 <div class="alert alert-warning small anim-rise"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up. Please contact support on WhatsApp to activate a plan manually.</div>
 {% endif %}

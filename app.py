@@ -32,7 +32,8 @@ from helpers import (activate_subscription, COURSE_ICONS, FREE_PRACTICE_PER_DAY,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon, CHALLENGE_SIZE, REFERRAL_REWARD_DAYS, ensure_referral_code, referral_stats,
-                     share_text, study_streak)
+                     share_text, study_streak, clear_mistake, jamb_projection, mistakes_summary, pace_info, record_mistake,
+                     redeem_access_code)
 from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, json_login_required,
                       login_required, normalise_phone, password_problems, rate_limit, valid_email, validate_csrf,
                       wants_json_response)
@@ -796,6 +797,10 @@ def dashboard():
     challenge_row = cur.execute("SELECT score, completed_at FROM daily_challenge WHERE username = ? AND day = ?", (user, today)).fetchone()
     challenge_done = bool(challenge_row and challenge_row["completed_at"])
     challenge_score = challenge_row["score"] if challenge_done else None
+    mistakes = mistakes_summary(cur, user)
+    projection = jamb_projection(cur, user)
+    target_row = cur.execute("SELECT target_score FROM users WHERE email = ?", (user,)).fetchone()
+    target = target_row["target_score"] if target_row else None
     conn.commit()
     rank_row = cur.execute(
         """
@@ -822,6 +827,9 @@ def dashboard():
         challenge_done=challenge_done,
         challenge_score=challenge_score,
         challenge_size=CHALLENGE_SIZE,
+        mistakes=mistakes,
+        projection=projection,
+        target=target,
     )
 
 
@@ -1252,6 +1260,11 @@ def practice_question(exam_type, subject):
         state["correct"] += 1 if is_correct else 0
         session[key] = state
         session.modified = True
+        if is_correct:
+            clear_mistake(cur, session["user"], source, qid)
+        else:
+            record_mistake(cur, session["user"], source, qid, subject, exam_type)
+        conn.commit()
         conn.close()
         q["source"] = source
         feedback = {"q": q, "chosen": chosen, "is_correct": is_correct}
@@ -1394,10 +1407,17 @@ def result_details(result_id):
         score_txt = f"{r['jamb_score']}/400"
     else:
         score_txt = f"{r['score']}/{r['total']}"
+    pace = pace_info(r["duration"], r["total"], r["exam_type"])
+    conn = connect()
+    projection = jamb_projection(conn.cursor(), session["user"]) if r["exam_type"] == "JAMB" else None
+    target = conn.execute("SELECT target_score FROM users WHERE email = ?", (session["user"],)).fetchone()
+    conn.close()
+    target = target["target_score"] if target else None
     share_url = f"{app_url()}/verify_result/{r['verification_code']}" if r["verification_code"] else app_url()
     share = share_text(session.get("name"), f"{r['exam_type']} {r['exam_name'] or ''}".strip(), score_txt, pct, share_url)
     return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=data["attempt"], verdict=verdict, tone=tone,
-                           just_finished=request.args.get("done") == "1", share=share, share_url=share_url)
+                           just_finished=request.args.get("done") == "1", share=share, share_url=share_url,
+                           pace=pace, projection=projection, target=target)
 
 
 @app.route("/review_answers/<int:result_id>")
@@ -1613,6 +1633,77 @@ def invite():
     return render_template("invite.html", stats=stats, link=link, msg=msg)
 
 
+@app.route("/mistakes")
+@login_required
+def mistakes():
+    conn = connect()
+    cur = conn.cursor()
+    summary = mistakes_summary(cur, session["user"])
+    conn.close()
+    return render_template("mistakes.html", summary=summary)
+
+
+@app.route("/mistakes/fix", methods=["GET", "POST"])
+@app.route("/mistakes/fix/<subject>", methods=["GET", "POST"])
+@login_required
+def fix_mistakes(subject=None):
+    user = session["user"]
+    conn = connect()
+    cur = conn.cursor()
+    key = "fixing"
+    state = session.get(key) or {"fixed": 0, "tried": 0}
+    feedback = None
+
+    if request.method == "POST":
+        qid = request.form.get("question_id", type=int)
+        source = (request.form.get("source") or "questions_v2")[:30]
+        chosen = (request.form.get("answer") or "").strip().upper()
+        q = fetch_questions(cur, source, [qid], with_answers=True).get(qid) if qid else None
+        if not q or chosen not in ("A", "B", "C", "D"):
+            conn.close()
+            flash("Please choose an option.", "warning")
+            return redirect(url_for("fix_mistakes", subject=subject))
+        is_correct = chosen == q["correct"]
+        state["tried"] += 1
+        if is_correct:
+            state["fixed"] += 1
+            clear_mistake(cur, user, source, qid)
+        else:
+            record_mistake(cur, user, source, qid)
+        conn.commit()
+        session[key] = state
+        session.modified = True
+        q["source"] = source
+        feedback = {"q": q, "chosen": chosen, "is_correct": is_correct}
+        summary = mistakes_summary(cur, user)
+        conn.close()
+        return render_template("fix_mistakes.html", q=q, feedback=feedback, state=state, subject=subject, summary=summary, item=None)
+
+    params = [user]
+    where = "username = ? AND cleared_at IS NULL"
+    if subject:
+        where += " AND subject = ?"
+        params.append(subject)
+    item = cur.execute(f"SELECT * FROM mistakes WHERE {where} ORDER BY times_wrong DESC, last_wrong_at ASC LIMIT 1", params).fetchone()
+    if not item:
+        conn.close()
+        session.pop(key, None)
+        flash("No mistakes left to fix here — well done! Write a mock or practise to find new ones.", "success")
+        return redirect(url_for("mistakes"))
+    q = fetch_questions(cur, item["question_source"], [item["question_id"]], with_answers=True).get(item["question_id"])
+    if not q:
+        # question was deleted from the bank — clear it and move on
+        cur.execute("UPDATE mistakes SET cleared_at = CURRENT_TIMESTAMP WHERE id = ?", (item["id"],))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("fix_mistakes", subject=subject))
+    summary = mistakes_summary(cur, user)
+    conn.close()
+    q_public = {k: v for k, v in q.items() if k not in ("correct", "explanation")}
+    q_public["source"] = item["question_source"]
+    return render_template("fix_mistakes.html", q=q_public, feedback=None, state=state, subject=subject, summary=summary, item=item)
+
+
 @app.route("/leaderboard")
 @login_required
 def leaderboard():
@@ -1645,7 +1736,39 @@ def subscribe():
     plans = conn.execute("SELECT id, plan_name, price, duration_days, description FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days").fetchall()
     sub = get_subscription(session["user"], conn.cursor())
     conn.close()
-    return render_template("subscribe.html", plans=plans, sub=sub, paystack_ready=bool(PAYSTACK_SECRET_KEY))
+    return render_template("subscribe.html", plans=plans, sub=sub, paystack_ready=bool(PAYSTACK_SECRET_KEY),
+                           pin_open=request.args.get("pin") == "1")
+
+
+@app.route("/redeem_pin", methods=["POST"])
+@login_required
+@rate_limit(limit=8, window_seconds=600, scope="redeem_pin")
+def redeem_pin():
+    conn = connect()
+    cur = conn.cursor()
+    ok, message, _end = redeem_access_code(cur, session["user"], request.form.get("pin") or "")
+    conn.commit()
+    conn.close()
+    flash(message, "success" if ok else "danger")
+    return redirect(url_for("dashboard") if ok else url_for("subscribe", pin=1))
+
+
+@app.route("/set_target", methods=["POST"])
+@login_required
+def set_target():
+    try:
+        target = int(request.form.get("target") or 0)
+    except ValueError:
+        target = 0
+    if not 100 <= target <= 400:
+        flash("Pick a target between 100 and 400.", "warning")
+        return redirect(url_for("dashboard"))
+    conn = connect()
+    conn.execute("UPDATE users SET target_score = ? WHERE email = ?", (target, session["user"]))
+    conn.commit()
+    conn.close()
+    flash(f"Target set: {target}/400. We will show your progress towards it after every mock.", "success")
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/subscription")

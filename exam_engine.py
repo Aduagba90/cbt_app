@@ -21,7 +21,7 @@ from db import connect
 from helpers import (
     JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ENGLISH_QUESTIONS, JAMB_OTHER_QUESTIONS,
     WAEC_DURATION_MIN, WAEC_QUESTIONS, fetch_question_ids, fetch_questions,
-    new_verification_code, resolve_source, reward_referral_if_due,
+    new_verification_code, resolve_source, reward_referral_if_due, clear_mistake, record_mistake,
 )
 
 FMT = "%Y-%m-%d %H:%M:%S"
@@ -367,6 +367,15 @@ def finalize_attempt(attempt_id, username=None, cur=None, auto=False):
             "UPDATE exam_attempts SET status = ?, submitted_at = ?, score = ?, percentage = ?, result_id = ? WHERE id = ?",
             ("AUTO_SUBMITTED" if auto else "SUBMITTED", now.strftime(FMT), score, percentage, result_id, attempt["id"]),
         )
+        # "Fix my mistakes": remember every wrong/blank answer, clear the ones answered correctly.
+        try:
+            for r in reviews:
+                if r["is_correct"]:
+                    clear_mistake(cur, attempt["username"], r["question_source"], r["question_id"])
+                else:
+                    record_mistake(cur, attempt["username"], r["question_source"], r["question_id"], r["subject"], attempt["exam_type"])
+        except Exception:
+            logging.getLogger("prepnova").exception("mistake tracking failed")
         # Referral reward: the invited friend's FIRST mock unlocks bonus days for both students.
         try:
             n_results = cur.execute("SELECT COUNT(*) FROM results WHERE username = ?", (attempt["username"],)).fetchone()[0]

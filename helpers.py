@@ -577,3 +577,146 @@ def share_text(name, exam, score_txt, pct, url):
         return f"{line}\nCan you beat it? Practise free for 7 days 👉 {url}"
     line = f"{first} just finished a {exam} mock on PrepNova CBT — real CBT timer, every question explained 📚"
     return f"{line}\nPractise with me, free for 7 days 👉 {url}"
+
+
+# ---------------------------------------------------------------------------
+# Access PINs (vouchers), mistakes pool, projections
+# ---------------------------------------------------------------------------
+
+def normalise_code(raw):
+    return "".join(ch for ch in (raw or "").upper() if ch.isalnum())[:24]
+
+
+def pretty_code(code):
+    code = code or ""
+    if len(code) == 10 and code.startswith("PN"):
+        return f"{code[:2]}-{code[2:6]}-{code[6:]}"
+    return code
+
+
+def generate_access_codes(cur, count, days, label, max_uses, expires_at, created_by, custom=None):
+    """Create one custom code or `count` random PN-XXXX-XXXX codes. Returns the list of codes created."""
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    made = []
+    if custom:
+        code = normalise_code(custom)
+        if len(code) < 4:
+            raise ValueError("A custom PIN needs at least 4 letters or numbers.")
+        if cur.execute("SELECT 1 FROM access_codes WHERE code = ?", (code,)).fetchone():
+            raise ValueError("That PIN already exists.")
+        cur.execute("INSERT INTO access_codes (code, label, days, max_uses, expires_at, created_by) VALUES (?, ?, ?, ?, ?, ?)",
+                    (code, label, days, max_uses, expires_at, created_by))
+        return [code]
+    for _ in range(count):
+        for _try in range(30):
+            code = "PN" + "".join(random.choice(alphabet) for _ in range(8))
+            if not cur.execute("SELECT 1 FROM access_codes WHERE code = ?", (code,)).fetchone():
+                cur.execute("INSERT INTO access_codes (code, label, days, max_uses, expires_at, created_by) VALUES (?, ?, ?, ?, ?, ?)",
+                            (code, label, days, max_uses, expires_at, created_by))
+                made.append(code)
+                break
+    return made
+
+
+def grant_days(cur, email, days, plan_name, status_tag, reference):
+    """Give `days` of access. Extends a running paid plan; upgrades a trial/bonus row; or starts a new period now."""
+    now = datetime.now()
+    row = cur.execute("SELECT id, end_date, is_active, payment_status FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+    end = None
+    if row and row["end_date"]:
+        try:
+            end = datetime.strptime(row["end_date"], "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            end = None
+    if row and row["is_active"] and end and end > now:
+        new_end = end + timedelta(days=int(days))
+        if row["payment_status"] in ("FREE_TRIAL", "BONUS", "ACCESS_CODE"):
+            cur.execute("UPDATE subscriptions SET end_date = ?, plan_name = ?, payment_status = ?, payment_reference = ? WHERE id = ?",
+                        (new_end.strftime("%Y-%m-%d %H:%M:%S"), plan_name, status_tag, reference, row["id"]))
+        else:
+            cur.execute("UPDATE subscriptions SET end_date = ? WHERE id = ?", (new_end.strftime("%Y-%m-%d %H:%M:%S"), row["id"]))
+        return new_end
+    new_end = now + timedelta(days=int(days))
+    cur.execute(
+        """INSERT INTO subscriptions (username, plan_id, plan_name, start_date, end_date, payment_reference, payment_status, is_active, amount_paid, currency)
+           VALUES (?, 0, ?, ?, ?, ?, ?, 1, 0, 'NGN')""",
+        (email, plan_name, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reference, status_tag),
+    )
+    return new_end
+
+
+def redeem_access_code(cur, email, raw):
+    """Returns (ok, message, new_end_or_None)."""
+    code = normalise_code(raw)
+    if len(code) < 4:
+        return False, "Please enter the PIN exactly as it was given to you.", None
+    row = cur.execute("SELECT * FROM access_codes WHERE code = ?", (code,)).fetchone()
+    if not row or not row["is_active"]:
+        return False, "That PIN is not valid. Check it and try again.", None
+    if row["expires_at"]:
+        try:
+            if datetime.strptime(row["expires_at"], "%Y-%m-%d %H:%M:%S") < datetime.now():
+                return False, "That PIN has expired.", None
+        except ValueError:
+            pass
+    if row["uses"] >= row["max_uses"]:
+        return False, "That PIN has already been used the maximum number of times.", None
+    if cur.execute("SELECT 1 FROM access_code_redemptions WHERE code_id = ? AND username = ?", (row["id"], email)).fetchone():
+        return False, "You have already used this PIN on your account.", None
+    cur.execute("INSERT INTO access_code_redemptions (code_id, username) VALUES (?, ?)", (row["id"], email))
+    cur.execute("UPDATE access_codes SET uses = uses + 1 WHERE id = ?", (row["id"],))
+    reference = f"PIN-{row['id']}-{secrets.token_hex(3).upper()}"
+    plan_name = (row["label"] or "Access PIN")[:40]
+    new_end = grant_days(cur, email, row["days"], plan_name, "ACCESS_CODE", reference)
+    return True, f"PIN accepted — {row['days']} days of full access added. Your access now runs until {new_end:%d %B %Y}.", new_end
+
+
+def record_mistake(cur, email, source, qid, subject=None, exam_type=None):
+    if not source or not qid:
+        return
+    cur.execute(
+        """INSERT INTO mistakes (username, question_source, question_id, subject, exam_type)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(username, question_source, question_id)
+           DO UPDATE SET times_wrong = times_wrong + 1, last_wrong_at = CURRENT_TIMESTAMP, cleared_at = NULL,
+                         subject = COALESCE(excluded.subject, subject), exam_type = COALESCE(excluded.exam_type, exam_type)""",
+        (email, source, int(qid), subject, exam_type),
+    )
+
+
+def clear_mistake(cur, email, source, qid):
+    if not source or not qid:
+        return False
+    cur.execute("UPDATE mistakes SET cleared_at = CURRENT_TIMESTAMP WHERE username = ? AND question_source = ? AND question_id = ? AND cleared_at IS NULL",
+                (email, source, int(qid)))
+    return cur.rowcount > 0
+
+
+def mistakes_summary(cur, email):
+    rows = cur.execute(
+        "SELECT COALESCE(subject, 'Other') AS subject, COUNT(*) AS n FROM mistakes WHERE username = ? AND cleared_at IS NULL GROUP BY subject ORDER BY n DESC",
+        (email,),
+    ).fetchall()
+    fixed_today = cur.execute("SELECT COUNT(*) FROM mistakes WHERE username = ? AND date(cleared_at) = date('now', 'localtime')", (email,)).fetchone()[0]
+    fixed_total = cur.execute("SELECT COUNT(*) FROM mistakes WHERE username = ? AND cleared_at IS NOT NULL", (email,)).fetchone()[0]
+    return {"open": sum(r["n"] for r in rows), "by_subject": rows, "fixed_today": fixed_today, "fixed_total": fixed_total}
+
+
+def jamb_projection(cur, email):
+    """Average /400 of the student's last three full JAMB mocks (None until they have one)."""
+    rows = cur.execute(
+        "SELECT jamb_score FROM results WHERE username = ? AND exam_type = 'JAMB' AND jamb_score IS NOT NULL AND total >= 10 ORDER BY id DESC LIMIT 3",
+        (email,),
+    ).fetchall()
+    if not rows:
+        return None
+    return round(sum(r[0] for r in rows) / len(rows))
+
+
+def pace_info(duration_seconds, total_questions, exam_type):
+    """Seconds per question vs what the real exam allows."""
+    if not duration_seconds or not total_questions:
+        return None
+    allowed = {"JAMB": 40, "WAEC": 72, "POST-UTME": 60}.get((exam_type or "").upper(), 60)
+    per_q = round(duration_seconds / total_questions)
+    return {"per_q": per_q, "allowed": allowed, "ok": per_q <= allowed}
