@@ -305,6 +305,23 @@ def _error(err):
 # Public pages
 # ---------------------------------------------------------------------------
 
+# Landing page: subjects ticker + next-exam countdown (configurable, sensible default)
+def _next_utme_date():
+    """Date shown in the landing countdown. NEXT_UTME_DATE=YYYY-MM-DD in .env overrides; otherwise
+    assume the UTME window opens around mid-April of the coming cycle."""
+    raw = (os.getenv("NEXT_UTME_DATE") or "").strip()
+    today = datetime.now().date()
+    if raw:
+        try:
+            d = datetime.strptime(raw, "%Y-%m-%d").date()
+            if d >= today:
+                return d
+        except ValueError:
+            pass
+    d = datetime(today.year, 4, 18).date()
+    return d if d >= today else datetime(today.year + 1, 4, 18).date()
+
+
 @app.route("/")
 @app.route("/index", endpoint="index")
 def home():
@@ -319,8 +336,50 @@ def home():
         "exams": conn.execute("SELECT COUNT(*) FROM results").fetchone()[0],
         "subjects": conn.execute("SELECT COUNT(DISTINCT subject_name) FROM subjects WHERE status = 'Active'").fetchone()[0],
     }
+    ticker = conn.execute(
+        """SELECT s.subject_name, COUNT(q.id) AS n FROM subjects s
+           JOIN questions_v2 q ON q.subject_id = s.id AND q.status = 'Active'
+           JOIN exam_types e ON e.id = s.exam_type_id AND e.exam_name = 'JAMB'
+           WHERE s.status = 'Active' GROUP BY s.subject_name HAVING n >= 50 ORDER BY n DESC"""
+    ).fetchall()
     conn.close()
-    return render_template("index.html", plans=plans, stats=stats, courses=list(JAMB_COURSES.keys())[:8])
+    exam_date = _next_utme_date()
+    return render_template("index.html", plans=plans, stats=stats, courses=list(JAMB_COURSES.keys())[:8],
+                           ticker=ticker, exam_date=exam_date, days_to_exam=(exam_date - datetime.now().date()).days)
+
+
+# Public sample question for the landing page ("Try a real question"). Read-only, no answers
+# stored, rate-limited; the correct answer is only revealed after the visitor picks an option.
+_TRY_SUBJECTS = ("Use of English", "Mathematics", "Biology", "Chemistry", "Physics", "Government", "Economics")
+
+
+@app.route("/try_question")
+@rate_limit(limit=60, window_seconds=600, scope="try_question", methods=("GET",))
+def try_question():
+    conn = connect()
+    marks = ",".join("?" * len(_TRY_SUBJECTS))
+    row = conn.execute(
+        f"""SELECT q.id, s.subject_name, q.difficulty, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
+                   q.correct_answer, q.explanation
+            FROM questions_v2 q JOIN subjects s ON s.id = q.subject_id
+            WHERE q.status = 'Active' AND s.subject_name IN ({marks})
+              AND length(q.question_text) BETWEEN 30 AND 170
+              AND length(q.option_a) < 45 AND length(q.option_b) < 45 AND length(q.option_c) < 45 AND length(q.option_d) < 45
+              AND length(COALESCE(q.explanation, '')) > 40 AND q.explanation NOT LIKE '%option%is correct%'
+              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%'
+              AND q.id != ?
+            ORDER BY RANDOM() LIMIT 1""",
+        (*_TRY_SUBJECTS, request.args.get("skip", 0, type=int)),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"ok": False}), 404
+    return jsonify({
+        "ok": True, "id": row["id"], "subject": row["subject_name"], "difficulty": row["difficulty"],
+        "text": row["question_text"],
+        "options": {"A": row["option_a"], "B": row["option_b"], "C": row["option_c"], "D": row["option_d"]},
+        "answer": (row["correct_answer"] or "").strip().upper()[:1], "explanation": row["explanation"],
+    })
 
 
 @app.route("/health")

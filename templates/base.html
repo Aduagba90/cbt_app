@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=4">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -92,7 +92,7 @@
 {% endblock %}
 
 <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=3"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -32,9 +32,12 @@
     <div class="container position-relative">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <div class="pn-hero-pill anim-rise"><span class="dot"><i class="bi bi-check-lg"></i></span> Trusted by students preparing for UTME {{ current_year }}</div>
-                <h1 class="anim-rise d1">Pass <span class="hl">JAMB</span>, <span class="hl">WAEC</span> &amp; Post-UTME with confidence.</h1>
-                <p class="lead anim-rise d2">Practise with a real CBT interface, a live timer, thousands of past questions and step-by-step explanations — on your phone or laptop, even on slow networks.</p>
+                <div class="pn-hero-pill anim-rise">
+                    <span class="dot"><i class="bi bi-calendar-event"></i></span>
+                    <span><b data-countdown="{{ exam_date.isoformat() }}">{{ days_to_exam }}</b> days to UTME {{ exam_date.year }} — start now</span>
+                </div>
+                <h1 class="anim-rise d1">Pass <span class="hl">JAMB</span> &amp; Post-UTME with <span class="pn-rotate" data-rotate>{% for w in ["confidence", "a real CBT timer", "past questions", "clear explanations", "your phone"] %}<span class="pn-rotate-word{% if loop.first %} on{% endif %}">{{ w }}</span>{% endfor %}</span></h1>
+                <p class="lead anim-rise d2">Practise exactly the way you will be examined: real CBT interface, live timer, thousands of past questions and step-by-step corrections — on any phone, even on slow networks.</p>
                 <div class="d-flex flex-wrap gap-2 mt-4 anim-rise d3">
                     <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg"><i class="bi bi-rocket-takeoff me-1"></i> Start 7-day free trial</a>
                     <a href="#how" class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle me-1"></i> See how it works</a>
@@ -75,6 +78,15 @@
         </div>
     </div>
 </header>
+
+<!-- ============================ SUBJECT TICKER ============================ -->
+{% if ticker %}
+<div class="pn-ticker" aria-label="Subjects available">
+    <div class="pn-ticker-track">
+        {% for _ in range(2) %}{% for t in ticker %}<span class="pn-ticker-item"><i class="bi {{ subject_icon(t['subject_name']) }}"></i>{{ t['subject_name'] }}<small>{{ t['n'] }} questions</small></span>{% endfor %}{% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <!-- ============================ TRUST BAR ============================ -->
 <section class="py-4 bg-white border-bottom">
@@ -125,6 +137,35 @@
                     <h3>Post-UTME</h3>
                     <p>University-specific screening formats — UNILAG, UI, OAU, UNILORIN, ABU, UNN, LASU and more — including aptitude and current affairs.</p>
                     <div class="mt-3 d-flex flex-wrap gap-1"><span class="pn-subject-chip">UNILAG</span><span class="pn-subject-chip">UI</span><span class="pn-subject-chip">OAU</span><span class="pn-subject-chip">UNN</span><span class="pn-subject-chip">+ more</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================ TRY A QUESTION ============================ -->
+<section class="pn-section pn-try-wrap" id="try">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5 reveal">
+                <span class="pn-eyebrow">No sign-up needed</span>
+                <h2>Try a real past question right now</h2>
+                <p class="lead">Pick an answer and see the correction instantly — this is exactly how Practice Mode works inside PrepNova. Then imagine 3,000+ more.</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg mt-2"><i class="bi bi-rocket-takeoff me-1"></i> Practise all subjects free for 7 days</a>
+            </div>
+            <div class="col-lg-7">
+                <div class="pn-try reveal" data-delay="1" id="pnTry" data-src="{{ url_for('try_question') }}">
+                    <div class="pn-try-head">
+                        <span class="pn-try-subject"><i class="bi bi-book"></i> <span data-try="subject">Loading…</span></span>
+                        <span class="badge rounded-pill bg-light text-dark" data-try="difficulty"></span>
+                    </div>
+                    <div class="pn-try-q" data-try="text">Fetching a question from the bank…</div>
+                    <div class="pn-try-opts" data-try="options"></div>
+                    <div class="pn-try-exp" data-try="explanation" hidden></div>
+                    <div class="pn-try-foot">
+                        <span class="small text-muted" data-try="score">Score: 0 / 0</span>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-try="next"><i class="bi bi-arrow-repeat me-1"></i>Another question</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -222,14 +263,14 @@
             <span class="pn-eyebrow">Student stories</span>
             <h2>Nigerian students are scoring higher with PrepNova</h2>
         </div>
-        <div class="row g-4">
+        <div class="row g-4 pn-slider" data-slider>
             {% set quotes = [
                 ("The question palette and timer made the real JAMB feel familiar. I stopped panicking and finished with 10 minutes to spare.", "Chidera O.", "Medicine aspirant, Enugu", "CO", "tint-green"),
                 ("I practised Mathematics on my phone every night during NEPA outages because the pages load so fast. My WAEC result was my best subject.", "Ibrahim A.", "SS3 student, Kano", "IA", "tint-gold"),
                 ("The explanations are better than my textbook. I bookmarked the ones I kept failing and reviewed them before the exam.", "Funmilayo T.", "Post-UTME candidate, UNILAG", "FT", "tint-purple"),
             ] %}
             {% for q, name, who, ini, tint in quotes %}
-            <div class="col-md-4 reveal" data-delay="{{ loop.index0 }}">
+            <div class="col-md-4 reveal pn-slide" data-delay="{{ loop.index0 }}">
                 <div class="pn-testimonial">
                     <div class="pn-stars">{% for _ in range(5) %}<i class="bi bi-star-fill"></i>{% endfor %}</div>
                     <p>“{{ q }}”</p>
@@ -238,6 +279,7 @@
             </div>
             {% endfor %}
         </div>
+        <div class="pn-slider-dots d-md-none" data-slider-dots></div>
     </div>
 </section>
 
@@ -277,6 +319,11 @@
         </div>
     </div>
 </section>
+
+<div class="pn-sticky-cta d-lg-none" data-sticky-cta>
+    <span><b>7-day free trial</b><small>No card needed</small></span>
+    <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start now <i class="bi bi-arrow-right"></i></a>
+</div>
 {% endblock %}
 
 {% block footer %}
