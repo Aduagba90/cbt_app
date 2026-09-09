@@ -31,7 +31,8 @@ from helpers import (activate_subscription, COURSE_ICONS, FREE_PRACTICE_PER_DAY,
                      TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_ENABLED, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
-                     send_email, subject_icon)
+                     send_email, subject_icon, CHALLENGE_SIZE, REFERRAL_REWARD_DAYS, ensure_referral_code, referral_stats,
+                     share_text, study_streak)
 from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, json_login_required,
                       login_required, normalise_phone, password_problems, rate_limit, valid_email, validate_csrf,
                       wants_json_response)
@@ -465,6 +466,16 @@ def register():
     if "user" in session:
         return redirect(url_for("dashboard"))
     form = {"name": "", "email": "", "phone": ""}
+    ref_code = (request.args.get("ref") or request.form.get("ref") or session.get("ref_code") or "").strip().upper()[:12]
+    if ref_code:
+        _c = connect()
+        _ok = _c.execute("SELECT 1 FROM users WHERE referral_code = ?", (ref_code,)).fetchone()
+        _c.close()
+        if _ok:
+            session["ref_code"] = ref_code
+        else:
+            ref_code = ""
+            session.pop("ref_code", None)
     if request.method == "POST":
         form["name"] = " ".join((request.form.get("name") or "").split())[:80]
         form["email"] = (request.form.get("email") or "").strip().lower()[:254]
@@ -506,6 +517,12 @@ def register():
                     """,
                     (form["email"], now.strftime("%Y-%m-%d %H:%M:%S"), (now + timedelta(days=TRIAL_DAYS)).strftime("%Y-%m-%d %H:%M:%S")),
                 )
+                if ref_code:
+                    inviter = cur.execute("SELECT email FROM users WHERE referral_code = ? AND lower(email) != ?", (ref_code, form["email"])).fetchone()
+                    if inviter:
+                        cur.execute("UPDATE users SET referred_by = ? WHERE email = ?", (inviter["email"], form["email"]))
+                        cur.execute("INSERT OR IGNORE INTO referrals (referrer_email, referred_email) VALUES (?, ?)", (inviter["email"], form["email"]))
+                    session.pop("ref_code", None)
                 if mail_configured():
                     _send_verification(cur, form["email"], form["name"])
                     conn.commit()
@@ -522,7 +539,7 @@ def register():
             conn.close()
         for e in errors:
             flash(e, "danger")
-    return render_template("register.html", form=form)
+    return render_template("register.html", form=form, ref_code=ref_code)
 
 
 @app.route("/verify_email_required")
@@ -773,10 +790,13 @@ def dashboard():
         """,
         (user,),
     ).fetchall()
-    streak_days = cur.execute(
-        "SELECT COUNT(DISTINCT substr(date_taken, 1, 10)) FROM results WHERE username = ? AND date_taken >= datetime('now', '-7 days')",
-        (user,),
-    ).fetchone()[0]
+    streak_days = study_streak(cur, user)
+    referral = referral_stats(cur, user)
+    today = datetime.now().strftime("%Y-%m-%d")
+    challenge_row = cur.execute("SELECT score, completed_at FROM daily_challenge WHERE username = ? AND day = ?", (user, today)).fetchone()
+    challenge_done = bool(challenge_row and challenge_row["completed_at"])
+    challenge_score = challenge_row["score"] if challenge_done else None
+    conn.commit()
     rank_row = cur.execute(
         """
         WITH best AS (SELECT username, MAX(percentage) AS p FROM results GROUP BY username)
@@ -798,6 +818,10 @@ def dashboard():
         weak=weak,
         streak_days=streak_days,
         rank=rank_row[0] if rank_row and (stats["n"] or 0) > 0 else None,
+        referral=referral,
+        challenge_done=challenge_done,
+        challenge_score=challenge_score,
+        challenge_size=CHALLENGE_SIZE,
     )
 
 
@@ -1366,8 +1390,14 @@ def result_details(result_id):
         verdict, tone = "Good effort. Review your weak subjects and try again.", "warning"
     else:
         verdict, tone = "Keep practising — focus on the explanations for the questions you missed.", "danger"
+    if r["exam_type"] == "JAMB" and r["jamb_score"] is not None:
+        score_txt = f"{r['jamb_score']}/400"
+    else:
+        score_txt = f"{r['score']}/{r['total']}"
+    share_url = f"{app_url()}/verify_result/{r['verification_code']}" if r["verification_code"] else app_url()
+    share = share_text(session.get("name"), f"{r['exam_type']} {r['exam_name'] or ''}".strip(), score_txt, pct, share_url)
     return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=data["attempt"], verdict=verdict, tone=tone,
-                           just_finished=request.args.get("done") == "1")
+                           just_finished=request.args.get("done") == "1", share=share, share_url=share_url)
 
 
 @app.route("/review_answers/<int:result_id>")
@@ -1493,6 +1523,95 @@ def _result_pdf(data):
 # ---------------------------------------------------------------------------
 # Leaderboard
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Growth features: Daily Challenge + Invite friends
+# ---------------------------------------------------------------------------
+
+def _challenge_pick(cur, size):
+    """A short mixed set of curated questions (same quality filter as the landing-page teaser)."""
+    marks = ",".join("?" * len(_TRY_SUBJECTS))
+    rows = cur.execute(
+        f"""SELECT q.id FROM questions_v2 q JOIN subjects s ON s.id = q.subject_id
+            WHERE q.status = 'Active' AND s.subject_name IN ({marks})
+              AND length(q.question_text) BETWEEN 25 AND 260
+              AND length(COALESCE(q.explanation, '')) > 40 AND q.explanation NOT LIKE '%option%is correct%'
+              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%'
+            ORDER BY RANDOM() LIMIT ?""",
+        (*_TRY_SUBJECTS, size),
+    ).fetchall()
+    return [r["id"] for r in rows]
+
+
+@app.route("/challenge", methods=["GET", "POST"])
+@login_required
+@rate_limit(limit=40, window_seconds=600, scope="challenge")
+def daily_challenge():
+    user = session["user"]
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = connect()
+    cur = conn.cursor()
+    row = cur.execute("SELECT * FROM daily_challenge WHERE username = ? AND day = ?", (user, today)).fetchone()
+    if not row:
+        ids = _challenge_pick(cur, CHALLENGE_SIZE)
+        if len(ids) < 3:
+            conn.close()
+            flash("Today's challenge is not ready yet — try a practice session instead.", "info")
+            return redirect(url_for("practice"))
+        cur.execute("INSERT INTO daily_challenge (username, day, question_ids) VALUES (?, ?, ?)", (user, today, json.dumps(ids)))
+        conn.commit()
+        row = cur.execute("SELECT * FROM daily_challenge WHERE username = ? AND day = ?", (user, today)).fetchone()
+    ids = json.loads(row["question_ids"] or "[]")
+    questions = fetch_questions(cur, "questions_v2", ids, with_answers=True)
+    ordered = [questions[i] for i in ids if i in questions]
+    answers = json.loads(row["answers"] or "{}")
+
+    if request.method == "POST" and not row["completed_at"]:
+        answers = {}
+        for q in ordered:
+            pick = (request.form.get(f"q{q['id']}") or "").strip().upper()[:1]
+            if pick in ("A", "B", "C", "D"):
+                answers[str(q["id"])] = pick
+        score = sum(1 for q in ordered if answers.get(str(q["id"])) == q["correct"])
+        cur.execute("UPDATE daily_challenge SET answers = ?, score = ?, completed_at = ? WHERE id = ?",
+                    (json.dumps(answers), score, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), row["id"]))
+        conn.commit()
+        row = cur.execute("SELECT * FROM daily_challenge WHERE id = ?", (row["id"],)).fetchone()
+
+    done = bool(row["completed_at"])
+    # How everyone else did today (only when there is real data)
+    agg = cur.execute("SELECT COUNT(*) AS n, AVG(score) AS avg FROM daily_challenge WHERE day = ? AND completed_at IS NOT NULL", (today,)).fetchone()
+    beat_pct = None
+    if done and agg and (agg["n"] or 0) >= 3:
+        below = cur.execute("SELECT COUNT(*) FROM daily_challenge WHERE day = ? AND completed_at IS NOT NULL AND score < ?", (today, row["score"])).fetchone()[0]
+        beat_pct = int(100 * below / agg["n"])
+    streak = study_streak(cur, user)
+    conn.commit()
+    conn.close()
+    if not done:
+        for q in ordered:
+            q.pop("correct", None)
+            q.pop("explanation", None)
+    share = share_text(session.get("name"), "Daily Challenge", f"{row['score']}/{len(ordered)}",
+                       int(100 * (row["score"] or 0) / max(1, len(ordered))), app_url()) if done else None
+    return render_template("challenge.html", questions=ordered, answers=answers, done=done, score=row["score"],
+                           total=len(ordered), streak=streak, beat_pct=beat_pct, players=(agg["n"] if agg else 0), share=share, day=today)
+
+
+@app.route("/invite")
+@login_required
+def invite():
+    conn = connect()
+    cur = conn.cursor()
+    stats = referral_stats(cur, session["user"])
+    conn.commit()
+    conn.close()
+    link = f"{app_url()}/register?ref={stats['code']}" if stats["code"] else f"{app_url()}/register"
+    first = (session.get("name") or "").split()[0] if session.get("name") else "I"
+    msg = (f"{first} is preparing for JAMB on PrepNova CBT — real CBT mocks with step-by-step explanations. "
+           f"Register with my link and we BOTH get {REFERRAL_REWARD_DAYS} free days after your first mock 👉 {link}")
+    return render_template("invite.html", stats=stats, link=link, msg=msg)
+
 
 @app.route("/leaderboard")
 @login_required

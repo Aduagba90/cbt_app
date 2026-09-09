@@ -30,7 +30,7 @@
     <div class="pn-orb a"></div>
     <div class="pn-orb b"></div>
     <div class="container position-relative">
-        <div class="row align-items-center g-5">
+        <div class="row align-items-center g-4 g-lg-5">
             <div class="col-lg-6">
                 <div class="pn-hero-pill anim-rise">
                     <span class="dot"><i class="bi bi-calendar-event"></i></span>
@@ -66,13 +66,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="pn-float-badge d-none d-md-flex" style="top:-6%;left:-5%">
+                <div class="pn-float-badge pn-badge-score" style="top:-6%;left:-5%">
                     <span class="pn-stat-icon tint-green"><i class="bi bi-check2-circle"></i></span>
                     <span>Score: 312/400<small>Great job, Amina!</small></span>
                 </div>
-                <div class="pn-float-badge d-none d-md-flex" style="bottom:-7%;right:-3%;animation-delay:-3s">
+                <div class="pn-float-badge pn-badge-explain" style="bottom:-7%;right:-3%;animation-delay:-3s">
                     <span class="pn-stat-icon tint-gold"><i class="bi bi-lightbulb"></i></span>
                     <span>Step-by-step explanation<small>for every question</small></span>
+                </div>
+                <div class="pn-float-badge pn-badge-share" style="bottom:22%;left:-6%;animation-delay:-5s">
+                    <span class="pn-stat-icon tint-blue"><i class="bi bi-whatsapp"></i></span>
+                    <span>Shared to class group<small>"Can you beat 312?"</small></span>
                 </div>
             </div>
         </div>
@@ -146,7 +150,7 @@
 <!-- ============================ TRY A QUESTION ============================ -->
 <section class="pn-section pn-try-wrap" id="try">
     <div class="container">
-        <div class="row align-items-center g-5">
+        <div class="row align-items-center g-4 g-lg-5">
             <div class="col-lg-5 reveal">
                 <span class="pn-eyebrow">No sign-up needed</span>
                 <h2>Try a real past question right now</h2>
@@ -202,9 +206,36 @@
 </section>
 
 <!-- ============================ HOW IT WORKS ============================ -->
+<section class="pn-section pn-only" id="only">
+    <div class="container">
+        <div class="text-center mb-4 reveal">
+            <span class="pn-eyebrow">Only on PrepNova</span>
+            <h2>Built to keep you studying — not just to sell past questions</h2>
+            <p class="lead mx-auto" style="max-width:600px">Small daily habits are what move a JAMB score. These tools make the habit easy (and a little competitive).</p>
+        </div>
+        <div class="row g-3 g-lg-4">
+            {% set only = [
+                ("bi-fire", "tint-red", "Daily Challenge", "5 fresh questions every day — the same set for every student in Nigeria. Finish it to keep your streak alive and see how many students you beat."),
+                ("bi-whatsapp", "tint-green", "Share-to-WhatsApp result slips", "One tap posts your score to your class group with a verification link, so nobody can say you edited the screenshot."),
+                ("bi-gift", "tint-gold", "Invite a friend, both get free days", "Your invite link gives you and your friend bonus days once they finish their first mock. Study partners pay less."),
+                ("bi-shield-check", "tint-blue", "Anti-cheat mock exams", "Tab switches are counted and shown on your slip, exactly like the pressure of the real hall — so your practice score is a score you can trust."),
+            ] %}
+            {% for icon, tint, title, text in only %}
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="{{ loop.index0 }}">
+                <div class="pn-only-card">
+                    <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
+                    <h3>{{ title }}</h3>
+                    <p>{{ text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 <section class="pn-section" id="how">
     <div class="container">
-        <div class="row align-items-center g-5">
+        <div class="row align-items-center g-4 g-lg-5">
             <div class="col-lg-5 reveal">
                 <span class="pn-eyebrow">How it works</span>
                 <h2>From sign-up to your first mock in under 2 minutes</h2>

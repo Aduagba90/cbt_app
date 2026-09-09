@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Daily Challenge{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise mb-3">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Daily Challenge</span></div>
+        <h1 class="h3"><i class="bi bi-fire text-danger me-1"></i>Daily Challenge <span class="badge bg-primary align-middle ms-1">{{ day|nicedate('%d %b') }}</span></h1>
+        <p class="lead mb-0">{{ total }} quick questions, new every day. Same set for every student — finish it to keep your streak alive.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="pn-kpi py-2 px-3"><b class="fs-6 text-danger"><i class="bi bi-fire"></i> {{ streak }}</b><small>day streak</small></div>
+        {% if done %}<div class="pn-kpi py-2 px-3"><b class="fs-6 text-primary">{{ score }}/{{ total }}</b><small>today</small></div>{% endif %}
+    </div>
+</div>
+
+{% if done %}
+<div class="card anim-rise mb-3 pn-challenge-done">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+        <div class="pn-score-ring" style="--p:{{ (100 * score / total)|int if total else 0 }};--c:{{ 'var(--pn-success)' if score >= total * 0.7 else ('var(--pn-warning)' if score >= total * 0.5 else 'var(--pn-danger)') }};width:96px;height:96px"><div><b style="font-size:1.4rem">{{ score }}/{{ total }}</b></div></div>
+        <div class="flex-grow-1">
+            <h2 class="h5 mb-1">{% if score == total %}Perfect score! 🏆{% elif score >= total * 0.6 %}Nice work! 💪{% else %}Good try — read the explanations below. 📖{% endif %}</h2>
+            <p class="mb-2 text-muted small">
+                {% if beat_pct is not none %}You beat <b>{{ beat_pct }}%</b> of the {{ players }} students who took today's challenge.{% else %}Come back tomorrow for a fresh set — your streak counts every day you show up.{% endif %}
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-success btn-sm" href="https://wa.me/?text={{ share|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i> Challenge a friend on WhatsApp</a>
+                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('practice') }}"><i class="bi bi-lightning-charge me-1"></i> Keep practising</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<form method="POST" action="{{ url_for('daily_challenge') }}" id="challengeForm" {% if not done %}data-once{% endif %}>
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+    {% for q in questions %}
+    {% set picked = answers.get(q.id|string) %}
+    <div class="pn-qcard anim-rise mb-3">
+        <div class="pn-qhead">
+            <div class="pn-qnum">Question <strong>{{ loop.index }}</strong> <span class="text-muted fw-semibold ms-2">of {{ total }}</span>{% if q.topic %} <span class="text-muted fw-semibold ms-2">· {{ q.topic }}</span>{% endif %}{% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}</div>
+        </div>
+        {% if q.passage %}<div class="pn-passage">{{ q.passage }}</div>{% endif %}
+        <div class="pn-qtext">{{ q.text }}</div>
+        {% if not done %}
+            {% for k, v in q.options.items() %}
+            <label class="pn-option" data-key="{{ k }}">
+                <input type="radio" name="q{{ q.id }}" value="{{ k }}" required>
+                <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+            </label>
+            {% endfor %}
+        {% else %}
+            {% for k, v in q.options.items() %}
+            <div class="pn-option locked {% if k == q.correct %}correct{% elif k == picked %}wrong{% endif %}">
+                <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                {% if k == q.correct %}<i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>{% elif k == picked %}<i class="bi bi-x-circle-fill text-danger ms-auto fs-5"></i>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="pn-explain {{ '' if picked == q.correct else 'wrong' }}">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    {% if picked == q.correct %}<i class="bi bi-emoji-smile-fill text-success fs-4"></i><b class="text-success">Correct!</b>{% elif picked %}<i class="bi bi-emoji-neutral-fill text-warning fs-4"></i><b class="text-danger">Not quite.</b> <span>The correct answer is <b>{{ q.correct }}</b>.</span>{% else %}<i class="bi bi-dash-circle text-muted fs-4"></i><b class="text-muted">Skipped.</b> <span>The correct answer is <b>{{ q.correct }}</b>.</span>{% endif %}
+                </div>
+                <div>{{ q.explanation }}</div>
+            </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if not done %}
+    <div class="pn-challenge-actions">
+        <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>One attempt per day — answers are checked when you submit.</div>
+        <button class="btn btn-primary btn-lg" type="submit" data-loading="Checking…">Submit challenge <i class="bi bi-check2-circle"></i></button>
+    </div>
+    {% else %}
+    <div class="text-center py-3"><a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Back to dashboard</a></div>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var form = document.getElementById('challengeForm'); if (!form || form.dataset.once === undefined) return;
+    form.querySelectorAll('.pn-qcard').forEach(function(card){
+        var opts = card.querySelectorAll('.pn-option');
+        opts.forEach(function(o){ o.addEventListener('click', function(){ opts.forEach(function(x){ x.classList.remove('selected'); }); o.classList.add('selected'); var i = o.querySelector('input'); if (i) i.checked = true; }); });
+    });
+})();
+</script>
+{% endblock %}

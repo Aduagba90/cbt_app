@@ -665,3 +665,58 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
   .pn-ticker-track { animation: none; }
   .pn-rotate-word.on, .pn-rotate-word.out { animation: none; transform: none; }
 }
+
+/* ===== Growth pack: hero badges on phones, "Only on PrepNova", boosts, challenge, invite ===== */
+.pn-float-badge { z-index: 2; }
+@media (max-width: 767.98px) {
+  /* On phones the card fills the width, so the badges cannot float beside it. They become a row of
+     floating chips under the card instead — same content, same gentle motion, no overlap. */
+  .pn-hero .col-lg-6.position-relative { padding-bottom: .5rem; }
+  .pn-hero .pn-mock { margin-bottom: 1.1rem; }
+  .pn-float-badge { position: relative !important; inset: auto !important; margin: 0 auto .6rem; max-width: 300px; animation: pn-float-sm 6s ease-in-out infinite; }
+  .pn-float-badge.pn-badge-score { transform-origin: left center; }
+  .pn-float-badge.pn-badge-explain { animation-delay: -2s !important; }
+  .pn-float-badge.pn-badge-share { animation-delay: -4s !important; }
+}
+@media (min-width: 768px) {
+  .pn-float-badge.pn-badge-share { display: none; }
+}
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .pn-float-badge.pn-badge-score { left: 2% !important; top: -4% !important; }
+  .pn-float-badge.pn-badge-explain { right: 2% !important; bottom: -4% !important; }
+}
+@keyframes pn-float-sm { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.pn-only { background: #fff; }
+.pn-only-card { height: 100%; border: 1px solid var(--pn-line); border-radius: 18px; padding: 1.35rem 1.25rem; background: linear-gradient(180deg, #fff 0%, #f8fafc 100%); transition: transform .3s ease, box-shadow .3s ease; }
+.pn-only-card:hover { transform: translateY(-4px); box-shadow: var(--pn-shadow-lg); }
+.pn-only-card h3 { font-size: 1.02rem; font-weight: 800; margin: .9rem 0 .4rem; }
+.pn-only-card p { font-size: .88rem; color: var(--pn-muted); margin: 0; }
+
+.pn-boost { display: flex; align-items: center; gap: .9rem; padding: .95rem 1.1rem; border-radius: 16px; color: #fff; text-decoration: none; height: 100%; position: relative; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease; }
+.pn-boost:hover { color: #fff; transform: translateY(-2px); box-shadow: var(--pn-shadow-lg); }
+.pn-boost::after { content: ""; position: absolute; width: 160px; height: 160px; border-radius: 50%; right: -60px; top: -70px; background: rgba(255, 255, 255, .12); }
+.pn-boost-challenge { background: linear-gradient(120deg, #b91c1c 0%, #ea580c 100%); }
+.pn-boost-challenge.done { background: linear-gradient(120deg, #065f46 0%, #0b7a4b 100%); }
+.pn-boost-invite { background: linear-gradient(120deg, #1e3a8a 0%, #2563eb 100%); }
+.pn-boost-icon { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 12px; background: rgba(255, 255, 255, .18); display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+.pn-boost-challenge:not(.done) .pn-boost-icon i { animation: pn-flame 1.6s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes pn-flame { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15) rotate(-4deg); } }
+.pn-boost-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.pn-boost-body b { font-size: .95rem; line-height: 1.2; }
+.pn-boost-body small { color: rgba(255, 255, 255, .8); font-size: .78rem; margin-top: .15rem; }
+.pn-boost-cta { font-weight: 800; font-size: .85rem; white-space: nowrap; background: rgba(255, 255, 255, .16); border-radius: 999px; padding: .35rem .75rem; }
+
+.pn-challenge-actions { position: sticky; bottom: .75rem; z-index: 5; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: space-between; background: #fff; border: 1px solid var(--pn-line); border-radius: 14px; padding: .75rem 1rem; box-shadow: var(--pn-shadow-lg); margin-top: 1rem; }
+.pn-challenge-actions .btn { flex: 1 1 auto; }
+@media (min-width: 576px) { .pn-challenge-actions .btn { flex: 0 0 auto; } }
+.pn-challenge-done { border-left: 4px solid var(--pn-primary); }
+
+.pn-invite-code { font-size: 1.6rem; font-weight: 800; letter-spacing: .12em; color: var(--pn-primary); background: var(--pn-primary-50); border-radius: 12px; padding: .35rem .8rem; }
+.pn-steps-list { padding-left: 1.2rem; }
+.pn-steps-list li { margin-bottom: .55rem; font-size: .92rem; }
+.pn-ref-banner { display: flex; gap: .75rem; align-items: center; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: .7rem .9rem; color: #78350f; }
+.pn-ref-banner i { font-size: 1.4rem; color: #d97706; }
+.pn-ref-banner b { display: block; font-size: .9rem; }
+.pn-ref-banner small { display: block; font-size: .78rem; }
+.pn-share-card { border-left: 4px solid #25d366; }

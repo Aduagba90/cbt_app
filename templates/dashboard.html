@@ -22,7 +22,7 @@
                 <div>
                     <span class="badge bg-primary mb-2"><i class="bi bi-hand-thumbs-up me-1"></i>Welcome back</span>
                     <h1>Hello, {{ first }} 👋</h1>
-                    <p class="mb-3">You are {{ 'on a roll — ' if streak_days >= 3 else '' }}{{ streak_days }} active day{{ '' if streak_days == 1 else 's' }} this week. {% if rank %}You currently rank <b>#{{ rank }}</b> among all students.{% else %}Write your first mock to join the leaderboard.{% endif %}</p>
+                    <p class="mb-3">{% if streak_days >= 2 %}You are on a <b>{{ streak_days }}-day study streak</b> 🔥 — don't break it today.{% elif streak_days == 1 %}You studied today — come back tomorrow to start a streak.{% else %}Do one mock or practice set today to start your study streak.{% endif %} {% if rank %}You currently rank <b>#{{ rank }}</b> among all students.{% else %}Write your first mock to join the leaderboard.{% endif %}</p>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ url_for('exam_types') }}" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i> Start mock exam</a>
                         <a href="{{ url_for('practice') }}" class="btn btn-outline-primary"><i class="bi bi-lightning-charge me-1"></i> Quick practice</a>
@@ -51,6 +51,30 @@
             {% endif %}
             <a href="{{ url_for('subscribe') }}" class="btn btn-accent w-100 mt-3"><i class="bi bi-gem me-1"></i> {{ 'Extend plan' if sub.active else 'Choose a plan' }}</a>
         </div>
+    </div>
+</div>
+
+<!-- Daily challenge + invite -->
+<div class="row g-3 mb-4">
+    <div class="col-md-7">
+        <a href="{{ url_for('daily_challenge') }}" class="pn-boost pn-boost-challenge anim-rise d1 {{ 'done' if challenge_done else '' }}">
+            <span class="pn-boost-icon"><i class="bi bi-fire"></i></span>
+            <span class="pn-boost-body">
+                <b>{% if challenge_done %}Today's challenge done — {{ challenge_score }}/{{ challenge_size }} ✓{% else %}Daily Challenge: {{ challenge_size }} questions, 3 minutes{% endif %}</b>
+                <small>{% if challenge_done %}See the explanations or come back tomorrow for a new set.{% else %}Same questions for every student today. Keep your {{ streak_days }}-day streak alive 🔥{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">{{ 'Review' if challenge_done else 'Start' }} <i class="bi bi-arrow-right"></i></span>
+        </a>
+    </div>
+    <div class="col-md-5">
+        <a href="{{ url_for('invite') }}" class="pn-boost pn-boost-invite anim-rise d2">
+            <span class="pn-boost-icon"><i class="bi bi-gift"></i></span>
+            <span class="pn-boost-body">
+                <b>Invite a friend, get {{ referral.reward_days }} free days</b>
+                <small>{% if referral.invited %}{{ referral.invited }} joined · {{ referral.days_earned }} days earned{% else %}Both of you get bonus days after their first mock.{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">Share <i class="bi bi-arrow-right"></i></span>
+        </a>
     </div>
 </div>
 

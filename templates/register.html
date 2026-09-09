@@ -23,8 +23,12 @@
                 {% endif %}
             {% endwith %}
 
+            {% if ref_code %}
+            <div class="pn-ref-banner mb-3"><i class="bi bi-gift-fill"></i><div><b>Invited by a friend — code {{ ref_code }}</b><small>Finish your first mock and you both get bonus days on top of the free trial.</small></div></div>
+            {% endif %}
             <form method="POST" action="{{ url_for('register') }}" data-once novalidate>
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                {% if ref_code %}<input type="hidden" name="ref" value="{{ ref_code }}">{% endif %}
                 <div class="mb-3">
                     <label class="form-label" for="name">Full name</label>
                     <input type="text" class="form-control" id="name" name="name" value="{{ form.name }}" placeholder="e.g. Adebayo Chukwuma Musa" autocomplete="name" minlength="3" maxlength="80" required autofocus>

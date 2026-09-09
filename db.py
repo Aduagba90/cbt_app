@@ -88,6 +88,7 @@ def init_db():
         ("date_joined", "TIMESTAMP"), ("is_active", "INTEGER DEFAULT 1"),
         ("profile_picture", "TEXT"), ("email_verified", "INTEGER DEFAULT 0"),
         ("last_login", "TEXT"), ("state_of_origin", "TEXT"), ("school", "TEXT"),
+        ("referral_code", "TEXT"), ("referred_by", "TEXT"),
     ]:
         _add_column(cur, "users", col, ddl)
     cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
@@ -511,6 +512,34 @@ def init_db():
 
     # Housekeeping: prune old login attempts (older than 30 days)
     cur.execute("DELETE FROM login_attempts WHERE attempt_time < datetime('now', '-30 days')")
+
+    # ------------------------------------------------------------ growth: referrals
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_email TEXT NOT NULL,
+            referred_email TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            reward_status TEXT DEFAULT 'PENDING',
+            rewarded_at TIMESTAMP
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_email)")
+    cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL")
+
+    # ------------------------------------------------------------ growth: daily challenge
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS daily_challenge (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            day TEXT NOT NULL,
+            question_ids TEXT NOT NULL,
+            answers TEXT DEFAULT '{}',
+            score INTEGER,
+            completed_at TIMESTAMP,
+            UNIQUE(username, day)
+        )
+    """)
 
     conn.commit()
     conn.close()

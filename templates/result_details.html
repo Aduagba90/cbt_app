@@ -32,8 +32,18 @@
                 </div>
             </div>
         </div>
+        <div class="card mt-3 anim-rise d1 pn-share-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-megaphone-fill text-primary"></i><b>{{ 'Share your score' if pct >= 50 else 'Invite a study partner' }}</b></div>
+                <p class="small text-muted mb-2">{% if pct >= 50 %}Post it in your class group — friends can verify it is genuine with the link.{% else %}Studying with a friend keeps you consistent — send them the mock you just wrote.{% endif %}</p>
+                <div class="d-grid d-sm-flex gap-2">
+                    <a class="btn btn-success btn-sm" href="https://wa.me/?text={{ share|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i> WhatsApp</a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-copy="{{ share }}" data-copied="Copied!"><i class="bi bi-clipboard me-1"></i> Copy text</button>
+                </div>
+            </div>
+        </div>
         {% if r['verification_code'] %}
-        <div class="card mt-3 anim-rise d1">
+        <div class="card mt-3 anim-rise d2">
             <div class="card-body small">
                 <div class="text-uppercase text-muted ls-1 mb-1" style="font-size:.7rem">Verification code</div>
                 <div class="d-flex align-items-center justify-content-between"><code class="fs-6 fw-bold">{{ r['verification_code'] }}</code><a href="{{ url_for('verify_result', code=r['verification_code']) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Verify <i class="bi bi-box-arrow-up-right"></i></a></div>

@@ -129,6 +129,16 @@
       });
     });
 
+    /* ---------- Copy-to-clipboard buttons ---------- */
+    document.querySelectorAll("[data-copy]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var txt = b.getAttribute("data-copy"), orig = b.innerHTML;
+        var done = function () { b.innerHTML = '<i class="bi bi-check2 me-1"></i>' + (b.getAttribute("data-copied") || "Copied!"); setTimeout(function () { b.innerHTML = orig; }, 1800); };
+        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done, function () { window.prompt("Copy this link:", txt); }); }
+        else { window.prompt("Copy this link:", txt); }
+      });
+    });
+
     /* ---------- Auto-dismiss alerts ---------- */
     document.querySelectorAll(".alert[data-autodismiss]").forEach(function (a) {
       setTimeout(function () { a.style.transition = "opacity .4s"; a.style.opacity = "0"; setTimeout(function () { a.remove(); }, 400); }, 6000);

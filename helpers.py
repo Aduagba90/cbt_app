@@ -475,3 +475,105 @@ def activate_subscription(cur, username, plan_id, plan_name, duration_days, amou
     return now, new_end
 
 
+
+
+# ---------------------------------------------------------------------------
+# Growth features: referrals, streaks, daily challenge, share text
+# ---------------------------------------------------------------------------
+
+REFERRAL_REWARD_DAYS = 3          # days added to BOTH students when the invited friend finishes a first mock
+REFERRAL_MAX_REWARDS = 20         # per referrer
+CHALLENGE_SIZE = 5
+
+
+def ensure_referral_code(cur, email):
+    """Return the user's referral code, creating a short unique one (e.g. AMINA-7K3Q) if missing."""
+    row = cur.execute("SELECT referral_code, name FROM users WHERE email = ?", (email,)).fetchone()
+    if row and row["referral_code"]:
+        return row["referral_code"]
+    first = "".join(ch for ch in ((row["name"] or "").split() or [""])[0].upper() if "A" <= ch <= "Z")[:6] or "NOVA"
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    for _ in range(20):
+        code = first + "-" + "".join(random.choice(alphabet) for _ in range(4))
+        if not cur.execute("SELECT 1 FROM users WHERE referral_code = ?", (code,)).fetchone():
+            cur.execute("UPDATE users SET referral_code = ? WHERE email = ?", (code, email))
+            return code
+    return None
+
+
+def extend_subscription_days(cur, email, days, reason):
+    """Add free days for a user: extends an active plan/trial, or starts a bonus period from now."""
+    now = datetime.now()
+    row = cur.execute("SELECT id, end_date, is_active, plan_name FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+    base = now
+    if row and row["end_date"]:
+        try:
+            end = datetime.strptime(row["end_date"], "%Y-%m-%d %H:%M:%S")
+            if end > now:
+                base = end
+        except ValueError:
+            pass
+    new_end = base + timedelta(days=int(days))
+    if row:
+        cur.execute("UPDATE subscriptions SET end_date = ?, is_active = 1 WHERE id = ?", (new_end.strftime("%Y-%m-%d %H:%M:%S"), row["id"]))
+    else:
+        cur.execute(
+            """INSERT INTO subscriptions (username, plan_id, plan_name, start_date, end_date, payment_reference, payment_status, is_active, amount_paid, currency)
+               VALUES (?, 0, 'Bonus days', ?, ?, ?, 'BONUS', 1, 0, 'NGN')""",
+            (email, now.strftime("%Y-%m-%d %H:%M:%S"), new_end.strftime("%Y-%m-%d %H:%M:%S"), reason[:60]),
+        )
+    return new_end
+
+
+def reward_referral_if_due(cur, referred_email):
+    """Called after a student's FIRST submitted mock: reward the inviter and the invitee once."""
+    ref = cur.execute("SELECT id, referrer_email, reward_status FROM referrals WHERE referred_email = ?", (referred_email,)).fetchone()
+    if not ref or ref["reward_status"] != "PENDING":
+        return None
+    given = cur.execute("SELECT COUNT(*) FROM referrals WHERE referrer_email = ? AND reward_status = 'REWARDED'", (ref["referrer_email"],)).fetchone()[0]
+    cur.execute("UPDATE referrals SET reward_status = 'REWARDED', rewarded_at = CURRENT_TIMESTAMP WHERE id = ?", (ref["id"],))
+    extend_subscription_days(cur, referred_email, REFERRAL_REWARD_DAYS, "referral-welcome")
+    if given < REFERRAL_MAX_REWARDS:
+        extend_subscription_days(cur, ref["referrer_email"], REFERRAL_REWARD_DAYS, "referral-reward")
+    return ref["referrer_email"]
+
+
+def referral_stats(cur, email):
+    code = ensure_referral_code(cur, email)
+    rows = cur.execute(
+        "SELECT r.referred_email, r.reward_status, r.created_at, u.name FROM referrals r LEFT JOIN users u ON u.email = r.referred_email WHERE r.referrer_email = ? ORDER BY r.id DESC LIMIT 20",
+        (email,),
+    ).fetchall()
+    rewarded = sum(1 for r in rows if r["reward_status"] == "REWARDED")
+    return {"code": code, "invited": len(rows), "rewarded": rewarded, "days_earned": rewarded * REFERRAL_REWARD_DAYS,
+            "friends": rows, "reward_days": REFERRAL_REWARD_DAYS}
+
+
+def study_streak(cur, email):
+    """Consecutive days (ending today or yesterday) with any activity: a result, practice, or a daily challenge."""
+    days = set()
+    for (d,) in cur.execute("SELECT DISTINCT substr(date_taken, 1, 10) FROM results WHERE username = ? AND date_taken >= date('now', '-60 days')", (email,)):
+        if d:
+            days.add(d)
+    for (d,) in cur.execute("SELECT DISTINCT day FROM daily_usage WHERE username = ? AND day >= date('now', '-60 days')", (email,)):
+        if d:
+            days.add(str(d)[:10])
+    for (d,) in cur.execute("SELECT DISTINCT day FROM daily_challenge WHERE username = ? AND completed_at IS NOT NULL", (email,)):
+        if d:
+            days.add(d)
+    today = datetime.now().date()
+    cur_day = today if today.isoformat() in days else today - timedelta(days=1)
+    streak = 0
+    while cur_day.isoformat() in days:
+        streak += 1
+        cur_day -= timedelta(days=1)
+    return streak
+
+
+def share_text(name, exam, score_txt, pct, url):
+    first = (name or "I").split()[0]
+    if pct >= 50:
+        line = f"{first} just scored {score_txt} ({pct}%) in a {exam} mock on PrepNova CBT 🎯"
+        return f"{line}\nCan you beat it? Practise free for 7 days 👉 {url}"
+    line = f"{first} just finished a {exam} mock on PrepNova CBT — real CBT timer, every question explained 📚"
+    return f"{line}\nPractise with me, free for 7 days 👉 {url}"

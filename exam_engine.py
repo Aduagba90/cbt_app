@@ -13,6 +13,7 @@ Design principles (anti-cheating / integrity):
 """
 
 import json
+import logging
 import random
 from datetime import datetime, timedelta
 
@@ -20,7 +21,7 @@ from db import connect
 from helpers import (
     JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ENGLISH_QUESTIONS, JAMB_OTHER_QUESTIONS,
     WAEC_DURATION_MIN, WAEC_QUESTIONS, fetch_question_ids, fetch_questions,
-    new_verification_code, resolve_source,
+    new_verification_code, resolve_source, reward_referral_if_due,
 )
 
 FMT = "%Y-%m-%d %H:%M:%S"
@@ -366,6 +367,13 @@ def finalize_attempt(attempt_id, username=None, cur=None, auto=False):
             "UPDATE exam_attempts SET status = ?, submitted_at = ?, score = ?, percentage = ?, result_id = ? WHERE id = ?",
             ("AUTO_SUBMITTED" if auto else "SUBMITTED", now.strftime(FMT), score, percentage, result_id, attempt["id"]),
         )
+        # Referral reward: the invited friend's FIRST mock unlocks bonus days for both students.
+        try:
+            n_results = cur.execute("SELECT COUNT(*) FROM results WHERE username = ?", (attempt["username"],)).fetchone()[0]
+            if n_results == 1:
+                reward_referral_if_due(cur, attempt["username"])
+        except Exception:  # never let a bonus break a submission
+            logging.getLogger("prepnova").exception("referral reward failed")
         conn.commit()
         return result_id
     finally:

@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=5">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -39,6 +39,7 @@
                 <li class="nav-item"><a class="nav-link {% if request.endpoint in ['practice','practice_question'] %}active{% endif %}" href="{{ url_for('practice') }}"><i class="bi bi-lightning-charge"></i>Practice</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.endpoint in ['my_results','result_details','review_answers'] %}active{% endif %}" href="{{ url_for('my_results') }}"><i class="bi bi-bar-chart-line"></i>Results</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}"><i class="bi bi-trophy"></i>Leaderboard</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.endpoint == 'daily_challenge' %}active{% endif %}" href="{{ url_for('daily_challenge') }}"><i class="bi bi-fire"></i>Challenge</a></li>
             </ul>
 
             <div class="pn-actions">
@@ -59,6 +60,8 @@
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('practice') }}"><i class="bi bi-lightning-charge"></i> Practice</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('my_results') }}"><i class="bi bi-bar-chart-line"></i> Results</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('leaderboard') }}"><i class="bi bi-trophy"></i> Leaderboard</a></li>
+                        <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('daily_challenge') }}"><i class="bi bi-fire"></i> Daily Challenge</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('invite') }}"><i class="bi bi-gift"></i> Invite friends</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
                     </ul>
@@ -92,7 +95,7 @@
 {% endblock %}
 
 <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=4"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
