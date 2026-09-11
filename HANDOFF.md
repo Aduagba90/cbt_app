@@ -80,3 +80,13 @@ on a persistent disk (seeded from repo `database.db` on first boot), `APP_URL`, 
 - `c3f41b6` Fix admin corrections view, retire legacy uploader
 - `10a4c3e` Zero-config local run
 - `0fb7d7b` Admin subscriptions console + Paystack key checks
+
+## Phone navigation, prices & Plans page (Sept 2026)
+- **Bottom app bar on phones/tablets** (`.pn-tabbar` in `base.html`, hidden ≥992px and inside the exam room via
+  `body.pn-exam-body`): Home · Mocks · Practice · Results · Subscribe. A `.pn-tabbar-space` spacer keeps the footer
+  and sticky elements (`.pn-challenge-actions`) above it. The avatar dropdown lost the duplicate links and is now 8 items.
+- **Prices**: Monthly ₦1,000 / Quarterly ₦2,500 / Yearly ₦8,000. `init_db()` applies this ONCE (flag
+  `plans_repriced_2026_09` in the new `app_settings` key/value table) and never touches prices again.
+- **Admin → Plans** (`/manage_plans`, `POST /manage_plans/<id>`): edit price (₦100–₦1,000,000), description, on/off
+  (at least one plan must stay on). Audited as `save_plan`. Landing, Subscribe and Paystack all read `subscription_plans`.
+- Cache-bust: css `?v=7` (base.html + _admin_bar.html).

@@ -451,9 +451,9 @@ def init_db():
         cur.executemany(
             "INSERT INTO subscription_plans (plan_name, price, duration_days, description) VALUES (?, ?, ?, ?)",
             [
-                ("Monthly", 5000, 30, "30 days unlimited CBT access"),
-                ("Quarterly", 12000, 90, "90 days unlimited CBT access"),
-                ("Yearly", 45000, 365, "365 days unlimited CBT access"),
+                ("Monthly", 1000, 30, "30 days unlimited CBT access"),
+                ("Quarterly", 2500, 90, "90 days unlimited CBT access"),
+                ("Yearly", 8000, 365, "365 days unlimited CBT access"),
             ],
         )
 
@@ -582,6 +582,15 @@ def init_db():
         )
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_mistakes_user ON mistakes(username, cleared_at)")
+
+    # ------------------------------------------------------------ app settings + one-off data fixes
+    cur.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    # Launch pricing (Sept 2026): Monthly 1,000 / Quarterly 2,500 / Yearly 8,000. Runs once; afterwards
+    # prices are owned by Admin -> Plans and never touched again by code.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'plans_repriced_2026_09'").fetchone():
+        for name, price in (("Monthly", 1000), ("Quarterly", 2500), ("Yearly", 8000)):
+            cur.execute("UPDATE subscription_plans SET price = ? WHERE plan_name = ?", (price, name))
+        cur.execute("INSERT INTO app_settings (key, value) VALUES ('plans_repriced_2026_09', '1')")
 
     conn.commit()
     conn.close()

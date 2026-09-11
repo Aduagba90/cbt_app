@@ -1603,6 +1603,45 @@ def _codes_page(new_codes=None, new_days=None):
     return render_template("access_codes.html", codes=codes, stats=stats, new_codes=[pretty_code(c) for c in (new_codes or [])], new_days=new_days)
 
 
+@admin_bp.route("/manage_plans")
+def manage_plans():
+    """Prices students see on the landing page, the Subscribe page and in Paystack checkout."""
+    conn = connect()
+    plans = conn.execute("SELECT id, plan_name, price, duration_days, description, is_active FROM subscription_plans ORDER BY duration_days").fetchall()
+    sold = {r["plan_id"]: r["n"] for r in conn.execute("SELECT plan_id, COUNT(*) AS n FROM payments WHERE payment_status = 'SUCCESS' GROUP BY plan_id").fetchall()}
+    conn.close()
+    return render_template("manage_plans.html", plans=plans, sold=sold, paystack_ready=_paystack_ready())
+
+
+@admin_bp.route("/manage_plans/<int:plan_id>", methods=["POST"])
+def save_plan(plan_id):
+    try:
+        price = int(round(float((request.form.get("price") or "").replace(",", "").replace("₦", "").strip())))
+    except ValueError:
+        flash("Enter the price as a plain number, e.g. 1000.", "danger")
+        return redirect(url_for("admin_bp.manage_plans"))
+    if not 100 <= price <= 1_000_000:
+        flash("Price must be between ₦100 and ₦1,000,000.", "danger")
+        return redirect(url_for("admin_bp.manage_plans"))
+    description = (request.form.get("description") or "").strip()[:80]
+    is_active = 1 if request.form.get("is_active") else 0
+    conn = connect()
+    plan = conn.execute("SELECT plan_name, price FROM subscription_plans WHERE id = ?", (plan_id,)).fetchone()
+    if not plan:
+        conn.close()
+        abort(404)
+    if not is_active and conn.execute("SELECT COUNT(*) FROM subscription_plans WHERE is_active = 1 AND id != ?", (plan_id,)).fetchone()[0] == 0:
+        conn.close()
+        flash("At least one plan must stay switched on.", "danger")
+        return redirect(url_for("admin_bp.manage_plans"))
+    conn.execute("UPDATE subscription_plans SET price = ?, description = ?, is_active = ? WHERE id = ?", (price, description, is_active, plan_id))
+    conn.commit()
+    conn.close()
+    _audit("save_plan", f"{plan['plan_name']}: ₦{plan['price']:,.0f} -> ₦{price:,} {'on' if is_active else 'off'}")
+    flash(f"{plan['plan_name']} plan saved — students now see ₦{price:,}.", "success")
+    return redirect(url_for("admin_bp.manage_plans"))
+
+
 @admin_bp.route("/access_codes")
 def access_codes():
     return _codes_page()

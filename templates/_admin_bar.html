@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css">
-<link rel="stylesheet" href="/static/css/prepnova.css?v=6">
+<link rel="stylesheet" href="/static/css/prepnova.css?v=7">
 <style>
   body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; font-size: .925rem; }
   .pn-admin-bar { position: sticky; top: 0; z-index: 1050; background: #0f1f3d; color: #fff; box-shadow: 0 4px 14px rgba(15,31,61,.25); }
@@ -40,6 +40,7 @@
       <a href="{{ url_for('admin_bp.manage_results') }}" class="{{ 'active' if ep in ['manage_results','view_result','review_result'] }}"><i class="bi bi-bar-chart-line"></i> Results</a>
       <a href="{{ url_for('admin_bp.manage_subscriptions') }}" class="{{ 'active' if ep in ['manage_subscriptions','activate_subscription','deactivate_subscription'] }}"><i class="bi bi-credit-card-2-front"></i> Subscriptions</a>
       <a href="{{ url_for('admin_bp.access_codes') }}" class="{{ 'active' if ep in ['access_codes','create_access_codes','toggle_access_code'] }}"><i class="bi bi-ticket-perforated"></i> Access PINs</a>
+      <a href="{{ url_for('admin_bp.manage_plans') }}" class="{{ 'active' if ep in ['manage_plans','save_plan'] }}"><i class="bi bi-tags"></i> Plans</a>
     </nav>
     <div class="right">
       <a href="{{ url_for('admin_bp.admin_backup') }}" class="btn btn-sm btn-outline-light" title="Download the complete live database (students, results, payments, questions). Keep a copy in Google Drive weekly."><i class="bi bi-download"></i> Backup</a>
