@@ -65,6 +65,8 @@ if not _env:
     _env = "development" if (__name__ == "__main__" and not os.getenv("DYNO") and not os.getenv("RENDER")
                              and not os.getenv("RAILWAY_ENVIRONMENT")) else "production"
 IS_PRODUCTION = _env == "production" and os.getenv("FLASK_DEBUG", "0") != "1"
+# Development-only: lets the app run inside a hosted preview frame (never honoured in production).
+PREVIEW_EMBED = (not IS_PRODUCTION) and os.getenv("PREVIEW_EMBED", "0") == "1"
 
 _secret = (os.getenv("SECRET_KEY") or "").strip()
 if not _secret or _secret.startswith("#") or _secret == "replace_with_a_long_random_secret" or len(_secret) < 32:
@@ -81,8 +83,8 @@ if not _secret or _secret.startswith("#") or _secret == "replace_with_a_long_ran
 app.config.update(
     SECRET_KEY=_secret,
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "1" if IS_PRODUCTION else "0") == "1",
+    SESSION_COOKIE_SAMESITE="None" if PREVIEW_EMBED else "Lax",
+    SESSION_COOKIE_SECURE=PREVIEW_EMBED or os.getenv("SESSION_COOKIE_SECURE", "1" if IS_PRODUCTION else "0") == "1",
     SESSION_COOKIE_NAME="prepnova_session",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
     MAX_CONTENT_LENGTH=8 * 1024 * 1024,
@@ -287,7 +289,8 @@ def _before():
 
 @app.after_request
 def _after(response):
-    return apply_security_headers(response, https=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https")
+    return apply_security_headers(response, https=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
+                                  embeddable=PREVIEW_EMBED)
 
 
 # ---------------------------------------------------------------------------

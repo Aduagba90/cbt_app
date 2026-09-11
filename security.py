@@ -207,7 +207,8 @@ def admin_required(fn):
 # Security headers
 # ----------------------------------------------------------------------------
 
-def apply_security_headers(response, nonce=None, https=False):
+def apply_security_headers(response, nonce=None, https=False, embeddable=False):
+    """`embeddable` is ONLY used by the development preview (PREVIEW_EMBED=1); production always forbids framing."""
     csp = (
         "default-src 'self'; "
         "img-src 'self' data: blob:; "
@@ -220,9 +221,12 @@ def apply_security_headers(response, nonce=None, https=False):
         "base-uri 'self'; "
         "object-src 'none'"
     )
+    if embeddable:
+        csp = csp.replace("frame-ancestors 'none'; ", "")
     response.headers.setdefault("Content-Security-Policy", csp)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "DENY")
+    if not embeddable:
+        response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(self)")
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
