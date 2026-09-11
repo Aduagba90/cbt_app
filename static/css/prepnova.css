@@ -731,3 +731,8 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
 .pn-target-form { min-width: 200px; }
 .pn-target-form .input-group { max-width: 230px; }
 @media (max-width: 767.98px) { .pn-target { width: 100%; padding-top: .75rem; border-top: 1px solid rgba(15, 31, 61, .08); } .pn-target-ring { display: none; } }
+
+.pn-plan-box .pn-pin-link { color: #fff; background: rgba(255, 255, 255, .12); border: 1px dashed rgba(255, 255, 255, .45); font-weight: 700; }
+.pn-plan-box .pn-pin-link:hover { background: rgba(255, 255, 255, .22); color: #fff; }
+.pn-pin-focus { border-left-width: 6px; box-shadow: 0 0 0 4px rgba(242, 183, 5, .25), var(--pn-shadow-lg); animation: pn-pin-pulse 1.6s ease-in-out 2; }
+@keyframes pn-pin-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(242, 183, 5, .25), var(--pn-shadow-lg); } 50% { box-shadow: 0 0 0 10px rgba(242, 183, 5, .12), var(--pn-shadow-lg); } }

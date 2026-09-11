@@ -22,7 +22,7 @@
 <div class="alert alert-danger d-flex align-items-center gap-3 anim-rise"><span class="pn-stat-icon tint-red"><i class="bi bi-exclamation-octagon"></i></span><div><b>Your {{ sub.plan }} plan has expired.</b> Renew below to continue taking mock exams.</div></div>
 {% endif %}
 
-<div class="card anim-rise mb-4 pn-pin-card" id="pin">
+<div class="card anim-rise mb-4 pn-pin-card {{ 'pn-pin-focus' if pin_open }}" id="pin">
     <div class="card-body">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">

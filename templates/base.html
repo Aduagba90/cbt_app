@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=6">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -53,7 +53,8 @@
                         <li class="px-3 py-2 small text-muted border-bottom mb-1"><div class="fw-bold text-dark text-truncate">{{ session.get('name') }}</div><div class="text-truncate">{{ session.get('user') }}</div></li>
                         <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="bi bi-person"></i> My Account</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('my_bookmarks') }}"><i class="bi bi-bookmark-star"></i> Bookmarks</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('subscribe') }}"><i class="bi bi-credit-card"></i> Subscription</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('subscribe') }}"><i class="bi bi-gem"></i> Subscribe / plans</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('subscribe', pin=1) }}#pin"><i class="bi bi-ticket-perforated"></i> I have an Access PIN</a></li>
                         <li class="d-lg-none"><hr class="dropdown-divider"></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
                         <li class="d-lg-none"><a class="dropdown-item" href="{{ url_for('exam_types') }}"><i class="bi bi-pencil-square"></i> Mock Exams</a></li>
