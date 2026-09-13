@@ -37,7 +37,7 @@
                     <span><b data-countdown="{{ exam_date.isoformat() }}">{{ days_to_exam }}</b> days to UTME {{ exam_date.year }} — start now</span>
                 </div>
                 <h1 class="anim-rise d1">Pass <span class="hl">JAMB</span> &amp; Post-UTME with <span class="pn-rotate" data-rotate>{% for w in ["confidence", "a real CBT timer", "past questions", "clear explanations", "your phone"] %}<span class="pn-rotate-word{% if loop.first %} on{% endif %}">{{ w }}</span>{% endfor %}</span></h1>
-                <p class="lead anim-rise d2">Walk into the exam hall without fear. Practise on a real CBT screen with a live timer, thousands of past questions and step-by-step corrections — on any phone, even on slow networks.</p>
+                <p class="lead anim-rise d2">Walk into the exam hall without fear. Practise on a real CBT screen with a live timer, thousands of past questions and step-by-step corrections. Works on any phone, even on slow networks.</p>
                 <div class="d-flex flex-wrap gap-2 mt-4 anim-rise d3">
                     <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg"><i class="bi bi-rocket-takeoff me-1"></i> Start 7-day free trial</a>
                     <a href="#how" class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle me-1"></i> See how it works</a>
