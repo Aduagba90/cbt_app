@@ -52,6 +52,18 @@ A–D with one unambiguous correct answer; balance the correct letters roughly e
 Avoid "all of the above" and "none of the above". After each question give a one- to
 three-sentence explanation that teaches why the answer is right.
 
+IMPORTANT — question style. JAMB tests application, not memory. At most 10 of the 40 may be
+direct recall ("What is…", "Which of the following is…"). The other 30 must make the student
+DO something:
+- Sciences/Maths/Economics: a short scenario with real numbers to calculate, a graph/table
+  described in words to read, an equation to balance, a result to predict ("A 2 kg block…",
+  "If the price rises from ₦200 to ₦250…"). Two-step calculations for the Hard ones.
+- English: a 4–6 sentence passage followed by questions on it; sentence-completion,
+  nearest/opposite in meaning, stress and emphasis — never "what is a noun".
+- Literature/Government/CRS/IRS/Commerce: a quoted line, a case or a situation the student
+  must interpret or apply a principle to ("A minister resigns after a policy fails. This
+  illustrates…"), not definitions.
+
 Output ONLY a table with these exact columns, one question per row, no numbering:
 Exam Type | Subject | Topic | Question | Option A | Option B | Option C | Option D | Answer | Explanation | Difficulty
 Use "JAMB" for Exam Type, "SUBJECT" for Subject and "TOPIC" for Topic in every row.
