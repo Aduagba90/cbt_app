@@ -12,7 +12,7 @@ without re-explaining anything.
 > admin blueprint (`admin_routes.py`), Admin → Subscriptions page with manual activation,
 > zero-config local run (`python app.py` = development mode, admin `admin@gmail.com` / `admin123`).
 > Production needs `.env` with `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, Paystack keys.
-> Read `README.md` and `HANDOFF.md` in the repo first. Known open items: 239 English
+> Read `README.md`, `HANDOFF.md` and `docs/QUESTION_UPGRADE_PLAN.md` in the repo first. Known open items: 239 English
 > explanations are boilerplate; Post-UTME has 0 questions; rotate Paystack keys/admin
 > password that exist in old git history. Today's task: <describe it>.
 
