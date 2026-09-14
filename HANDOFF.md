@@ -16,6 +16,15 @@ without re-explaining anything.
 > explanations are boilerplate; Post-UTME has 0 questions; rotate Paystack keys/admin
 > password that exist in old git history. Today's task: <describe it>.
 
+## Question content batches (Sept 2026)
+New applied-style questions live in `content/batch_*.json` and are written by `scripts/build_content_batch*.py`
+(numerical answers are re-computed in Python before the file is written). `content_loader.apply_pending()` runs
+inside `init_db()`, so every database — developer, preview, and the live PythonAnywhere copy with student data —
+receives each batch exactly once (tracked in `app_settings` as `content_batch_<id>`). Nothing is deleted: retired
+recall questions are set to `status='Inactive'`. Comprehension passages go in the `passages` table and are linked via
+`questions_v2.passage_id`; the exam engine shows a passage's questions together (max 2 passages per subject per mock).
+Next batches: Economics, Government, Commerce, Literature, CRS, IRS; then Post-UTME/WAEC.
+
 ## Where things are
 
 | Item | Location |

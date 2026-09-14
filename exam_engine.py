@@ -47,14 +47,46 @@ def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, 
             ids = fetch_question_ids(cur, source, exam_type, subject) if source else []
         if not ids:
             raise ExamError(f"No questions are available yet for {subject}. Please try another subject or check back soon.")
-        random.shuffle(ids)
         cap = per_subject
         if english_count and subject in ("Use of English", "English"):
             cap = english_count
-        if cap:
-            ids = ids[:cap]
-        plan.append((subject, source, ids))
+        plan.append((subject, source, _arrange(cur, source, ids, cap)))
     return plan
+
+
+def _arrange(cur, source, ids, cap):
+    """Shuffle a subject's question ids, keeping passage-linked questions together.
+
+    Like the real CBT, a comprehension passage is shown once with its questions in order,
+    at the start of the subject (at most two passages per subject per sitting).  Everything
+    else is randomised.
+    """
+    if source != "questions_v2":
+        random.shuffle(ids)
+        return ids[:cap] if cap else ids
+    passage_of = {}
+    for i in range(0, len(ids), 500):
+        chunk = ids[i:i + 500]
+        for r in cur.execute(f"SELECT id, passage_id FROM questions_v2 WHERE id IN ({','.join('?' * len(chunk))})", chunk):
+            passage_of[r[0]] = r[1]
+    groups, singles = {}, []
+    for q in ids:
+        p = passage_of.get(q)
+        if p:
+            groups.setdefault(p, []).append(q)
+        else:
+            singles.append(q)
+    group_list = [sorted(g) for g in groups.values()]
+    random.shuffle(group_list)
+    random.shuffle(singles)
+    max_groups = 2 if (cap or 60) >= 40 else 1
+    chosen = [q for g in group_list[:max_groups] for q in g]
+    if cap:
+        chosen = chosen[:cap]
+        chosen += singles[:max(0, cap - len(chosen))]
+    else:
+        chosen += singles
+    return chosen
 
 
 def get_open_attempt(username, cur=None):

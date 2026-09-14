@@ -592,6 +592,15 @@ def init_db():
             cur.execute("UPDATE subscription_plans SET price = ? WHERE plan_name = ?", (price, name))
         cur.execute("INSERT INTO app_settings (key, value) VALUES ('plans_repriced_2026_09', '1')")
 
+    # Question batches written in content/*.json (applied-style questions). Each batch is
+    # applied once per database, so a live site with student data picks new questions up on
+    # the next restart without any import step.
+    try:
+        from content_loader import apply_pending
+        apply_pending(cur)
+    except Exception as exc:  # never stop the site from starting because of a content file
+        print(f"[content] skipped: {exc}")
+
     conn.commit()
     conn.close()
 

@@ -397,7 +397,7 @@ def try_question():
               AND length(q.question_text) BETWEEN 30 AND 170
               AND length(q.option_a) < 45 AND length(q.option_b) < 45 AND length(q.option_c) < 45 AND length(q.option_d) < 45
               AND length(COALESCE(q.explanation, '')) > 40 AND q.explanation NOT LIKE '%option%is correct%'
-              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%'
+              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%' AND q.passage_id IS NULL
               AND q.id != ?
             ORDER BY RANDOM() LIMIT 1""",
         (*_TRY_SUBJECTS, request.args.get("skip", 0, type=int)),
@@ -1585,7 +1585,7 @@ def _challenge_pick(cur, size):
             WHERE q.status = 'Active' AND s.subject_name IN ({marks})
               AND length(q.question_text) BETWEEN 25 AND 260
               AND length(COALESCE(q.explanation, '')) > 40 AND q.explanation NOT LIKE '%option%is correct%'
-              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%'
+              AND q.question_text NOT LIKE '%passage%' AND q.question_text NOT LIKE '%underlined%' AND q.passage_id IS NULL
             ORDER BY RANDOM() LIMIT ?""",
         (*_TRY_SUBJECTS, size),
     ).fetchall()
