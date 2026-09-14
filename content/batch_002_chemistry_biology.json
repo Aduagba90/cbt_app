@@ -648,7 +648,7 @@
    "A": "TT",
    "B": "Tt",
    "C": "tt",
-   "D": "TTt",
+   "D": "either TT or Tt",
    "answer": "B",
    "explanation": "This is a test cross; a 1 : 1 ratio means the tall parent gave T half the time and t half the time — it is heterozygous, Tt."
   },

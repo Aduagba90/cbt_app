@@ -1195,7 +1195,7 @@
    "C": "2 s",
    "D": "50 s",
    "answer": "A",
-   "explanation": "T = 1/f = 1/50 = 0.02 s."
+   "explanation": "Period is the time for one complete cycle: T = 1/f = 1/50 = 0.02 s."
   },
   {
    "subject": "Physics",
