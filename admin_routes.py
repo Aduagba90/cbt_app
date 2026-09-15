@@ -2235,9 +2235,10 @@ def admin_questions_v2():
                     option_d,
                     correct_answer,
                     explanation,
-                    status
+                    status,
+                    tier
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
             """, (
                 exam_type_id,
                 subject_id,
@@ -4598,9 +4599,10 @@ def import_questions_v2():
                         option_d,
                         correct_answer,
                         explanation,
-                        status
+                        status,
+                        tier
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
                 """, (
                     exam_type_id,
                     subject_id,

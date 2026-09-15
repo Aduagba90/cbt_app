@@ -352,6 +352,7 @@ def init_db():
         )
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_attempt_questions ON exam_attempt_questions(attempt_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_attempts_user_status ON exam_attempts(username, status)")
 
     # Legacy progress table (no longer written to, kept for history)
     cur.execute("""

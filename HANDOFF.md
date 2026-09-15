@@ -34,7 +34,24 @@ least half of the questions from tier 1, the rest from the general bank, shuffle
 runs of spaces render as monospace tables (`passage_class` filter / `.pn-table`). Quality gates used by the build
 scripts: numeric answers verified, no duplicate options, explanation ≥ 25 chars, no "option X" in explanations,
 answer letters balanced A–D, correct option never > 1.5× the longest distractor (`scripts/distractor_fixes.py`).
-Next: Post-UTME bank, WAEC bank, then offline mode.
+
+Round 3 (batches 010–011, Sept 2026) added 383 Use of English questions written to the JAMB syllabus (12 comprehension
++ 10 cloze passages, sentence interpretation, synonyms, antonyms, grammar/sentence completion, oral English), taking
+English to 552 curated questions and 30 passages. Two engine rules were added at the same time:
+
+* **Auto-retire at 500** (`content_loader._auto_retire`, `AUTO_RETIRE_AT`): once a subject has ≥ 500 Active tier-1
+  questions, every remaining tier-0 (old bank) question of that subject is set Inactive. It runs after each
+  `apply_pending()`, so each subject switches over automatically as its curated bank grows. English switched over
+  in this round (97 old items retired; the setting `content_auto_retire_<subject_id>` records it).
+* **No repeats** (`exam_engine._seen_questions` / `_arrange(seen=)`): questions and passages a student met in earlier
+  (submitted/expired/abandoned) attempts are used only when the unseen ones run out. Index
+  `idx_attempts_user_status` supports the lookup. With 552 English items a student sees no repeated English question
+  for the first 9 mocks; other subjects still repeat because their banks are smaller.
+
+Questions added through Admin → Add question / Import v2 are inserted as tier 1 (they count towards the 500).
+Cross-batch duplicate stems are silently skipped by the loader (dedupe on subject + text + passage), so check for
+duplicates before writing a batch (see the ad-hoc check in the round-3 build session: same stem in an earlier batch).
+Next: sciences and Maths to 500 each, then arts; then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 

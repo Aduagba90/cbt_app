@@ -35,9 +35,23 @@ class ExamError(Exception):
 # Building attempts
 # ---------------------------------------------------------------------------
 
-def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, english_count=None):
+def _seen_questions(cur, username, source):
+    """Question ids this student has already met in earlier attempts (used to avoid repeats)."""
+    if not username:
+        return set()
+    rows = cur.execute(
+        """SELECT DISTINCT q.question_id FROM exam_attempt_questions q
+           JOIN exam_attempts a ON a.id = q.attempt_id
+           WHERE a.username = ? AND q.question_source = ? AND a.status != 'IN_PROGRESS'""",
+        (username, source),
+    ).fetchall()
+    return {r[0] for r in rows}
+
+
+def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, english_count=None, username=None):
     """Return a list of (subject, source, [question_ids]) with randomised, capped ids."""
     plan = []
+    seen_cache = {}
     for subject in subjects:
         if exam_type == "POST-UTME":
             source = "post_utme_questions"
@@ -50,20 +64,30 @@ def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, 
         cap = per_subject
         if english_count and subject in ("Use of English", "English"):
             cap = english_count
-        plan.append((subject, source, _arrange(cur, source, ids, cap)))
+        if source not in seen_cache:
+            seen_cache[source] = _seen_questions(cur, username, source)
+        plan.append((subject, source, _arrange(cur, source, ids, cap, seen_cache[source])))
     return plan
 
 
-def _arrange(cur, source, ids, cap):
+def _arrange(cur, source, ids, cap, seen=None):
     """Choose and order one subject's questions the way the real CBT does.
 
     * Passage-linked questions stay together, at the start of the subject (max two passages).
     * At least half of the questions come from the curated tier-1 bank (applied, exam-standard
       items) whenever enough exist; the rest are drawn from the general bank.
+    * Questions (and passages) the student has met in earlier attempts are used only when the
+      unseen ones run out, so repeats are as rare as the bank size allows.
     * Everything else is randomised.
     """
+    seen = seen or set()
+
+    def fresh_first(items):
+        random.shuffle(items)
+        return [q for q in items if q not in seen] + [q for q in items if q in seen]
+
     if source != "questions_v2":
-        random.shuffle(ids)
+        ids = fresh_first(list(ids))
         return ids[:cap] if cap else ids
     meta = {}
     for i in range(0, len(ids), 500):
@@ -84,7 +108,9 @@ def _arrange(cur, source, ids, cap):
             general.append(q)
     keys = list(groups)
     random.shuffle(keys)
-    # Prefer passages of different kinds (e.g. one comprehension + one cloze), as the real paper does.
+    # Unseen passages first, then prefer passages of different kinds (e.g. one comprehension + one
+    # cloze), as the real paper does.
+    keys.sort(key=lambda k: any(q in seen for q in groups[k]))
     picked, seen_topics = [], set()
     for k in keys:
         if group_topic[k] not in seen_topics:
@@ -92,15 +118,14 @@ def _arrange(cur, source, ids, cap):
             seen_topics.add(group_topic[k])
     picked += [k for k in keys if k not in picked]
     group_list = [sorted(groups[k]) for k in picked]
-    random.shuffle(curated)
-    random.shuffle(general)
+    curated = fresh_first(curated)
+    general = fresh_first(general)
     limit = cap or (len(ids))
     max_groups = 2 if limit >= 40 else 1
     chosen = [q for g in group_list[:max_groups] for q in g][:limit]
     want_curated = max(0, (limit + 1) // 2 - len(chosen))
     take = curated[:want_curated]
-    rest = curated[want_curated:] + general
-    random.shuffle(rest)
+    rest = fresh_first(curated[want_curated:] + general)
     body = take + rest[:max(0, limit - len(chosen) - len(take))]
     random.shuffle(body)
     return chosen + body
@@ -139,7 +164,7 @@ def create_attempt(username, exam_type, exam_name, subjects, *, university=None,
     conn = connect()
     cur = conn.cursor()
     try:
-        plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count)
+        plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count, username=username)
         abandon_open_attempts(username, cur)
 
         total = sum(len(ids) for _, _, ids in plan)

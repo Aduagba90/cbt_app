@@ -166,7 +166,36 @@ def apply_pending(cur):
             (key, f"inserted={n} deactivated={d}", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         )
         applied.append((key, n, d))
+    _auto_retire(cur)
     return applied
+
+
+# Once a subject's curated (tier-1) bank reaches this size, the old general (tier-0) items of that
+# subject are switched off automatically, so students only ever meet exam-standard questions.
+AUTO_RETIRE_AT = 500
+
+
+def _auto_retire(cur):
+    """Per subject: when >= AUTO_RETIRE_AT curated questions are Active, retire the remaining tier-0 ones."""
+    rows = cur.execute(
+        """SELECT subject_id, COUNT(*) FROM questions_v2
+           WHERE status = 'Active' AND tier = 1 GROUP BY subject_id HAVING COUNT(*) >= ?""",
+        (AUTO_RETIRE_AT,),
+    ).fetchall()
+    retired = []
+    for subject_id, n in rows:
+        cur.execute(
+            "UPDATE questions_v2 SET status = 'Inactive' WHERE subject_id = ? AND status = 'Active' AND COALESCE(tier, 0) = 0",
+            (subject_id,),
+        )
+        if cur.rowcount:
+            retired.append((subject_id, cur.rowcount))
+            cur.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
+                (f"content_auto_retire_{subject_id}", f"tier1={n} retired={cur.rowcount}",
+                 datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            )
+    return retired
 
 
 def _retag(cur, batches):
