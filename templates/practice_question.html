@@ -29,7 +29,7 @@
                     <button class="btn btn-sm {{ 'btn-warning' if bookmarked else 'btn-outline-warning' }}" type="submit"><i class="bi {{ 'bi-bookmark-star-fill' if bookmarked else 'bi-bookmark-star' }}"></i> {{ 'Bookmarked' if bookmarked else 'Bookmark' }}</button>
                 </form>
             </div>
-            {% if q.passage %}<div class="pn-passage">{{ q.passage }}</div>{% endif %}
+            {% if q.passage %}<div class="{{ q.passage|passage_class }}">{{ q.passage }}</div>{% endif %}
             <div class="pn-qtext">{{ q.text }}</div>
 
             {% if not answered %}

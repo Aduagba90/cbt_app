@@ -23,7 +23,18 @@ inside `init_db()`, so every database — developer, preview, and the live Pytho
 receives each batch exactly once (tracked in `app_settings` as `content_batch_<id>`). Nothing is deleted: retired
 recall questions are set to `status='Inactive'`. Comprehension passages go in the `passages` table and are linked via
 `questions_v2.passage_id`; the exam engine shows a passage's questions together (max 2 passages per subject per mock).
-Batches 001-004 cover all 10 JAMB subjects except Mathematics (already applied). Next: Post-UTME/WAEC, then a second round per subject.
+Batches 001-009 (Sept 2026) cover all 11 JAMB subjects, two rounds each: ~1,230 curated exam-standard questions,
+15 passages (comprehension, two cloze passages with numbered gaps, unseen poems/prose/drama, an Economics
+demand-supply schedule, a Mathematics frequency table). Roughly 1,090 weak recall items retired (Inactive).
+`questions_v2.tier` = 1 for curated batch items (`_retag` marks them by text on every start), 0 for the old bank.
+`exam_engine._arrange()` builds each subject block as: up to 2 passages first (different kinds preferred), then at
+least half of the questions from tier 1, the rest from the general bank, shuffled. Deactivation rules in a batch's
+`deactivate` list are generic (`subject`, `topic`, `only_without_passage`, `max_length`, `no_digit`, `starts_with`,
+`like`, `telegraphic`, `keep_at_least` floor) and only ever touch tier-0 Active rows. Passages whose text contains
+runs of spaces render as monospace tables (`passage_class` filter / `.pn-table`). Quality gates used by the build
+scripts: numeric answers verified, no duplicate options, explanation ≥ 25 chars, no "option X" in explanations,
+answer letters balanced A–D, correct option never > 1.5× the longest distractor (`scripts/distractor_fixes.py`).
+Next: Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 

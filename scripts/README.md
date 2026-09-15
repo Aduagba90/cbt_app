@@ -11,3 +11,12 @@ One-off data utilities kept for reference. They operate on the SQLite database a
 | `validate_question_bank.py` | Reports malformed questions (missing options, bad correct letters). |
 | `shuffle_answers.py` | Randomises option order. **Do not re-run** on the current bank — run `fix_explanation_letters.py` afterwards if you ever do. |
 | `check_math.py`, `check_subjects.py`, `clean_check.py`, `clean_irs.py`, `fix_irs.py`, `fix_final.py`, `reset_subjects.py`, `copy_to_waec.py`, `debug_question.py`, `run_sql.py` | Historical clean-up helpers from the original import. |
+
+## Question content batches
+
+| Script | Purpose |
+| --- | --- |
+| `build_content_batch1.py` … `build_content_batch9.py` | Write `content/batch_00N_*.json` (JAMB questions, passages, retirement rules). Numerical answers are re-computed before the file is written; the script exits on any mismatch. Re-running is safe — output is deterministic. |
+| `distractor_fixes.py` | Replacement wrong options used by the build scripts so the correct answer is never conspicuously longer than the distractors. |
+
+Batches are applied automatically by `content_loader.apply_pending()` when the app starts (once per database).

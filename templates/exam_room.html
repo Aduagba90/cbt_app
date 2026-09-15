@@ -209,7 +209,7 @@
         qNum.textContent = idx + 1;
         qSubject.textContent = "· " + q.subject;
         qText.textContent = q.text;
-        if (q.passage) { qPassage.textContent = q.passage; qPassage.classList.remove("d-none"); } else { qPassage.classList.add("d-none"); }
+        if (q.passage) { qPassage.textContent = q.passage; qPassage.classList.toggle("pn-table", /\S {3,}\S/.test(q.passage)); qPassage.classList.remove("d-none"); } else { qPassage.classList.add("d-none"); }
         qProgress.style.width = Math.round(((idx + 1) / TOTAL) * 100) + "%";
         options.forEach(function (o) {
             var k = o.dataset.key;

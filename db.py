@@ -592,6 +592,11 @@ def init_db():
             cur.execute("UPDATE subscription_plans SET price = ? WHERE plan_name = ?", (price, name))
         cur.execute("INSERT INTO app_settings (key, value) VALUES ('plans_repriced_2026_09', '1')")
 
+    # Curated (applied, exam-standard) questions are tier 1; the original bank is tier 0. The exam
+    # engine fills at least half of every subject from tier 1 whenever enough exist.
+    _add_column(cur, "questions_v2", "tier", "INTEGER DEFAULT 0")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_q2_tier ON questions_v2(subject_id, status, tier)")
+
     # Question batches written in content/*.json (applied-style questions). Each batch is
     # applied once per database, so a live site with student data picks new questions up on
     # the next restart without any import step.

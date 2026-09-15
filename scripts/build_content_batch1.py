@@ -237,8 +237,24 @@ PHYS = [
 ]
 
 
+_VULGAR = {"½": 0.5, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 0.25, "¾": 0.75, "⅛": 0.125, "⅜": 0.375, "⅝": 0.625, "⅞": 0.875}
+
+
 def _num(text):
-    m = re.search(r"-?\d[\d,]*\.?\d*", text.replace(" ", ""))
+    """Read the first number in an option: handles 1,540, −½, 3/4, 5√3 (as 5×√3) and 2√5."""
+    t = text.replace(" ", "").replace("−", "-").replace("–", "-")
+    if t and t[0] in _VULGAR:
+        return _VULGAR[t[0]]
+    if len(t) > 1 and t[0] == "-" and t[1] in _VULGAR:
+        return -_VULGAR[t[1]]
+    m = re.match(r"(-?\d[\d,]*\.?\d*)/(\d+\.?\d*)", t)
+    if m:
+        return float(m.group(1).replace(",", "")) / float(m.group(2))
+    m = re.match(r"(-?\d*\.?\d*)√(\d+)", t)
+    if m:
+        coef = float(m.group(1)) if m.group(1) not in ("", "-") else (-1.0 if m.group(1) == "-" else 1.0)
+        return coef * math.sqrt(float(m.group(2)))
+    m = re.search(r"-?\d[\d,]*\.?\d*", t)
     return float(m.group(0).replace(",", "")) if m else None
 
 

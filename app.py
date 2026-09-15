@@ -14,6 +14,7 @@ import json
 from urllib.parse import urlparse
 import logging
 import os
+import re
 import secrets
 import time
 from datetime import datetime, timedelta, timezone
@@ -180,6 +181,12 @@ def inject_globals():
         "mask_email": mask_email,
         "paystack_public_key": PAYSTACK_PUBLIC_KEY,
     }
+
+
+@app.template_filter("passage_class")
+def passage_class(text):
+    """Tabular passages (columns separated by runs of spaces) keep their spacing."""
+    return "pn-passage pn-table" if text and re.search(r"\S {3,}\S", text) else "pn-passage"
 
 
 @app.template_filter("naira")

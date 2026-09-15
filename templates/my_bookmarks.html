@@ -20,7 +20,7 @@
                 <div class="pn-qnum"><span class="badge bg-light text-dark border me-1">{{ it.exam_type or '—' }}</span>{{ it.subject or it.q.topic or 'General' }}<span class="text-muted fw-normal small ms-2">· saved {{ it.date|nicedate('%d %b %Y') }}</span></div>
                 <form method="POST" action="{{ url_for('delete_bookmark', bookmark_id=it.id) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger" data-confirm="Remove this bookmark?" title="Remove"><i class="bi bi-trash"></i></button></form>
             </div>
-            {% if it.q.passage %}<div class="pn-passage">{{ it.q.passage }}</div>{% endif %}
+            {% if it.q.passage %}<div class="{{ it.q.passage|passage_class }}">{{ it.q.passage }}</div>{% endif %}
             <div class="pn-qtext">{{ it.q.text }}</div>
             <div class="bm-options" data-correct="{{ it.q.correct }}">
                 {% for k, v in it.q.options.items() %}

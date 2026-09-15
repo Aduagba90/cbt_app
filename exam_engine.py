@@ -55,38 +55,55 @@ def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, 
 
 
 def _arrange(cur, source, ids, cap):
-    """Shuffle a subject's question ids, keeping passage-linked questions together.
+    """Choose and order one subject's questions the way the real CBT does.
 
-    Like the real CBT, a comprehension passage is shown once with its questions in order,
-    at the start of the subject (at most two passages per subject per sitting).  Everything
-    else is randomised.
+    * Passage-linked questions stay together, at the start of the subject (max two passages).
+    * At least half of the questions come from the curated tier-1 bank (applied, exam-standard
+      items) whenever enough exist; the rest are drawn from the general bank.
+    * Everything else is randomised.
     """
     if source != "questions_v2":
         random.shuffle(ids)
         return ids[:cap] if cap else ids
-    passage_of = {}
+    meta = {}
     for i in range(0, len(ids), 500):
         chunk = ids[i:i + 500]
-        for r in cur.execute(f"SELECT id, passage_id FROM questions_v2 WHERE id IN ({','.join('?' * len(chunk))})", chunk):
-            passage_of[r[0]] = r[1]
-    groups, singles = {}, []
+        for r in cur.execute(
+            f"SELECT id, passage_id, COALESCE(tier, 0), topic_id FROM questions_v2 WHERE id IN ({','.join('?' * len(chunk))})", chunk
+        ):
+            meta[r[0]] = (r[1], r[2], r[3])
+    groups, group_topic, curated, general = {}, {}, [], []
     for q in ids:
-        p = passage_of.get(q)
+        p, tier, topic = meta.get(q, (None, 0, None))
         if p:
             groups.setdefault(p, []).append(q)
+            group_topic.setdefault(p, topic)
+        elif tier:
+            curated.append(q)
         else:
-            singles.append(q)
-    group_list = [sorted(g) for g in groups.values()]
-    random.shuffle(group_list)
-    random.shuffle(singles)
-    max_groups = 2 if (cap or 60) >= 40 else 1
-    chosen = [q for g in group_list[:max_groups] for q in g]
-    if cap:
-        chosen = chosen[:cap]
-        chosen += singles[:max(0, cap - len(chosen))]
-    else:
-        chosen += singles
-    return chosen
+            general.append(q)
+    keys = list(groups)
+    random.shuffle(keys)
+    # Prefer passages of different kinds (e.g. one comprehension + one cloze), as the real paper does.
+    picked, seen_topics = [], set()
+    for k in keys:
+        if group_topic[k] not in seen_topics:
+            picked.append(k)
+            seen_topics.add(group_topic[k])
+    picked += [k for k in keys if k not in picked]
+    group_list = [sorted(groups[k]) for k in picked]
+    random.shuffle(curated)
+    random.shuffle(general)
+    limit = cap or (len(ids))
+    max_groups = 2 if limit >= 40 else 1
+    chosen = [q for g in group_list[:max_groups] for q in g][:limit]
+    want_curated = max(0, (limit + 1) // 2 - len(chosen))
+    take = curated[:want_curated]
+    rest = curated[want_curated:] + general
+    random.shuffle(rest)
+    body = take + rest[:max(0, limit - len(chosen) - len(take))]
+    random.shuffle(body)
+    return chosen + body
 
 
 def get_open_attempt(username, cur=None):

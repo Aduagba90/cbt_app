@@ -36,7 +36,7 @@
             <div class="pn-qnum">Q{{ it.n }} <span class="text-muted fw-semibold">· {{ it.subject }}</span></div>
             {% if it.is_correct %}<span class="badge bg-success"><i class="bi bi-check-lg"></i> Correct</span>{% elif it.selected %}<span class="badge bg-danger"><i class="bi bi-x-lg"></i> Wrong</span>{% else %}<span class="badge bg-secondary">Not answered</span>{% endif %}
         </div>
-        {% if it.passage %}<div class="pn-passage">{{ it.passage }}</div>{% endif %}
+        {% if it.passage %}<div class="{{ it.passage|passage_class }}">{{ it.passage }}</div>{% endif %}
         <div class="pn-qtext">{{ it.text }}</div>
         {% if it.options %}
             {% for k, v in it.options.items() %}
