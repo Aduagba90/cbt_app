@@ -23,7 +23,7 @@ inside `init_db()`, so every database — developer, preview, and the live Pytho
 receives each batch exactly once (tracked in `app_settings` as `content_batch_<id>`). Nothing is deleted: retired
 recall questions are set to `status='Inactive'`. Comprehension passages go in the `passages` table and are linked via
 `questions_v2.passage_id`; the exam engine shows a passage's questions together (max 2 passages per subject per mock).
-Next batches: Economics, Government, Commerce, Literature, CRS, IRS; then Post-UTME/WAEC.
+Batches 001-004 cover all 10 JAMB subjects except Mathematics (already applied). Next: Post-UTME/WAEC, then a second round per subject.
 
 ## Where things are
 
