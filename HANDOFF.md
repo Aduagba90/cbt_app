@@ -70,9 +70,11 @@ had no curated items) and Physics +260 (velocity–time table, cell terminal-p.d
 pendulum data). Curated totals are now Biology 264, Chemistry 324, Physics 343 (of 500 for auto-retire). Batches
 014+ use the shared builder `scripts/batch_common.py::build_batch()` — same gates as before plus a near-duplicate
 scan (exact stem or Jaccard ≥ 0.6 on 4-letter words) against every other batch file and the Active rows of
-`database.db`; warnings are printed, not fatal, so read them and reword the stems. Table passages: any line with a
-run of ≥ 3 spaces makes the whole passage render monospace, so all lines must be ≤ 42 characters (the builder wraps
-prose and keeps "25 °C"/"0.10 mol/dm³"/"Na = 23" together with non-breaking spaces; table rows must already fit).
+`database.db`; warnings are printed, not fatal, so read them and reword the stems. Table passages (any line with a
+run of ≥ 3 spaces) are rendered by the `passage_html` filter / `renderPassage()` in `exam_room.html`: the prose
+before and after the table is re-flowed into normal wrapping paragraphs and only the table block itself is
+monospace (`<pre class="pn-tbl">`, smaller font under 420 px). Table rows must therefore be ≤ 42 characters so they
+fit a 360 px phone without sideways scrolling; prose length no longer matters (the builder still wraps it).
 Teacher review sheets for the three sciences are in `docs/review/`.
 Next: Biology, Chemistry, Physics and Maths to 500 each, then arts; then Post-UTME bank, WAEC bank, then offline mode.
 

@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 from dotenv import load_dotenv
 from flask import (Flask, abort, flash, g, jsonify, make_response, redirect, render_template, request, session, url_for)
+from markupsafe import Markup
 from flask_mail import Mail
 from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -183,10 +184,52 @@ def inject_globals():
     }
 
 
+_TABLE_LINE = re.compile(r"\S {3,}\S")
+
+
+def split_passage(text):
+    """Split a passage into ('p', paragraph) and ('table', block) segments.
+
+    Lines whose columns are separated by runs of spaces form the table block (from the first such
+    line to the last, so a wrapped row label stays inside it); the hard-wrapped prose before and
+    after it is re-flowed into paragraphs so it wraps naturally on any screen width.
+    """
+    lines = (text or "").split("\n")
+    idx = [i for i, line in enumerate(lines) if _TABLE_LINE.search(line)]
+    if not idx:
+        return [("p", text or "")]
+    segs = []
+
+    def prose(chunk):
+        for para in re.split(r"\n\s*\n", "\n".join(chunk).strip()):
+            para = " ".join(part.strip() for part in para.split("\n") if part.strip())
+            if para:
+                segs.append(("p", para))
+
+    prose(lines[:idx[0]])
+    segs.append(("table", "\n".join(lines[idx[0]:idx[-1] + 1])))
+    prose(lines[idx[-1] + 1:])
+    return segs
+
+
 @app.template_filter("passage_class")
 def passage_class(text):
     """Tabular passages (columns separated by runs of spaces) keep their spacing."""
-    return "pn-passage pn-table" if text and re.search(r"\S {3,}\S", text) else "pn-passage"
+    return "pn-passage pn-table" if text and _TABLE_LINE.search(text) else "pn-passage"
+
+
+@app.template_filter("passage_html")
+def passage_html(text):
+    """Render a passage box: plain prose keeps its line breaks; table passages get wrapped
+    paragraphs plus a monospace <pre> for the table itself."""
+    if not text:
+        return ""
+    segs = split_passage(text)
+    if len(segs) == 1 and segs[0][0] == "p":
+        return Markup('<div class="pn-passage">{}</div>').format(text)
+    parts = [Markup("<p>{}</p>").format(body) if kind == "p" else Markup('<pre class="pn-tbl">{}</pre>').format(body)
+             for kind, body in segs]
+    return Markup('<div class="pn-passage pn-table">{}</div>').format(Markup("").join(parts))
 
 
 @app.template_filter("naira")

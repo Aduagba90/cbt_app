@@ -18,7 +18,7 @@ One-off data utilities kept for reference. They operate on the SQLite database a
 | --- | --- |
 | `build_content_batch1.py` … `build_content_batch15.py` | Write `content/batch_00N_*.json` (JAMB questions, passages, retirement rules). Numerical answers are re-computed before the file is written; the script exits on any mismatch. Re-running is safe — output is deterministic. |
 | `export_review_sheet.py` | Exports one subject's curated questions to an Excel sheet with a Verdict drop-down (OK / Wrong answer / Too easy / Unclear) for a teacher to mark: `python3 scripts/export_review_sheet.py "Use of English" docs/review/use_of_english_review.xlsx`. |
-| `batch_common.py` | Shared `build_batch()` used by batches 014+: takes `PASSAGES`/`PQ`/`Q` tuples and an optional `FIX` dict, verifies numeric answers, applies every gate, wraps passage prose to 42 characters, writes the JSON and prints near-duplicate warnings against the other batches and `database.db`. |
+| `batch_common.py` | Shared `build_batch()` used by batches 014+: takes `PASSAGES`/`PQ`/`Q` tuples and an optional `FIX` dict, verifies numeric answers, applies every gate, wraps passage prose to 42 characters (table rows must already be ≤ 42 so they fit a phone screen), writes the JSON and prints near-duplicate warnings against the other batches and `database.db`. |
 | `distractor_fixes.py` | Replacement wrong options used by the build scripts so the correct answer is never conspicuously longer than the distractors. |
 
 Batches are applied automatically by `content_loader.apply_pending()` when the app starts (once per database).

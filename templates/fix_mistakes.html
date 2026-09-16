@@ -24,7 +24,7 @@
                     {% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}
                 </div>
             </div>
-            {% if q.passage %}<div class="{{ q.passage|passage_class }}">{{ q.passage }}</div>{% endif %}
+            {% if q.passage %}{{ q.passage|passage_html }}{% endif %}
             <div class="pn-qtext">{{ q.text }}</div>
 
             {% if not answered %}

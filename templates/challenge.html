@@ -40,7 +40,7 @@
         <div class="pn-qhead">
             <div class="pn-qnum">Question <strong>{{ loop.index }}</strong> <span class="text-muted fw-semibold ms-2">of {{ total }}</span>{% if q.topic %} <span class="text-muted fw-semibold ms-2">· {{ q.topic }}</span>{% endif %}{% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}</div>
         </div>
-        {% if q.passage %}<div class="{{ q.passage|passage_class }}">{{ q.passage }}</div>{% endif %}
+        {% if q.passage %}{{ q.passage|passage_html }}{% endif %}
         <div class="pn-qtext">{{ q.text }}</div>
         {% if not done %}
             {% for k, v in q.options.items() %}

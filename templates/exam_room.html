@@ -204,12 +204,32 @@
         el("modalAnswered").textContent = a;
     }
 
+    var TABLE_LINE = /\S {3,}\S/;
+    function renderPassage(box, text) {
+        // Prose paragraphs wrap normally; only the table rows (columns separated by 3+ spaces) are monospace.
+        box.textContent = "";
+        var lines = text.split("\n"), idx = [];
+        lines.forEach(function (l, i) { if (TABLE_LINE.test(l)) idx.push(i); });
+        if (!idx.length) { box.classList.remove("pn-table"); box.textContent = text; return; }
+        box.classList.add("pn-table");
+        function prose(chunk) {
+            chunk.join("\n").trim().split(/\n\s*\n/).forEach(function (para) {
+                var t = para.split("\n").map(function (s) { return s.trim(); }).filter(Boolean).join(" ");
+                if (t) { var p = document.createElement("p"); p.textContent = t; box.appendChild(p); }
+            });
+        }
+        prose(lines.slice(0, idx[0]));
+        var pre = document.createElement("pre"); pre.className = "pn-tbl";
+        pre.textContent = lines.slice(idx[0], idx[idx.length - 1] + 1).join("\n"); box.appendChild(pre);
+        prose(lines.slice(idx[idx.length - 1] + 1));
+    }
+
     function render() {
         var q = Q[idx];
         qNum.textContent = idx + 1;
         qSubject.textContent = "· " + q.subject;
         qText.textContent = q.text;
-        if (q.passage) { qPassage.textContent = q.passage; qPassage.classList.toggle("pn-table", /\S {3,}\S/.test(q.passage)); qPassage.classList.remove("d-none"); } else { qPassage.classList.add("d-none"); }
+        if (q.passage) { renderPassage(qPassage, q.passage); qPassage.classList.remove("d-none"); } else { qPassage.classList.add("d-none"); }
         qProgress.style.width = Math.round(((idx + 1) / TOTAL) * 100) + "%";
         options.forEach(function (o) {
             var k = o.dataset.key;
