@@ -63,7 +63,18 @@ when all five topics exist in a subject's curated pool (i.e. English); other sub
 Questions added through Admin → Add question / Import v2 are inserted as tier 1 (they count towards the 500).
 Cross-batch duplicate stems are silently skipped by the loader (dedupe on subject + text + passage), so check for
 duplicates before writing a batch (see the ad-hoc check in the round-3 build session: same stem in an earlier batch).
-Next: sciences and Maths to 500 each, then arts; then Post-UTME bank, WAEC bank, then offline mode.
+**Sciences round 3 (batches 013–015, Sept 2026).** Biology +196 (four data passages: quadrat counts, food tests,
+germination, potometer), Chemistry +235 (Na₂CO₃ titration table, Mg/HCl rate data, standard electrode potentials,
+KNO₃ solubility table; every one of the 15 topics covered, including separation techniques and radioactivity that
+had no curated items) and Physics +260 (velocity–time table, cell terminal-p.d. readings, heating curve, simple
+pendulum data). Curated totals are now Biology 264, Chemistry 324, Physics 343 (of 500 for auto-retire). Batches
+014+ use the shared builder `scripts/batch_common.py::build_batch()` — same gates as before plus a near-duplicate
+scan (exact stem or Jaccard ≥ 0.6 on 4-letter words) against every other batch file and the Active rows of
+`database.db`; warnings are printed, not fatal, so read them and reword the stems. Table passages: any line with a
+run of ≥ 3 spaces makes the whole passage render monospace, so all lines must be ≤ 42 characters (the builder wraps
+prose and keeps "25 °C"/"0.10 mol/dm³"/"Na = 23" together with non-breaking spaces; table rows must already fit).
+Teacher review sheets for the three sciences are in `docs/review/`.
+Next: Biology, Chemistry, Physics and Maths to 500 each, then arts; then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 
