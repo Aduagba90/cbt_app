@@ -55,6 +55,11 @@ does; unseen ones first. When JAMB announces a new novel: write `scripts/build_c
 `Reading Text: <new title>` and put the old topic name in that batch's `"retire_topics"` list — the loader switches
 the old novel off on the next start. Novel-question sources: chapter summaries only (no copyrighted text is quoted).
 
+**Fixed English sections.** `exam_engine.SECTION_QUOTAS` fixes the rest of the English paper after the passages and
+the novel: sentence interpretation (topic `Lexis and Structure`) 5, `Antonyms` 5, `Synonyms` 5, `Sentence Completion`
+10, `Oral English` 10 — so every mock is 5 + 10 + 10 + 5 + 5 + 5 + 10 + 10 = 60, like the UTME. The quotas apply only
+when all five topics exist in a subject's curated pool (i.e. English); other subjects keep the mixed draw.
+
 Questions added through Admin → Add question / Import v2 are inserted as tier 1 (they count towards the 500).
 Cross-batch duplicate stems are silently skipped by the loader (dedupe on subject + text + passage), so check for
 duplicates before writing a batch (see the ad-hoc check in the round-3 build session: same stem in an earlier batch).

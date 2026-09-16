@@ -32,6 +32,18 @@ FMT = "%Y-%m-%d %H:%M:%S"
 READING_TEXT_PREFIX = "Reading Text:"
 READING_TEXT_QUESTIONS = 10
 
+# Fixed section sizes for the rest of a full Use of English paper (after the two passages and the
+# reading text), exactly as the UTME sets it: sentence interpretation 5, antonyms 5, synonyms 5,
+# sentence completion / grammar 10, oral forms 10. Applied to any subject whose curated pool has
+# all these topics (i.e. English); other subjects keep the mixed draw.
+SECTION_QUOTAS = {
+    "Lexis and Structure": 5,
+    "Antonyms": 5,
+    "Synonyms": 5,
+    "Sentence Completion": 10,
+    "Oral English": 10,
+}
+
 
 class ExamError(Exception):
     """User-facing problem while building or using an attempt."""
@@ -104,7 +116,7 @@ def _arrange(cur, source, ids, cap, seen=None):
                 WHERE q.id IN ({','.join('?' * len(chunk))})""", chunk
         ):
             meta[r[0]] = (r[1], r[2], r[3], r[4])
-    groups, group_topic, curated, general, novel = {}, {}, [], [], []
+    groups, group_topic, curated, general, novel, by_topic = {}, {}, [], [], [], {}
     for q in ids:
         p, tier, topic, topic_name = meta.get(q, (None, 0, None, ""))
         if p:
@@ -114,6 +126,7 @@ def _arrange(cur, source, ids, cap, seen=None):
             novel.append(q)
         elif tier:
             curated.append(q)
+            by_topic.setdefault(topic_name, []).append(q)
         else:
             general.append(q)
     keys = list(groups)
@@ -139,10 +152,22 @@ def _arrange(cur, source, ids, cap, seen=None):
         block = fresh_first(novel)[:READING_TEXT_QUESTIONS]
         random.shuffle(block)
         chosen = (chosen + block)[:limit]
+    room = limit - len(chosen)
+    if room > 0 and all(t in by_topic for t in SECTION_QUOTAS):
+        # Fixed sections (English): so many of each kind, unseen first, then anything left over.
+        body, used = [], set()
+        for topic_name, quota in SECTION_QUOTAS.items():
+            pick = fresh_first(by_topic[topic_name])[:min(quota, room - len(body))]
+            body += pick
+            used.update(pick)
+        if len(body) < room:
+            body += fresh_first([q for q in curated if q not in used])[:room - len(body)]
+        random.shuffle(body)
+        return chosen + body
     want_curated = max(0, (limit + 1) // 2 - len(chosen))
     take = curated[:want_curated]
     rest = fresh_first(curated[want_curated:] + general)
-    body = take + rest[:max(0, limit - len(chosen) - len(take))]
+    body = take + rest[:max(0, room - len(take))]
     random.shuffle(body)
     return chosen + body
 
