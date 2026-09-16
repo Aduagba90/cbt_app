@@ -48,6 +48,13 @@ English to 552 curated questions and 30 passages. Two engine rules were added at
   `idx_attempts_user_status` supports the lookup. With 552 English items a student sees no repeated English question
   for the first 9 mocks; other subjects still repeat because their banks are smaller.
 
+**Reading text (recommended novel).** Batch 012 adds 115 questions on *The Lekki Headmaster* (Kabir Alabi Garba),
+the UTME Use of English novel since 2025, under the topic `Reading Text: The Lekki Headmaster`. `exam_engine._arrange`
+places exactly `READING_TEXT_QUESTIONS` (10) of them straight after the passages in every full English paper, as JAMB
+does; unseen ones first. When JAMB announces a new novel: write `scripts/build_content_batch<N>.py` with topic
+`Reading Text: <new title>` and put the old topic name in that batch's `"retire_topics"` list — the loader switches
+the old novel off on the next start. Novel-question sources: chapter summaries only (no copyrighted text is quoted).
+
 Questions added through Admin → Add question / Import v2 are inserted as tier 1 (they count towards the 500).
 Cross-batch duplicate stems are silently skipped by the loader (dedupe on subject + text + passage), so check for
 duplicates before writing a batch (see the ad-hoc check in the round-3 build session: same stem in an earlier batch).

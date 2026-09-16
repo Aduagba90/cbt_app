@@ -100,6 +100,14 @@ def apply_batch(cur, batch):
         inserted_ids.append(cur.lastrowid)
 
     deactivated = 0
+    # Whole topics to switch off (any tier), e.g. the previous year's recommended novel once a batch
+    # for the new one arrives.
+    for name in batch.get("retire_topics", []):
+        s = sid(batch.get("retire_topics_subject", "Use of English"))
+        t = cur.execute("SELECT id FROM topics WHERE subject_id = ? AND topic_name = ?", (s, name)).fetchone() if s else None
+        if t:
+            cur.execute("UPDATE questions_v2 SET status = 'Inactive' WHERE topic_id = ? AND status = 'Active'", (t[0],))
+            deactivated += cur.rowcount
     for rule in batch.get("deactivate", []):
         s = sid(rule["subject"])
         if not s:

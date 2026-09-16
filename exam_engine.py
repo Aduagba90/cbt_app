@@ -27,6 +27,12 @@ from helpers import (
 FMT = "%Y-%m-%d %H:%M:%S"
 
 
+# Questions whose topic starts with this prefix are the "reading text" (JAMB recommended novel)
+# section; every full English paper carries READING_TEXT_QUESTIONS of them, like the real UTME.
+READING_TEXT_PREFIX = "Reading Text:"
+READING_TEXT_QUESTIONS = 10
+
+
 class ExamError(Exception):
     """User-facing problem while building or using an attempt."""
 
@@ -93,15 +99,19 @@ def _arrange(cur, source, ids, cap, seen=None):
     for i in range(0, len(ids), 500):
         chunk = ids[i:i + 500]
         for r in cur.execute(
-            f"SELECT id, passage_id, COALESCE(tier, 0), topic_id FROM questions_v2 WHERE id IN ({','.join('?' * len(chunk))})", chunk
+            f"""SELECT q.id, q.passage_id, COALESCE(q.tier, 0), q.topic_id, COALESCE(t.topic_name, '')
+                FROM questions_v2 q LEFT JOIN topics t ON t.id = q.topic_id
+                WHERE q.id IN ({','.join('?' * len(chunk))})""", chunk
         ):
-            meta[r[0]] = (r[1], r[2], r[3])
-    groups, group_topic, curated, general = {}, {}, [], []
+            meta[r[0]] = (r[1], r[2], r[3], r[4])
+    groups, group_topic, curated, general, novel = {}, {}, [], [], []
     for q in ids:
-        p, tier, topic = meta.get(q, (None, 0, None))
+        p, tier, topic, topic_name = meta.get(q, (None, 0, None, ""))
         if p:
             groups.setdefault(p, []).append(q)
             group_topic.setdefault(p, topic)
+        elif topic_name.startswith(READING_TEXT_PREFIX):
+            novel.append(q)
         elif tier:
             curated.append(q)
         else:
@@ -123,6 +133,12 @@ def _arrange(cur, source, ids, cap, seen=None):
     limit = cap or (len(ids))
     max_groups = 2 if limit >= 40 else 1
     chosen = [q for g in group_list[:max_groups] for q in g][:limit]
+    # Reading-text (recommended novel) block: a fixed number of questions right after the passages,
+    # as in the real UTME paper. Only used when the block is a small share of the subject.
+    if novel and limit >= 4 * READING_TEXT_QUESTIONS:
+        block = fresh_first(novel)[:READING_TEXT_QUESTIONS]
+        random.shuffle(block)
+        chosen = (chosen + block)[:limit]
     want_curated = max(0, (limit + 1) // 2 - len(chosen))
     take = curated[:want_curated]
     rest = fresh_first(curated[want_curated:] + general)
