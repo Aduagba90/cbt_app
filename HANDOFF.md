@@ -97,8 +97,30 @@ question text is rendered as plain text. On first start `_auto_retire` fired: Ma
 retired, so all five JAMB core-science subjects (English, Maths, Biology, Chemistry, Physics) now show only
 curated items. Every Maths topic has ≥ 11 curated items (weakest: Longitude and Latitude 11, Binary Operations 14).
 Review sheet: `docs/review/mathematics_review.xlsx` (521 rows).
-Next: arts to 500 — CRS 129, Commerce 98, Economics 94, Government 107, IRS 114, Literature 103 curated now (two
-subjects per release); then Post-UTME bank, WAEC bank, then offline mode.
+**Arts round 3a (batches 021–024, Sept 2026) — Economics and Government crossed 500 and auto-retired their old
+banks.** Economics: batch 021 (+236, micro — basic concepts, scarcity/choice, scale of preference, production,
+factors, division of labour, economic systems, demand, supply, price determination, elasticity, utility, theory of
+the firm, costs, revenue/profit, market structures; three data passages: a bottled-water demand/supply schedule
+before and after a ₦10 tax, a meat-pie utility table and a furniture workshop cost table) and batch 022 (+227,
+macro — national income and its measurement, money and the CBN, inflation, deflation, unemployment, population,
+agriculture, industrialisation, trade, international trade, balance of payments, public finance, taxation,
+development, planning; two data passages: Country K national-income accounts and a two-state population table).
+Government: batch 023 (+233, concepts and institutions — state/nation/sovereignty/legitimacy, forms, systems and
+structures of government, arms, constitution, democratic principles, citizenship, ideologies, legislation,
+elections, parties, pressure groups, public opinion, civil service, public corporations, local government; two
+data passages: a six-state presidential election result table with the 25%-in-two-thirds rule and a 40-seat state
+assembly seat table) and batch 024 (+243, Nigerian political history and external relations — pre-colonial systems,
+colonial administration, nationalism, constitutional development, First–Fourth Republics, military rule, Nigerian
+federalism, foreign policy, bilateral relations, international organisations; two data passages: heads of
+government 1960–1999 with route to power, and a table of bodies Nigeria belongs to). On first start `_auto_retire`
+fired: Economics 557 curated / 224 old retired, Government 583 curated / 173 old retired. Every topic in both
+subjects keeps ≥ 9 curated items (weakest: Scale of Preference 9, Deflation 11, Public Opinion 12). Four
+near-clones of old items ("A scale of preference is", "Legal tender is money that", "The incidence of a tax refers
+to", "A rolling plan is one that") were reworded into scenarios before shipping because `apply_batch` silently
+drops exact stem matches — always run the exact-match SQL check against `questions_v2` before applying. Review
+sheets: `docs/review/economics_review.xlsx` (557 rows), `docs/review/government_review.xlsx` (583 rows).
+Next: CRS 129 + Literature 103, then Commerce 98 + IRS 114 (two subjects per release); then Post-UTME bank, WAEC
+bank, then offline mode.
 
 ## Where things are
 
