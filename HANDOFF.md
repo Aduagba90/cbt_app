@@ -86,7 +86,19 @@ English, every science question a student now sees is a curated applied item (th
 not deleted; Admin → Questions can re-enable any of them). Each round-4 build script ends with a `FIX` dict of
 distractor rewrites (batch 18 has 68 — "because…" items always need same-length wrong options, write them that way
 from the start). Review sheets in `docs/review/` were re-exported (513 / 525 / 538 rows).
-Next: Mathematics to 500 (173 curated now), then arts; then Post-UTME bank, WAEC bank, then offline mode.
+**Mathematics round 3 (batches 019–020, Sept 2026) — Mathematics crossed 500 and auto-retired its old bank.**
+Batch 019 (+178, number & algebra: number bases, fractions/percentages, indices, logarithms, surds, sets, algebraic
+expressions, equations and inequalities, variation, sequences, binary operations, matrices) and batch 020 (+170,
+geometry, mensuration, trigonometry, coordinate geometry, calculus, statistics, probability, vectors, longitude and
+latitude, with two data passages: a test-marks frequency table and a 30-day pure-water sales table). Items are
+applied/word-problem style with Nigerian contexts (naira prices, petrol pump price, market stock in base seven,
+school-bus running costs). Matrices are written in text as `[[a, b], [c, d]] (rows shown in order)` because
+question text is rendered as plain text. On first start `_auto_retire` fired: Mathematics 521 curated / 110 old
+retired, so all five JAMB core-science subjects (English, Maths, Biology, Chemistry, Physics) now show only
+curated items. Every Maths topic has ≥ 11 curated items (weakest: Longitude and Latitude 11, Binary Operations 14).
+Review sheet: `docs/review/mathematics_review.xlsx` (521 rows).
+Next: arts to 500 — CRS 129, Commerce 98, Economics 94, Government 107, IRS 114, Literature 103 curated now (two
+subjects per release); then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 
