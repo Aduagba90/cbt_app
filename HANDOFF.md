@@ -76,7 +76,17 @@ before and after the table is re-flowed into normal wrapping paragraphs and only
 monospace (`<pre class="pn-tbl">`, smaller font under 420 px). Table rows must therefore be ≤ 42 characters so they
 fit a 360 px phone without sideways scrolling; prose length no longer matters (the builder still wraps it).
 Teacher review sheets for the three sciences are in `docs/review/`.
-Next: Biology, Chemistry, Physics and Maths to 500 each, then arts; then Post-UTME bank, WAEC bank, then offline mode.
+**Sciences round 4 (batches 016–018, Sept 2026) — the three sciences crossed 500 and auto-retired their old banks.**
+Physics +170 (stand-alone applied items, every topic; weakest topics Scalars/Vectors, Electronics and Sound
+topped up first), Chemistry +201 (two data passages: iron/copper displacement with mass and temperature readings,
+a pH table of household solutions) and Biology +274 (two data passages: pulse/breathing rates before and after
+exercise, a 9:3:3:1 dihybrid pea count). On the first start after these batches `_auto_retire` fired for all three:
+Biology 538 curated / 208 old retired, Chemistry 525 / 234 retired, Physics 513 / 242 retired — so, like Use of
+English, every science question a student now sees is a curated applied item (the old recall items are Inactive,
+not deleted; Admin → Questions can re-enable any of them). Each round-4 build script ends with a `FIX` dict of
+distractor rewrites (batch 18 has 68 — "because…" items always need same-length wrong options, write them that way
+from the start). Review sheets in `docs/review/` were re-exported (513 / 525 / 538 rows).
+Next: Mathematics to 500 (173 curated now), then arts; then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 
