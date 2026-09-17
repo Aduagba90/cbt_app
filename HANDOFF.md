@@ -119,8 +119,40 @@ near-clones of old items ("A scale of preference is", "Legal tender is money tha
 to", "A rolling plan is one that") were reworded into scenarios before shipping because `apply_batch` silently
 drops exact stem matches — always run the exact-match SQL check against `questions_v2` before applying. Review
 sheets: `docs/review/economics_review.xlsx` (557 rows), `docs/review/government_review.xlsx` (583 rows).
-Next: CRS 129 + Literature 103, then Commerce 98 + IRS 114 (two subjects per release); then Post-UTME bank, WAEC
-bank, then offline mode.
+
+**Arts round 3b (batches 025–029, Sept 2026) — CRS and Literature in English crossed 500 and auto-retired their
+old banks.** CRS: batch 025 (+151, Old Testament themes — sovereignty of God, covenant, leadership, providence,
+parental responsibility, obedience, David, decision-making, greed, supremacy of God, reforms in Judah, Nehemiah,
+faith and courage, Jonah, social justice, holiness and call, punishment and hope), batch 026 (+134, the Gospels —
+birth and early life, baptism and temptation, discipleship, miracles, parables, Sermon on the Mount, mission of
+the disciples, great confession, transfiguration, triumphal entry, Last Supper, trials and death, resurrection,
+Jesus' teachings about Himself) and batch 027 (+123, Acts, Epistles and Christian living — love, fellowship, Holy
+Spirit and mission, opposition, Gentile mission, justification, law and grace, new life, joint heirs, humility,
+forgiveness, gifts, giving, civic responsibility, labour, second coming, impartiality, prayer, community,
+corruption, sexual immorality). Roughly a third of the CRS items are application scenarios ("a cashier who…",
+"a pastor who…") and the rest quote the scripture passage in the stem; no passages. Literature: batch 028 (+187,
+twelve NEW unseen passages — six poems 'Queue at the Borehole', 'Letter to a Brother in Toronto', 'Harvest of
+Rust', 'The Tree at Number Twelve' (a Shakespearean sonnet), 'Night Shift', 'Okada'; three prose extracts 'First
+Day at St. Jude's', 'The Road', 'The Interview'; two drama extracts 'Contract', 'The Will'; and a diary 'From the
+Diary of a Trainee Teacher' — 7–8 appreciation questions each under topic Literary Appreciation, plus 95 device
+items built on fresh example lines) and batch 029 (+221, genre and forms, themes and characterisation,
+plot/setting/structure, narrative techniques and point of view, each built around a scenario or mini-extract,
+plus light, well-known-fact items on the set texts that appear on both the older and the 2026–2030 JAMB/WAEC lists:
+Antony and Cleopatra, To Kill a Mockingbird, An Inspector Calls, A Man for All Seasons, The Marriage of Anansewa,
+The Lion and the Jewel, Second Class Citizen, Wuthering Heights, So the Path Does Not Die, and the poems Not My
+Business, Once Upon a Time, Night, The Leader and the Led, Black Woman, She Walks in Beauty, Digging, Still I
+Rise, The Stone, The Nun's Priest's Tale, The Telephone Call, Caged Bird, Journey of the Magi). Set-text items are
+deliberately few (8–22 per topic) because JAMB's prescribed list is in transition — when the 2026/27 list is
+confirmed, write a dedicated set-text batch and, if a text drops off the list, retire its items with
+`deactivate` rules (`like` on the title). On first start `_auto_retire` fired: CRS 537 curated / 467 old retired,
+Literature 511 curated / 204 old retired. Every topic keeps Active items (weakest: CRS Joint Heirs 6, Law and Grace
+7; Literature African Prose 9, African Drama 12). Review sheets: `docs/review/christian_religious_studies_review.xlsx`
+(537 rows), `docs/review/literature_in_english_review.xlsx` (511 rows). Passages without a table are now stored exactly as
+written (`batch_common.build_batch` no longer hard-wraps them): poems keep their line breaks (every line ≤ 42
+characters, so nothing wraps on a 360 px phone), and prose/drama passages are one paragraph or one speech per line,
+soft-wrapped by the browser (`white-space: pre-line`). The first build of 028 had hard-wrapped the prose at 42
+characters, which produced ragged half-lines on phones; the six affected passage rows were corrected in place.
+Next: Commerce 98 + IRS 114 (two subjects per release); then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 

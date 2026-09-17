@@ -11,7 +11,8 @@ and calls build_batch(...).
 match it to within 1 % (or 0.006), otherwise the file is not written.  Every gate used for the
 earlier batches is applied: four distinct options, explanation >= 25 characters, no duplicate
 stems, no conspicuously long correct option, balanced answer letters, passage lines <= 42
-characters (prose is wrapped, table rows must already fit), and a near-duplicate scan against
+characters in table passages (prose around a table is wrapped, table rows must already fit;
+passages without a table are stored as written), and a near-duplicate scan against
 the other batch files and the tracked database (warnings only).
 """
 import glob
@@ -133,6 +134,12 @@ def build_batch(subject, out_name, batch_id, note, passages, pq, q, fix=None, de
         sys.exit(f"{len(problems)} problems - file not written.")
     wrapped = {}
     for key, _, _, text in passages:
+        if not any(TABLE_ROW.search(line) for line in text.split("\n")):
+            # Plain prose, drama or poetry: the page keeps the line breaks as written (one paragraph
+            # or one speech per line soft-wraps to the screen width; poem lines should already be
+            # short), so hard-wrapping here would only produce ragged half-lines on a phone.
+            wrapped[key] = text
+            continue
         lines = []
         for line in text.split("\n"):
             if len(line) <= 42 or TABLE_ROW.search(line):
