@@ -152,7 +152,29 @@ written (`batch_common.build_batch` no longer hard-wraps them): poems keep their
 characters, so nothing wraps on a 360 px phone), and prose/drama passages are one paragraph or one speech per line,
 soft-wrapped by the browser (`white-space: pre-line`). The first build of 028 had hard-wrapped the prose at 42
 characters, which produced ragged half-lines on phones; the six affected passage rows were corrected in place.
-Next: Commerce 98 + IRS 114 (two subjects per release); then Post-UTME bank, WAEC bank, then offline mode.
+
+**Arts round 3c (batches 030–033, Sept 2026) — Commerce and Islamic Religious Studies crossed 500 and auto-retired
+their old banks; all eleven JAMB subjects are now fully curated.** Commerce: batch 030 (+230, scenario items on
+introduction to commerce, occupations, production and its factors, trade, home/foreign/retail/wholesale trade,
+channels of distribution, transport, communication and warehousing; two table passages — a Kano wholesaler's
+invoice with trade discount, VAT and "carriage forward", and a table of a firm's external transactions) and batch
+031 (+240, insurance, banking, stock exchange, business units, business finance, management, marketing,
+advertising, consumer protection, trade associations, government and business; two passages — the fire-insurance
+case "Fire at Okonkwo Stores" (average clause, indemnity, subrogation) and the table "Capital structure of Delta
+Foods Plc" (ordinary/preference shares, debentures, gearing, dividend arithmetic)). IRS: batch 032 (+210, the
+Qur'an, Hadith, Tawhid, attributes of Allah, faith, articles of faith, worship, Salah, Zakat, Sawm, Hajj, jihad and
+self-discipline — Qur'an/Hadith quoted in the stem plus application scenarios) and batch 033 (+259, life of the
+Prophet, Hijrah, the Prophet as leader and model, the Rightly Guided Caliphs, the Madinan community, family life,
+marriage and divorce, parents and children, brotherhood, justice, honesty, corruption, economic principles
+(murabahah/musharakah/mudarabah/qard hasan/waqf), lawful and unlawful, political administration, shura, relations
+with non-Muslims, Islamic history and expansion incl. Islam in West Africa and Nigeria, contemporary issues); no
+passages. Answer text is transliterated consistently (Salah, Sawm, Zakat, Hajj, Tawhid, "the Prophet (SAW)").
+On first start `_auto_retire` fired: Commerce 568 curated / 154 old retired, IRS 583 curated / 296 old retired.
+Every topic keeps ≥ 11 curated items (weakest: Commerce Trade 11, Factors of Production 14; IRS Madinan
+community, Justice, Honesty, Relations with Non-Muslims 13 each). Review sheets: `docs/review/commerce_review.xlsx`
+(568 rows), `docs/review/islamic_religious_studies_review.xlsx` (583 rows). Bank after this round: 9,604 rows,
+6,104 Active (6,103 curated), 80 passages; the only Active tier-0 row is the single WAEC Mathematics seed item.
+Next: English round 5 (more comprehension/cloze passages); then Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 
