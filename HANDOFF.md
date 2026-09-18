@@ -174,7 +174,23 @@ Every topic keeps ≥ 11 curated items (weakest: Commerce Trade 11, Factors of P
 community, Justice, Honesty, Relations with Non-Muslims 13 each). Review sheets: `docs/review/commerce_review.xlsx`
 (568 rows), `docs/review/islamic_religious_studies_review.xlsx` (583 rows). Bank after this round: 9,604 rows,
 6,104 Active (6,103 curated), 80 passages; the only Active tier-0 row is the single WAEC Mathematics seed item.
-Next: English round 5 (more comprehension/cloze passages); then Post-UTME bank, WAEC bank, then offline mode.
+**English round 5 (batch 034, Sept 2026) — the passage pool was too small: with 18 comprehension and 12 cloze
+passages a student who wrote a dozen mocks started meeting the same passages again.** `scripts/build_content_batch34.py`
+adds 12 comprehension passages (5 questions each: main idea, detail, inference, "as used in the passage" vocabulary,
+figurative expressions — Nigerian-life prose: generators, mother-tongue teaching, a Sabon Gari tailor, red-light
+running, a boy reading on a bus, wedding costs, rainwater harvesting, exam malpractice, rural health access, a
+football viewing centre, a yam barn, bicycles) and 8 cloze passages (10 gaps each: the village well, a bus terminal,
+the dentist, a school farm, a power cut, learning to swim, a compound election, a bookshop), plus 21 sentence-
+interpretation idioms, 20 synonyms, 20 antonyms, 32 grammar items and 34 oral-forms items (stress, rhyme, vowel/
+consonant sounds, silent letters, emphatic stress) — none repeating an earlier English batch (checked against every
+capitalised test word, idiom, stress word and grammar sentence already Active). Cloze passages are one paragraph with
+`[n]` markers; the builder asserts every marker exists and rotates the cloze keys so each passage's answers spread
+over A–D. Comprehension distractors were rewritten so the correct option is the longest in only 17 of 60 items (23
+are the shortest). English is now 934 Active (all curated): Comprehension 150 (30 passages), Cloze 200 (20
+passages), Oral 146, Reading Text 115, Sentence Completion 112, Synonyms 75, Antonyms 75, Lexis 61; 50 English
+passages, 100 in all. A 16-mock loop (Medicine) drew two different English passages every time with no passage
+repeated across the 16 papers. Bank after this round: 9,871 rows, 6,371 Active (6,370 curated).
+Next: Post-UTME bank, WAEC bank, then offline mode.
 
 ## Where things are
 
