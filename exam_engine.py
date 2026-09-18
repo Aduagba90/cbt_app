@@ -241,8 +241,8 @@ def create_attempt(username, exam_type, exam_name, subjects, *, university=None,
         conn.close()
 
 
-def create_jamb_attempt(username, course, ip=None, ua=None):
-    subjects = JAMB_COURSES.get(course)
+def create_jamb_attempt(username, course, ip=None, ua=None, subjects=None):
+    subjects = subjects or JAMB_COURSES.get(course)
     if not subjects:
         raise ExamError("Invalid course selected.")
     return create_attempt(
@@ -305,6 +305,8 @@ def load_attempt_for_student(attempt_id, username):
                 "passage": q.get("passage"),
                 "selected": r["selected_answer"],
                 "flagged": bool(r["is_flagged"]),
+                "qid": r["question_id"],
+                "src": r["question_source"],
             })
 
         subjects = json.loads(att["subjects_json"])
@@ -532,6 +534,45 @@ def load_result(result_id, username=None):
         conn.close()
 
 
+def topic_report(result_id, username=None):
+    """Per-subject, per-topic breakdown of one result: [{subject, topics: [{topic, score, total, pct}], weak: [...]}].
+
+    Only curated-bank rows carry a topic, so legacy rows are grouped under 'General'."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        if username:
+            r = cur.execute("SELECT id FROM results WHERE id = ? AND username = ?", (result_id, username)).fetchone()
+        else:
+            r = cur.execute("SELECT id FROM results WHERE id = ?", (result_id,)).fetchone()
+        if not r:
+            return []
+        rows = cur.execute(
+            "SELECT subject, question_source, question_id, is_correct FROM review_answers WHERE result_id = ? ORDER BY id", (result_id,)
+        ).fetchall()
+        by_source = {}
+        for row in rows:
+            if row["question_source"] and row["question_id"]:
+                by_source.setdefault(row["question_source"], []).append(row["question_id"])
+        bank = {s: fetch_questions(cur, s, ids, with_answers=False) for s, ids in by_source.items()}
+        agg = {}
+        for row in rows:
+            q = bank.get(row["question_source"] or "", {}).get(row["question_id"]) if row["question_id"] else None
+            topic = (q or {}).get("topic") or "General"
+            cell = agg.setdefault(row["subject"], {}).setdefault(topic, [0, 0])
+            cell[1] += 1
+            cell[0] += 1 if row["is_correct"] else 0
+        out = []
+        for subject, topics in agg.items():
+            items = [{"topic": t, "score": v[0], "total": v[1], "pct": round(100 * v[0] / v[1])} for t, v in topics.items()]
+            items.sort(key=lambda x: (x["pct"], -x["total"], x["topic"]))
+            weak = [x for x in items if x["pct"] < 50 and x["topic"] != "General"]
+            out.append({"subject": subject, "topics": items, "weak": weak})
+        return out
+    finally:
+        conn.close()
+
+
 def load_review(result_id, username=None):
     conn = connect()
     cur = conn.cursor()
@@ -564,6 +605,8 @@ def load_review(result_id, username=None):
                 "correct": row["correct_answer"],
                 "explanation": row["explanation"],
                 "is_correct": bool(row["is_correct"]),
+                "question_id": row["question_id"],
+                "source": row["question_source"],
             })
         return r, items
     finally:

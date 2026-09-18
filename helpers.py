@@ -20,38 +20,165 @@ log = logging.getLogger("prepnova")
 # Static configuration
 # ---------------------------------------------------------------------------
 
-JAMB_COURSES = {
-    "Medicine & Surgery": ["Use of English", "Biology", "Chemistry", "Physics"],
-    "Nursing": ["Use of English", "Biology", "Chemistry", "Physics"],
-    "Pharmacy": ["Use of English", "Biology", "Chemistry", "Physics"],
-    "Computer Science": ["Use of English", "Mathematics", "Physics", "Chemistry"],
-    "Mechanical Engineering": ["Use of English", "Mathematics", "Physics", "Chemistry"],
-    "Electrical Engineering": ["Use of English", "Mathematics", "Physics", "Chemistry"],
-    "Civil Engineering": ["Use of English", "Mathematics", "Physics", "Chemistry"],
-    "Law": ["Use of English", "Literature in English", "Government", "Christian Religious Studies"],
-    "Law (Islamic Studies)": ["Use of English", "Literature in English", "Government", "Islamic Religious Studies"],
-    "Mass Communication": ["Use of English", "Literature in English", "Government", "Christian Religious Studies"],
-    "Mass Communication (IRS)": ["Use of English", "Literature in English", "Government", "Islamic Religious Studies"],
-    "Accounting": ["Use of English", "Mathematics", "Economics", "Commerce"],
-    "Business Administration": ["Use of English", "Mathematics", "Economics", "Commerce"],
-    "Economics": ["Use of English", "Mathematics", "Economics", "Government"],
-}
+# UTME subject combinations. Every course is English + three subjects, exactly as JAMB's brochure
+# sets it. Grouped by faculty so the course page can show them in sections; the order inside a
+# group is roughly by popularity.
+E, MTH, PHY, CHM, BIO = "Use of English", "Mathematics", "Physics", "Chemistry", "Biology"
+ECO, GOV, LIT, COM, CRS, IRS = "Economics", "Government", "Literature in English", "Commerce", "Christian Religious Studies", "Islamic Religious Studies"
+COURSE_GROUPS = [
+    ("Medicine & Health Sciences", [
+        ("Medicine & Surgery", [E, BIO, CHM, PHY]),
+        ("Nursing", [E, BIO, CHM, PHY]),
+        ("Pharmacy", [E, BIO, CHM, PHY]),
+        ("Dentistry", [E, BIO, CHM, PHY]),
+        ("Medical Laboratory Science", [E, BIO, CHM, PHY]),
+        ("Physiotherapy", [E, BIO, CHM, PHY]),
+        ("Radiography", [E, BIO, CHM, PHY]),
+        ("Anatomy", [E, BIO, CHM, PHY]),
+        ("Physiology", [E, BIO, CHM, PHY]),
+        ("Public Health", [E, BIO, CHM, PHY]),
+        ("Optometry", [E, BIO, CHM, PHY]),
+        ("Veterinary Medicine", [E, BIO, CHM, PHY]),
+    ]),
+    ("Sciences", [
+        ("Microbiology", [E, BIO, CHM, PHY]),
+        ("Biochemistry", [E, BIO, CHM, PHY]),
+        ("Industrial Chemistry", [E, CHM, MTH, PHY]),
+        ("Mathematics", [E, MTH, PHY, CHM]),
+        ("Statistics", [E, MTH, PHY, ECO]),
+        ("Geology", [E, PHY, CHM, MTH]),
+        ("Agriculture", [E, CHM, BIO, MTH]),
+        ("Food Science and Technology", [E, CHM, BIO, MTH]),
+    ]),
+    ("Engineering & Technology", [
+        ("Computer Science", [E, MTH, PHY, CHM]),
+        ("Software Engineering", [E, MTH, PHY, CHM]),
+        ("Mechanical Engineering", [E, MTH, PHY, CHM]),
+        ("Electrical Engineering", [E, MTH, PHY, CHM]),
+        ("Civil Engineering", [E, MTH, PHY, CHM]),
+        ("Chemical Engineering", [E, MTH, PHY, CHM]),
+        ("Petroleum Engineering", [E, MTH, PHY, CHM]),
+        ("Computer Engineering", [E, MTH, PHY, CHM]),
+        ("Mechatronics Engineering", [E, MTH, PHY, CHM]),
+        ("Architecture", [E, MTH, PHY, CHM]),
+        ("Building", [E, MTH, PHY, CHM]),
+        ("Estate Management", [E, MTH, ECO, GOV]),
+        ("Quantity Surveying", [E, MTH, PHY, ECO]),
+        ("Urban and Regional Planning", [E, MTH, ECO, GOV]),
+    ]),
+    ("Law, Arts & Social Sciences", [
+        ("Law", [E, LIT, GOV, CRS]),
+        ("Law (Islamic Studies)", [E, LIT, GOV, IRS]),
+        ("Mass Communication", [E, LIT, GOV, CRS]),
+        ("Mass Communication (IRS)", [E, LIT, GOV, IRS]),
+        ("English Language", [E, LIT, GOV, CRS]),
+        ("English Language (IRS)", [E, LIT, GOV, IRS]),
+        ("Theatre Arts", [E, LIT, GOV, CRS]),
+        ("Political Science", [E, GOV, ECO, LIT]),
+        ("International Relations", [E, GOV, ECO, LIT]),
+        ("Sociology", [E, GOV, ECO, LIT]),
+        ("Psychology", [E, BIO, GOV, ECO]),
+        ("Philosophy", [E, GOV, LIT, CRS]),
+        ("History and International Studies", [E, GOV, LIT, CRS]),
+        ("Christian Religious Studies", [E, CRS, GOV, LIT]),
+        ("Islamic Studies", [E, IRS, GOV, LIT]),
+        ("Criminology and Security Studies", [E, GOV, ECO, LIT]),
+    ]),
+    ("Business & Management", [
+        ("Accounting", [E, MTH, ECO, COM]),
+        ("Business Administration", [E, MTH, ECO, COM]),
+        ("Economics", [E, MTH, ECO, GOV]),
+        ("Banking and Finance", [E, MTH, ECO, COM]),
+        ("Marketing", [E, MTH, ECO, COM]),
+        ("Insurance", [E, MTH, ECO, COM]),
+        ("Public Administration", [E, GOV, ECO, COM]),
+        ("Industrial Relations and Personnel Management", [E, MTH, ECO, GOV]),
+        ("Entrepreneurship", [E, MTH, ECO, COM]),
+    ]),
+    ("Education", [
+        ("Education and English", [E, LIT, GOV, CRS]),
+        ("Education and Mathematics", [E, MTH, PHY, CHM]),
+        ("Education and Biology", [E, BIO, CHM, PHY]),
+        ("Education and Chemistry", [E, CHM, BIO, MTH]),
+        ("Education and Physics", [E, PHY, MTH, CHM]),
+        ("Education and Economics", [E, ECO, MTH, GOV]),
+        ("Education and Political Science", [E, GOV, ECO, LIT]),
+        ("Education and Christian Religious Studies", [E, CRS, GOV, LIT]),
+        ("Education and Islamic Studies", [E, IRS, GOV, LIT]),
+        ("Guidance and Counselling", [E, GOV, ECO, BIO]),
+        ("Early Childhood Education", [E, LIT, GOV, ECO]),
+        ("Business Education", [E, MTH, ECO, COM]),
+    ]),
+]
+JAMB_COURSES = {name: subs for _, group in COURSE_GROUPS for name, subs in group}
+
+# Any UTME subject the site can currently examine, for students whose course is not listed
+# ("Build my own combination": English + any three of these).
+JAMB_ELECTIVES = [MTH, PHY, CHM, BIO, ECO, GOV, LIT, COM, CRS, IRS]
+CUSTOM_COURSE_PREFIX = "My combination"
+SHORT_SUBJECT = {"Use of English": "English", "Literature in English": "Literature", "Christian Religious Studies": "CRS",
+                 "Islamic Religious Studies": "IRS", "Mathematics": "Maths"}
 
 COURSE_ICONS = {
     "Medicine & Surgery": ("bi-heart-pulse", "tint-red"),
     "Nursing": ("bi-bandaid", "tint-red"),
     "Pharmacy": ("bi-capsule", "tint-green"),
+    "Dentistry": ("bi-emoji-smile", "tint-red"),
+    "Medical Laboratory Science": ("bi-eyedropper", "tint-red"),
+    "Physiotherapy": ("bi-person-walking", "tint-red"),
+    "Radiography": ("bi-radioactive", "tint-red"),
+    "Anatomy": ("bi-person-bounding-box", "tint-red"),
+    "Physiology": ("bi-activity", "tint-red"),
+    "Public Health": ("bi-shield-plus", "tint-red"),
+    "Optometry": ("bi-eye", "tint-red"),
+    "Veterinary Medicine": ("bi-piggy-bank", "tint-red"),
+    "Microbiology": ("bi-virus", "tint-green"),
+    "Biochemistry": ("bi-droplet", "tint-green"),
+    "Industrial Chemistry": ("bi-droplet-half", "tint-green"),
+    "Mathematics": ("bi-plus-slash-minus", "tint-blue"),
+    "Statistics": ("bi-bar-chart", "tint-blue"),
+    "Geology": ("bi-gem", "tint-gold"),
+    "Agriculture": ("bi-tree", "tint-green"),
+    "Food Science and Technology": ("bi-egg-fried", "tint-green"),
     "Computer Science": ("bi-cpu", "tint-blue"),
+    "Software Engineering": ("bi-code-slash", "tint-blue"),
     "Mechanical Engineering": ("bi-gear-wide-connected", "tint-purple"),
     "Electrical Engineering": ("bi-lightning-charge", "tint-gold"),
     "Civil Engineering": ("bi-building", "tint-cyan"),
+    "Chemical Engineering": ("bi-fire", "tint-purple"),
+    "Petroleum Engineering": ("bi-fuel-pump", "tint-purple"),
+    "Computer Engineering": ("bi-motherboard", "tint-blue"),
+    "Mechatronics Engineering": ("bi-robot", "tint-purple"),
+    "Architecture": ("bi-rulers", "tint-cyan"),
+    "Building": ("bi-bricks", "tint-cyan"),
+    "Estate Management": ("bi-houses", "tint-cyan"),
+    "Quantity Surveying": ("bi-clipboard-data", "tint-cyan"),
+    "Urban and Regional Planning": ("bi-map", "tint-cyan"),
     "Law": ("bi-bank", "tint-navy"),
     "Law (Islamic Studies)": ("bi-bank2", "tint-navy"),
     "Mass Communication": ("bi-broadcast", "tint-purple"),
     "Mass Communication (IRS)": ("bi-broadcast-pin", "tint-purple"),
+    "English Language": ("bi-chat-quote", "tint-purple"),
+    "English Language (IRS)": ("bi-chat-quote", "tint-purple"),
+    "Theatre Arts": ("bi-mask", "tint-purple"),
+    "Political Science": ("bi-flag", "tint-navy"),
+    "International Relations": ("bi-globe2", "tint-navy"),
+    "Sociology": ("bi-people", "tint-navy"),
+    "Psychology": ("bi-lightbulb", "tint-navy"),
+    "Philosophy": ("bi-question-diamond", "tint-navy"),
+    "History and International Studies": ("bi-hourglass-split", "tint-navy"),
+    "Christian Religious Studies": ("bi-book-half", "tint-gold"),
+    "Islamic Studies": ("bi-moon-stars", "tint-green"),
+    "Criminology and Security Studies": ("bi-shield-lock", "tint-navy"),
     "Accounting": ("bi-calculator", "tint-green"),
     "Business Administration": ("bi-briefcase", "tint-gold"),
     "Economics": ("bi-graph-up-arrow", "tint-blue"),
+    "Banking and Finance": ("bi-cash-coin", "tint-green"),
+    "Marketing": ("bi-megaphone", "tint-gold"),
+    "Insurance": ("bi-umbrella", "tint-gold"),
+    "Public Administration": ("bi-building-gear", "tint-navy"),
+    "Industrial Relations and Personnel Management": ("bi-person-badge", "tint-gold"),
+    "Entrepreneurship": ("bi-rocket-takeoff", "tint-gold"),
 }
 
 WAEC_SUBJECTS = [
@@ -252,8 +379,16 @@ def _pack(qid, text, a, b, c, d, correct, explanation, with_answers=False, diffi
     return q
 
 
-def random_question(cur, source, exam_type, subject, exclude_ids=(), university=None):
+def random_question(cur, source, exam_type, subject, exclude_ids=(), university=None, topic=None):
     ids = fetch_question_ids(cur, source, exam_type, subject, university)
+    if topic and source == "questions_v2" and ids:
+        keep = set()
+        for i in range(0, len(ids), 500):
+            chunk = ids[i:i + 500]
+            keep.update(r[0] for r in cur.execute(
+                f"SELECT q.id FROM questions_v2 q JOIN topics t ON t.id = q.topic_id WHERE t.topic_name = ? AND q.id IN ({','.join('?' * len(chunk))})",
+                [topic, *chunk]))
+        ids = [i for i in ids if i in keep]
     if not ids:
         return None
     pool = [i for i in ids if i not in set(exclude_ids)] or ids

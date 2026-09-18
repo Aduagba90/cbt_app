@@ -51,9 +51,13 @@
         {% if it.explanation %}
         <div class="pn-explain {{ '' if it.is_correct else 'wrong' }} mt-2"><h5><i class="bi bi-lightbulb me-1"></i>Explanation</h5><div style="white-space:pre-line">{{ it.explanation }}</div></div>
         {% endif %}
+        {% if it.question_id and it.source %}
+        <div class="text-end mt-2"><button type="button" class="btn btn-link btn-sm p-0 text-decoration-none pn-report-link" data-report='{{ {"question_id": it.question_id, "source": it.source, "subject": it.subject, "exam_type": r["exam_type"], "result_id": r["id"]}|tojson }}'><i class="bi bi-flag"></i> <span>Report question</span></button></div>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
+{% include "_report_modal.html" %}
 {% else %}
 <div class="pn-empty card"><span class="ico"><i class="bi bi-emoji-sunglasses"></i></span><h3>{% if show == 'wrong' %}No wrong answers — perfect score!{% else %}No review data{% endif %}</h3><p>{% if show == 'wrong' %}Outstanding. Try a harder subject next.{% else %}This result has no stored corrections.{% endif %}</p><a href="{{ url_for('exam_types') }}" class="btn btn-primary btn-sm">Take another mock</a></div>
 {% endif %}

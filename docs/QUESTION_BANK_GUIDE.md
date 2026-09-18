@@ -84,3 +84,17 @@ Fine Arts, Music, Home Economics, Civic Education) are a later phase; add topics
 
 Also: about 220 Use of English explanations are generic placeholders. Replacing them is
 an edit job in Admin → Question bank, or re-upload corrected rows after deleting the old ones.
+
+## Questions students report as faulty
+
+Every question in the exam room, the practice page and the answer review has a **Report** button. Reports land in
+**Admin → Reported** (red badge shows how many are waiting). For each report you see the question, the marked
+answer, the student's note and how many different students reported the same question. Then:
+
+1. **Edit question** opens it in the question bank — fix the answer, option or explanation.
+2. **Mark as fixed** closes every open report on that question (add a short note if you like).
+3. **Dismiss** if the question is actually correct.
+4. **Remove from bank** if it cannot be fixed — students stop seeing it immediately (it can be re-activated from
+   the question bank later).
+
+Check this page once or twice a week; a question reported by two or more students is almost always genuinely wrong.

@@ -1,0 +1,64 @@
+{# "Report this question" modal. Opened by any element with data-report='{"question_id":..,"source":..,"subject":..,"exam_type":..,"attempt_id":..,"result_id":..}' #}
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="reportForm" novalidate>
+      <div class="modal-header">
+        <h5 class="modal-title" id="reportModalTitle"><i class="bi bi-flag-fill text-danger me-2"></i>Report this question</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-3">Spotted a mistake? Tell us and our team will check the question. Your exam is not affected.</p>
+        <div class="d-grid gap-2 mb-3" id="reportReasons">
+          {% for key, label in report_reasons.items() %}
+          <label class="pn-report-reason"><input type="radio" name="reason" value="{{ key }}" required><span>{{ label }}</span></label>
+          {% endfor %}
+        </div>
+        <label class="form-label small fw-semibold" for="reportNote">Details <span class="text-muted fw-normal" id="reportNoteHint">(optional)</span></label>
+        <textarea class="form-control" id="reportNote" rows="2" maxlength="500" placeholder="e.g. Option B and D are the same; the answer should be C"></textarea>
+        <div class="small text-danger mt-2 d-none" id="reportError"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger" id="reportSend"><i class="bi bi-send"></i> Send report</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function () {
+  function init() {
+  var modalEl = document.getElementById('reportModal'); if (!modalEl || !window.bootstrap) return;
+  var modal = new bootstrap.Modal(modalEl), form = document.getElementById('reportForm'), note = document.getElementById('reportNote'), err = document.getElementById('reportError'), send = document.getElementById('reportSend'), hint = document.getElementById('reportNoteHint');
+  var current = null, trigger = null;
+  var CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).getAttribute ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-report]'); if (!b) return;
+    e.preventDefault();
+    try { current = JSON.parse(b.getAttribute('data-report')); } catch (x) { current = null; }
+    if (typeof window.reportContext === 'function') { current = Object.assign({}, current || {}, window.reportContext() || {}); }
+    if (!current || !current.question_id) return;
+    trigger = b; form.reset(); err.classList.add('d-none'); send.disabled = false; hint.textContent = '(optional)';
+    modal.show();
+  });
+  form.addEventListener('change', function () { var r = form.querySelector('input[name="reason"]:checked'); hint.textContent = (r && r.value === 'other') ? '(required)' : '(optional)'; });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var r = form.querySelector('input[name="reason"]:checked');
+    if (!r) { err.textContent = 'Please choose what is wrong.'; err.classList.remove('d-none'); return; }
+    if (r.value === 'other' && note.value.trim().length < 5) { err.textContent = 'Please describe the problem in a few words.'; err.classList.remove('d-none'); return; }
+    send.disabled = true; err.classList.add('d-none');
+    var payload = Object.assign({}, current, { reason: r.value, note: note.value.trim() });
+    fetch('/report_question', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, 'X-Requested-With': 'fetch' }, body: JSON.stringify(payload) })
+      .then(function (res) { return res.json().catch(function () { return { ok: false, message: 'Could not send. Please try again.' }; }); })
+      .then(function (j) {
+        if (!j.ok) { err.textContent = j.message || 'Could not send. Please try again.'; err.classList.remove('d-none'); send.disabled = false; return; }
+        modal.hide();
+        if (trigger) { trigger.classList.add('reported'); var sp = trigger.querySelector('span'); if (sp) sp.textContent = 'Reported'; }
+        if (window.pnToast) { window.pnToast(j.message || 'Report sent. Thank you!', 'success'); } else { alert(j.message || 'Report sent. Thank you!'); }
+      })
+      .catch(function () { err.textContent = 'No connection. Please try again.'; err.classList.remove('d-none'); send.disabled = false; });
+  });
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>

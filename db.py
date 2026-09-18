@@ -584,6 +584,28 @@ def init_db():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_mistakes_user ON mistakes(username, cleared_at)")
 
+    # ------------------------------------------------------------ "Report this question" (students -> admin queue)
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS question_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            question_source TEXT NOT NULL DEFAULT 'questions_v2',
+            question_id INTEGER NOT NULL,
+            subject TEXT,
+            exam_type TEXT,
+            attempt_id INTEGER,
+            result_id TEXT,
+            reason TEXT NOT NULL,
+            note TEXT,
+            status TEXT NOT NULL DEFAULT 'open',
+            admin_note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            resolved_at TIMESTAMP
+        )"""
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_qreports_status ON question_reports(status, created_at)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_qreports_q ON question_reports(question_source, question_id)")
+
     # ------------------------------------------------------------ app settings + one-off data fixes
     cur.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     # Launch pricing (Sept 2026): Monthly 1,000 / Quarterly 2,500 / Yearly 8,000. Runs once; afterwards

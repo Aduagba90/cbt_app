@@ -87,6 +87,33 @@
             </div>
         </div>
 
+        {% if topics %}
+        <div class="card mt-3 anim-rise d2" id="topicReport">
+            <div class="card-header d-flex align-items-center justify-content-between"><span><i class="bi bi-bullseye me-2 text-primary"></i>Topic report — where you lost marks</span><span class="small text-muted d-none d-sm-inline">Tap a weak topic to drill it</span></div>
+            <div class="card-body">
+                {% for t in topics %}
+                <div class="pn-topic-block {% if not loop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-semibold"><i class="bi {{ subject_icon(t.subject) }} me-1 text-muted"></i>{{ t.subject }}</div>
+                        {% if t.weak %}<span class="badge text-bg-danger-subtle text-danger border border-danger-subtle">{{ t.weak|length }} weak topic{{ '' if t.weak|length == 1 else 's' }}</span>{% else %}<span class="badge text-bg-success-subtle text-success border border-success-subtle">No weak topics</span>{% endif %}
+                    </div>
+                    <div class="pn-topic-grid">
+                        {% for x in t.topics %}
+                        {% set weak = x.pct < 50 and x.topic != 'General' %}
+                        {% set hidden = loop.index > 8 %}
+                        {% if weak and r['exam_type'] in ('JAMB', 'WAEC') %}<a href="{{ url_for('practice_question', exam_type=r['exam_type'], subject=t.subject, topic=x.topic) }}" class="pn-topic weak {{ 'd-none more' if hidden }}" title="Practise {{ x.topic }}">{% else %}<div class="pn-topic {{ 'ok' if x.pct >= 70 else ('mid' if x.pct >= 50 else 'weak') }} {{ 'd-none more' if hidden }}">{% endif %}
+                            <span class="t">{{ x.topic }}</span><span class="n">{{ x.score }}/{{ x.total }}</span>
+                            {% if weak and r['exam_type'] in ('JAMB', 'WAEC') %}<i class="bi bi-arrow-right-circle-fill"></i></a>{% else %}</div>{% endif %}
+                        {% endfor %}
+                        {% if t.topics|length > 8 %}<button type="button" class="pn-topic toggle" data-more>Show {{ t.topics|length - 8 }} more <i class="bi bi-chevron-down"></i></button>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                <p class="small text-muted mb-0 mt-3"><i class="bi bi-info-circle me-1"></i>Red = below 50% in this mock. Two or three questions per topic is a small sample — a topic that stays red across several mocks is the one to fix first.</p>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row g-3 mt-1">
             <div class="col-md-6"><a href="{{ url_for('review_answers', result_id=r['id'], show='wrong') }}" class="pn-subject-link anim-rise d2"><span class="pn-stat-icon tint-red"><i class="bi bi-x-circle"></i></span><span>Review mistakes only<small>{{ r['total'] - r['score'] }} question{{ '' if r['total'] - r['score'] == 1 else 's' }} to learn from</small></span><i class="bi bi-chevron-right"></i></a></div>
             <div class="col-md-6"><a href="{{ url_for('exam_types') }}" class="pn-subject-link anim-rise d3"><span class="pn-stat-icon tint-green"><i class="bi bi-arrow-repeat"></i></span><span>Take another mock<small>Consistency beats cramming</small></span><i class="bi bi-chevron-right"></i></a></div>
@@ -96,6 +123,15 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-more]'); if (!b) return;
+    var grid = b.closest('.pn-topic-grid'), open = b.classList.toggle('open');
+    grid.querySelectorAll('.more').forEach(function (x) { x.classList.toggle('d-none', !open); });
+    var n = grid.querySelectorAll('.more').length;
+    b.innerHTML = open ? 'Show less <i class="bi bi-chevron-up"></i>' : 'Show ' + n + ' more <i class="bi bi-chevron-down"></i>';
+});
+</script>
 {% if just_finished and (r['percentage'] or 0)|int >= 70 %}
 <script>
 (function(){

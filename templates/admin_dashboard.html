@@ -255,6 +255,16 @@
     <div class="row">
 
         <div class="col-md-4 mb-4">
+            <div class="card {{ 'border-danger' if open_reports else '' }}">
+                <div class="card-body text-center">
+                    <h3>🚩 Reported questions</h3>
+                    <p>{% if open_reports %}<b class="text-danger">{{ open_reports }}</b> question{{ '' if open_reports == 1 else 's' }} reported by students are waiting for you.{% else %}Students have not reported any faulty question. Nice.{% endif %}</p>
+                    <a href="{{ url_for('admin_bp.question_reports') }}" class="btn {{ 'btn-danger' if open_reports else 'btn-outline-secondary' }}">Open</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
 
             <div class="card">
 

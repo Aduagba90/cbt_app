@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reported questions — PrepNova Admin</title>
+<link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<style>
+  .rep { border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+  .rep.open { border-left: 5px solid #dc2626; }
+  .rep.resolved { border-left: 5px solid #0b7a4b; opacity: .85; }
+  .rep.dismissed { border-left: 5px solid #9ca3af; opacity: .75; }
+  .qtext { white-space: pre-line; font-weight: 600; }
+  .opt { display: flex; gap: .5rem; padding: .25rem .5rem; border-radius: 8px; font-size: .875rem; }
+  .opt.correct { background: #e3f6ec; font-weight: 700; }
+  .opt .k { width: 1.4rem; font-weight: 800; color: #6b7280; }
+  .reason { font-size: .75rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px; background: #fde8e8; color: #b42318; }
+  .note { background: #fffbeb; border: 1px dashed #fde68a; border-radius: 8px; padding: .5rem .75rem; font-size: .875rem; }
+  .meta { font-size: .78rem; color: #6b7280; }
+  .tabs a { text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container-xl my-4">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+      <h2 class="mb-1">🚩 Reported questions</h2>
+      <p class="text-muted mb-0">Students tap <b>Report question</b> when an answer, option, wording or explanation looks wrong. Check the question, fix it in the bank, then mark the report as fixed. If the question is beyond repair, remove it from the bank in one click.</p>
+    </div>
+    <div class="d-flex gap-2 tabs">
+      {% for key, label in [('open', 'Open'), ('resolved', 'Fixed'), ('dismissed', 'Dismissed'), ('all', 'All')] %}
+      <a href="{{ url_for('admin_bp.question_reports', status=key) }}" class="btn btn-sm {{ 'btn-dark' if status == key else 'btn-outline-secondary' }}">{{ label }} <span class="badge text-bg-light ms-1">{{ total if key == 'all' else counts.get(key, 0) }}</span></a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if not items %}
+  <div class="card border-0 shadow-sm"><div class="card-body text-center py-5">
+    <div style="font-size:2.5rem">🎉</div>
+    <h5 class="mb-1">{% if status == 'open' %}No open reports{% else %}Nothing here{% endif %}</h5>
+    <p class="text-muted mb-0">{% if status == 'open' %}Every reported question has been dealt with.{% else %}Choose another tab above.{% endif %}</p>
+  </div></div>
+  {% endif %}
+
+  {% for it in items %}
+  <div class="rep {{ it.status }}">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="reason">{{ it.reason_label }}</span>
+        {% if it.reporters > 1 %}<span class="badge text-bg-danger">{{ it.reporters }} students reported this</span>{% endif %}
+        <span class="meta">#{{ it.id }} · {{ it.subject or '—' }} · {{ it.exam_type or '' }} · question {{ it.question_source }} <b>#{{ it.question_id }}</b></span>
+      </div>
+      <div class="meta">{{ it.student_name or it.username }} · {{ it.created_at }}{% if it.status != 'open' %} · <b class="text-uppercase">{{ it.status }}</b> {{ it.resolved_at or '' }}{% endif %}</div>
+    </div>
+
+    {% if it.note %}<div class="note mb-2"><b>Student says:</b> {{ it.note }}</div>{% endif %}
+    {% if it.admin_note %}<div class="meta mb-2"><b>Admin note:</b> {{ it.admin_note }}</div>{% endif %}
+
+    {% if it.q %}
+      {% if it.q.passage %}<details class="mb-2"><summary class="small text-muted">Show passage</summary><div class="small mt-1" style="white-space:pre-line">{{ it.q.passage }}</div></details>{% endif %}
+      <div class="qtext mb-2">{{ it.q.text }}</div>
+      <div class="row g-1 mb-2">
+        {% for k, v in it.q.options.items() %}
+        <div class="col-md-6"><div class="opt {{ 'correct' if k == it.q.correct }}"><span class="k">{{ k }}</span><span>{{ v }}</span>{% if k == it.q.correct %}<span class="ms-auto">✔</span>{% endif %}</div></div>
+        {% endfor %}
+      </div>
+      {% if it.q.explanation %}<details class="mb-2"><summary class="small text-muted">Explanation</summary><div class="small mt-1" style="white-space:pre-line">{{ it.q.explanation }}</div></details>{% endif %}
+      <div class="meta mb-2">Topic: {{ it.q.topic or '—' }} · Difficulty: {{ it.q.difficulty or '—' }}</div>
+    {% else %}
+      <div class="alert alert-secondary py-2 small mb-2">This question is no longer in the bank (deleted or removed).</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('admin_bp.resolve_question_report', report_id=it.id) }}" class="d-flex flex-wrap align-items-center gap-2">
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+      <input type="hidden" name="back" value="{{ status }}">
+      {% if it.q and it.question_source == 'questions_v2' %}
+      <a href="{{ url_for('admin_bp.edit_question_v2', question_id=it.question_id) }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">✏️ Edit question</a>
+      {% endif %}
+      {% if it.status == 'open' %}
+      <input type="text" name="admin_note" class="form-control form-control-sm" style="max-width:320px" placeholder="Note (optional), e.g. answer changed to C">
+      <button class="btn btn-sm btn-success" name="action" value="resolved">✅ Mark as fixed</button>
+      <button class="btn btn-sm btn-outline-secondary" name="action" value="dismissed">Dismiss (question is correct)</button>
+      {% if it.q and it.question_source == 'questions_v2' %}
+      <button class="btn btn-sm btn-outline-danger ms-auto" name="action" value="deactivate" onclick="return confirm('Remove question #{{ it.question_id }} from the bank? Students will stop seeing it. You can re-activate it later from the question bank.')">🗑 Remove from bank</button>
+      {% endif %}
+      {% else %}
+      <button class="btn btn-sm btn-outline-secondary" name="action" value="reopen">Reopen</button>
+      {% endif %}
+    </form>
+  </div>
+  {% endfor %}
+
+</div>
+</body>
+</html>

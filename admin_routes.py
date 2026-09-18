@@ -1603,6 +1603,109 @@ def _codes_page(new_codes=None, new_days=None):
     return render_template("access_codes.html", codes=codes, stats=stats, new_codes=[pretty_code(c) for c in (new_codes or [])], new_days=new_days)
 
 
+# ------------------------------------------------------------------ reported questions
+REPORT_LABELS = {
+    "wrong_answer": "Marked answer is wrong",
+    "typo": "Typo / unclear wording",
+    "no_correct": "No correct option / repeated options",
+    "explanation": "Explanation wrong or unhelpful",
+    "off_syllabus": "Not in syllabus",
+    "other": "Other",
+}
+
+
+def open_report_count():
+    try:
+        conn = connect()
+        n = conn.execute("SELECT COUNT(*) FROM question_reports WHERE status = 'open'").fetchone()[0]
+        conn.close()
+        return n
+    except sqlite3.Error:
+        return 0
+
+
+@admin_bp.app_context_processor
+def _inject_report_count():
+    # only pay for the query on admin pages (the bar is rendered there)
+    if session.get("admin"):
+        return {"open_report_count": open_report_count}
+    return {"open_report_count": lambda: 0}
+
+
+@admin_bp.route("/admin/question_reports")
+def question_reports():
+    from helpers import fetch_questions
+
+    status = request.args.get("status", "open")
+    if status not in ("open", "resolved", "dismissed", "all"):
+        status = "open"
+    conn = connect()
+    cur = conn.cursor()
+    where = "" if status == "all" else "WHERE r.status = ?"
+    params = [] if status == "all" else [status]
+    rows = cur.execute(
+        f"""SELECT r.*, u.name AS student_name FROM question_reports r LEFT JOIN users u ON u.email = r.username
+            {where} ORDER BY r.status = 'open' DESC, r.id DESC LIMIT 300""", params
+    ).fetchall()
+    by_source = {}
+    for r in rows:
+        by_source.setdefault(r["question_source"], set()).add(r["question_id"])
+    bank = {src: fetch_questions(cur, src, list(ids), with_answers=True) for src, ids in by_source.items()}
+    # how many separate students reported the same question (open reports only)
+    dup = {(d[0], d[1]): d[2] for d in cur.execute(
+        "SELECT question_source, question_id, COUNT(DISTINCT username) FROM question_reports WHERE status = 'open' GROUP BY 1, 2")}
+    counts = {k: v for k, v in cur.execute("SELECT status, COUNT(*) FROM question_reports GROUP BY status")}
+    conn.close()
+    items = []
+    for r in rows:
+        q = bank.get(r["question_source"], {}).get(r["question_id"])
+        items.append({**dict(r), "q": q, "reason_label": REPORT_LABELS.get(r["reason"], r["reason"]),
+                      "reporters": dup.get((r["question_source"], r["question_id"]), 0)})
+    return render_template("question_reports.html", items=items, status=status, counts=counts,
+                           total=sum(counts.values()))
+
+
+@admin_bp.route("/admin/question_reports/<int:report_id>", methods=["POST"])
+def resolve_question_report(report_id):
+    action = request.form.get("action", "")
+    note = " ".join((request.form.get("admin_note") or "").split())[:500] or None
+    conn = connect()
+    cur = conn.cursor()
+    r = cur.execute("SELECT * FROM question_reports WHERE id = ?", (report_id,)).fetchone()
+    if not r:
+        conn.close()
+        flash("Report not found.", "danger")
+        return redirect(url_for("admin_bp.question_reports"))
+    if action in ("resolved", "dismissed"):
+        # close every open report on the same question at once
+        cur.execute(
+            "UPDATE question_reports SET status = ?, admin_note = COALESCE(?, admin_note), resolved_at = CURRENT_TIMESTAMP "
+            "WHERE question_source = ? AND question_id = ? AND status = 'open'",
+            (action, note, r["question_source"], r["question_id"]),
+        )
+        msg = "Marked as fixed." if action == "resolved" else "Report dismissed."
+    elif action == "reopen":
+        cur.execute("UPDATE question_reports SET status = 'open', resolved_at = NULL WHERE id = ?", (report_id,))
+        msg = "Report reopened."
+    elif action == "deactivate" and r["question_source"] == "questions_v2":
+        cur.execute("UPDATE questions_v2 SET status = 'Inactive' WHERE id = ?", (r["question_id"],))
+        cur.execute(
+            "UPDATE question_reports SET status = 'resolved', admin_note = COALESCE(?, 'Question removed from the bank'), resolved_at = CURRENT_TIMESTAMP "
+            "WHERE question_source = ? AND question_id = ? AND status = 'open'",
+            (note, r["question_source"], r["question_id"]),
+        )
+        msg = f"Question #{r['question_id']} removed from the bank and the report closed."
+    else:
+        conn.close()
+        flash("Unknown action.", "warning")
+        return redirect(url_for("admin_bp.question_reports"))
+    conn.commit()
+    conn.close()
+    _audit(f"question_report:{action}", f"{r['question_source']}#{r['question_id']}")
+    flash(msg, "success")
+    return redirect(url_for("admin_bp.question_reports", status=request.form.get("back", "open")))
+
+
 @admin_bp.route("/manage_plans")
 def manage_plans():
     """Prices students see on the landing page, the Subscribe page and in Paystack checkout."""
@@ -1888,6 +1991,7 @@ def admin():
     return render_template(
     "admin_dashboard.html",
 
+    open_reports=open_report_count(),
     total_students=total_students,
     active_students=active_students,
     suspended_students=suspended_students,

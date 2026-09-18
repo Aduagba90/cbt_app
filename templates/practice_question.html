@@ -7,11 +7,12 @@
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('practice') }}">Practice</a><i class="bi bi-chevron-right"></i><span>{{ exam_type }} · {{ subject }}</span></div>
         <h1 class="h3">{{ subject }} <span class="badge bg-primary align-middle ms-1">{{ exam_type }}</span></h1>
+        {% if topic %}<div class="small mt-1"><span class="badge text-bg-warning"><i class="bi bi-bullseye me-1"></i>Topic drill: {{ topic }}</span> <a class="ms-1" href="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}">Practise the whole subject instead</a></div>{% endif %}
     </div>
     <div class="d-flex align-items-center gap-2">
         <div class="pn-kpi py-2 px-3"><b class="fs-6 text-primary">{{ state.correct }}/{{ state.total }}</b><small>correct</small></div>
         {% if remaining is not none %}<div class="pn-kpi py-2 px-3"><b class="fs-6">{{ remaining }}</b><small>free left</small></div>{% endif %}
-        <form method="POST" action="{{ url_for('practice_reset', exam_type=exam_type, subject=subject) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary" title="Reset score"><i class="bi bi-arrow-counterclockwise"></i></button></form>
+        <form method="POST" action="{{ url_for('practice_reset', exam_type=exam_type, subject=subject, topic=topic or None) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary" title="Reset score"><i class="bi bi-arrow-counterclockwise"></i></button></form>
     </div>
 </div>
 
@@ -20,22 +21,24 @@
         <div class="pn-qcard">
             <div class="pn-qhead">
                 <div class="pn-qnum">Question <strong>{{ state.total + (0 if answered else 1) }}</strong>{% if q.topic %} <span class="text-muted fw-semibold ms-2">· {{ q.topic }}</span>{% endif %}{% if q.difficulty %} <span class="badge {{ 'bg-success' if q.difficulty == 'Easy' else ('bg-warning text-dark' if q.difficulty == 'Medium' else 'bg-danger') }} ms-1">{{ q.difficulty }}</span>{% endif %}</div>
-                <form method="POST" action="{{ url_for('bookmark_question') }}">
+                <form method="POST" action="{{ url_for('bookmark_question') }}" class="d-flex flex-nowrap align-items-start">
                     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
                     <input type="hidden" name="question_id" value="{{ q.id }}">
                     <input type="hidden" name="source" value="{{ q.source if q.source else 'questions_v2' }}">
                     <input type="hidden" name="exam_type" value="{{ exam_type }}">
                     <input type="hidden" name="subject" value="{{ subject }}">
-                    <button class="btn btn-sm {{ 'btn-warning' if bookmarked else 'btn-outline-warning' }}" type="submit"><i class="bi {{ 'bi-bookmark-star-fill' if bookmarked else 'bi-bookmark-star' }}"></i> {{ 'Bookmarked' if bookmarked else 'Bookmark' }}</button>
+                    <button class="btn btn-sm text-nowrap {{ 'btn-warning' if bookmarked else 'btn-outline-warning' }}" type="submit" title="{{ 'Remove bookmark' if bookmarked else 'Bookmark this question' }}"><i class="bi {{ 'bi-bookmark-star-fill' if bookmarked else 'bi-bookmark-star' }}"></i><span class="d-none d-sm-inline"> {{ 'Bookmarked' if bookmarked else 'Bookmark' }}</span></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary ms-1 pn-report-link" data-report='{{ {"question_id": q.id, "source": q.source or "questions_v2", "subject": subject, "exam_type": exam_type}|tojson }}' title="Report a problem with this question"><i class="bi bi-flag"></i> <span class="d-none d-sm-inline">Report</span></button>
                 </form>
             </div>
             {% if q.passage %}{{ q.passage|passage_html }}{% endif %}
             <div class="pn-qtext">{{ q.text }}</div>
 
             {% if not answered %}
-            <form method="POST" action="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" id="practiceForm" data-once>
+            <form method="POST" action="{{ url_for('practice_question', exam_type=exam_type, subject=subject, topic=topic or None) }}" id="practiceForm" data-once>
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
                 <input type="hidden" name="question_id" value="{{ q.id }}">
+                {% if topic %}<input type="hidden" name="topic" value="{{ topic }}">{% endif %}
                 {% for k, v in q.options.items() %}
                 <label class="pn-option" data-key="{{ k }}">
                     <input type="radio" name="answer" value="{{ k }}" required>
@@ -43,7 +46,7 @@
                 </label>
                 {% endfor %}
                 <div class="pn-qactions">
-                    <div class="left"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" class="btn btn-outline-secondary"><i class="bi bi-skip-forward"></i> Skip</a></div>
+                    <div class="left"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject, topic=topic or None) }}" class="btn btn-outline-secondary"><i class="bi bi-skip-forward"></i> Skip</a></div>
                     <div class="right"><button class="btn btn-primary" type="submit" id="checkBtn" disabled data-loading="Checking…">Check answer <i class="bi bi-check2-circle"></i></button></div>
                 </div>
             </form>
@@ -63,7 +66,7 @@
                 </div>
                 <div class="pn-qactions">
                     <div class="left"><a href="{{ url_for('practice') }}" class="btn btn-outline-secondary"><i class="bi bi-grid"></i> Subjects</a></div>
-                    <div class="right"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject) }}" class="btn btn-primary" id="nextQ">Next question <i class="bi bi-arrow-right"></i></a></div>
+                    <div class="right"><a href="{{ url_for('practice_question', exam_type=exam_type, subject=subject, topic=topic or None) }}" class="btn btn-primary" id="nextQ">Next question <i class="bi bi-arrow-right"></i></a></div>
                 </div>
             {% endif %}
         </div>
@@ -86,6 +89,7 @@
         </div>
     </div>
 </div>
+{% include "_report_modal.html" %}
 {% endblock %}
 
 {% block scripts %}

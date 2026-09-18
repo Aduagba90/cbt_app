@@ -266,3 +266,32 @@ on a persistent disk (seeded from repo `database.db` on first boot), `APP_URL`, 
 - **Admin → Plans** (`/manage_plans`, `POST /manage_plans/<id>`): edit price (₦100–₦1,000,000), description, on/off
   (at least one plan must stay on). Audited as `save_plan`. Landing, Subscribe and Paystack all read `subscription_plans`.
 - Cache-bust: css `?v=7` (base.html + _admin_bar.html).
+
+## Feature release 1 — exam-room tools (Sept 2026)
+- **Calculator** in the exam room (`templates/exam_room.html`, `#calcPanel`, CSS `.pn-calc*`): safe tokeniser +
+  shunting-yard evaluator (no `eval`), keys `+ − × ÷ ^ % √ ( ) π ±`, AC/DEL. Toggle with the button or the **X** key
+  (C is the answer-C shortcut); while open, number/operator keys go to the calculator, Enter = equals, Esc closes.
+  Draggable on desktop, bottom sheet on phones. Pure client side — nothing is stored.
+- **Build my own combination** (`POST /start_jamb_custom`): English + any three of `helpers.JAMB_ELECTIVES` that
+  `available_subjects("JAMB")` currently has. Same subscription/open-attempt guards as `/start_jamb`;
+  `engine.create_jamb_attempt(..., subjects=[...])` now accepts an explicit list. Exam name is
+  `My combination: Maths · Physics · Chemistry` (`CUSTOM_COURSE_PREFIX`, `SHORT_SUBJECT`); the course page pre-ticks the
+  student's last custom pick. Course cards: `helpers.COURSE_GROUPS` (6 faculties, **71 courses**, all English + 3
+  per the JAMB brochure) → `JAMB_COURSES` is derived from it, so old code keeps working. Course page has search.
+- **Topic report** on the result page (`engine.topic_report(result_id, username)` → per subject, per topic
+  score/total/pct, weakest first; legacy rows without a topic group as "General"). Red topics (<50%) link to
+  `/practice/JAMB/<subject>?topic=<topic>` — `practice_question` and `practice_reset` accept an optional `topic`,
+  `helpers.random_question(..., topic=)` filters `questions_v2` by `topics.topic_name`; the session key becomes
+  `practice:JAMB:<subject>:<topic>` so a drill has its own score. Topics beyond the first 8 per subject are behind
+  "Show N more".
+- **Report this question**: table `question_reports` (created in `init_db`; status open/resolved/dismissed).
+  `POST /report_question` (JSON with `X-CSRFToken`, or form): reasons in `app.REPORT_REASONS`, "other" needs a note,
+  20 reports/user/day, one open report per user per question, sources limited to the three question tables. Buttons:
+  exam room (`#reportBtn`, sends `qid`/`src` now included in the attempt payload), review page (each item), practice
+  page (beside Bookmark). Shared modal `templates/_report_modal.html` (opened by any `[data-report]` element; the
+  exam room supplies context via `window.reportContext`). **Admin → Reported** (`/admin/question_reports`, tabs
+  Open/Fixed/Dismissed/All) shows the question with the marked answer, "N students reported this", Edit question,
+  Mark as fixed / Dismiss / **Remove from bank** (sets `questions_v2.status='Inactive'`), all audited as
+  `question_report:<action>`. Red badge with the open count in the admin bar (`open_report_count`, injected by an
+  `app_context_processor` in `admin_routes.py`) and a Quick Action card on the dashboard.
+- Cache-bust: css `?v=12` (base.html + _admin_bar.html). Tests: `_work/regress.py` 75 PASS, `_work/feat1_test.py`.

@@ -6,47 +6,90 @@
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>JAMB</span></div>
         <h1>Choose your course of study</h1>
-        <p class="lead">We automatically load the correct UTME subject combination. {{ duration }} minutes · 180 questions · scored out of 400.</p>
+        <p class="lead">We load the correct UTME subject combination for {{ total }} courses. {{ duration }} minutes · 180 questions · scored out of 400.</p>
     </div>
-    <div class="input-group" style="max-width:320px"><span class="input-group-text"><i class="bi bi-search"></i></span><input type="search" class="form-control" id="courseSearch" placeholder="Search course…" aria-label="Search course"></div>
+    <div class="input-group" style="max-width:320px"><span class="input-group-text"><i class="bi bi-search"></i></span><input type="search" class="form-control" id="courseSearch" placeholder="Search course, e.g. nursing…" aria-label="Search course"></div>
 </div>
 
-<div class="row g-3" id="courseGrid">
-    {% for c in courses %}
-    <div class="col-md-6 col-xl-4 course-item" data-name="{{ c.name|lower }} {{ c.subjects|join(' ')|lower }}">
-        <div class="pn-tile anim-rise d{{ loop.index0 % 4 }}">
-            <div class="d-flex align-items-start justify-content-between">
-                <span class="pn-tile-icon {{ c.tint }}"><i class="bi {{ c.icon }}"></i></span>
-                {% if c.ready %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+<!-- Build my own combination -->
+<div class="card pn-custom-combo anim-rise mb-4" id="customCombo">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+            <div>
+                <h2 class="h5 mb-1"><i class="bi bi-sliders me-2 text-primary"></i>Course not listed? Build your own combination</h2>
+                <p class="small text-muted mb-0">Use of English is compulsory. Tick the <b>three</b> other subjects your course requires — check the JAMB brochure if you are not sure.</p>
             </div>
-            <h3>{{ c.name }}</h3>
-            <div class="d-flex flex-wrap gap-1 mb-3">
-                {% for s in c.subjects %}<span class="pn-subject-chip {% if s in c.missing %}text-decoration-line-through opacity-50{% endif %}"><i class="bi {{ subject_icon(s) }}"></i> {{ s }}</span>{% endfor %}
-            </div>
-            {% if c.ready %}
-            <form method="POST" action="{{ url_for('start_jamb', course=c.name) }}" class="mt-auto" data-once>
-                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
-                <button class="btn btn-primary w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ c.name }} JAMB mock now? The {{ duration }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start mock exam</button>
-            </form>
-            {% else %}
-            <button class="btn btn-outline-secondary w-100 mt-auto" disabled>Questions being added</button>
-            {% endif %}
+            <span class="badge text-bg-light border" id="comboCount">0 of 3 chosen</span>
         </div>
+        <form method="POST" action="{{ url_for('start_jamb_custom') }}" id="comboForm" data-once>
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+            <div class="pn-combo-grid">
+                <label class="pn-combo-chip fixed"><input type="checkbox" checked disabled><i class="bi bi-chat-quote"></i> Use of English <small>compulsory</small></label>
+                {% for s in electives %}
+                <label class="pn-combo-chip"><input type="checkbox" name="subjects" value="{{ s }}" {% if s in last_custom %}checked{% endif %}><i class="bi {{ subject_icon(s) }}"></i> {{ s }}</label>
+                {% endfor %}
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                <button class="btn btn-primary" id="comboStart" disabled data-loading="Preparing your exam…" data-confirm="Start your custom JAMB mock now? The {{ duration }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start mock with my combination</button>
+                <span class="small text-muted" id="comboHint">Pick three subjects to continue.</span>
+            </div>
+        </form>
     </div>
-    {% endfor %}
 </div>
-<div class="pn-empty d-none" id="noCourse"><span class="ico"><i class="bi bi-search"></i></span><h3>No course matches</h3><p>Try another keyword, e.g. “engineering” or “law”.</p></div>
+
+{% for g in groups %}
+<section class="course-group mb-4" data-group="{{ g.name|lower }}">
+    <h2 class="h5 fw-bold mb-3 anim-rise"><i class="bi bi-mortarboard me-2 text-primary"></i>{{ g.name }} <span class="text-muted fw-normal small">· {{ g.courses|length }} courses</span></h2>
+    <div class="row g-3">
+        {% for c in g.courses %}
+        <div class="col-md-6 col-xl-4 course-item" data-name="{{ c.name|lower }} {{ c.subjects|join(' ')|lower }} {{ g.name|lower }}">
+            <div class="pn-tile anim-rise d{{ loop.index0 % 4 }}">
+                <div class="d-flex align-items-start justify-content-between">
+                    <span class="pn-tile-icon {{ c.tint }}"><i class="bi {{ c.icon }}"></i></span>
+                    {% if c.ready %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+                </div>
+                <h3>{{ c.name }}</h3>
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    {% for s in c.subjects %}<span class="pn-subject-chip {% if s in c.missing %}text-decoration-line-through opacity-50{% endif %}"><i class="bi {{ subject_icon(s) }}"></i> {{ s }}</span>{% endfor %}
+                </div>
+                {% if c.ready %}
+                <form method="POST" action="{{ url_for('start_jamb', course=c.name) }}" class="mt-auto" data-once>
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <button class="btn btn-primary w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ c.name }} JAMB mock now? The {{ duration }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start mock exam</button>
+                </form>
+                {% else %}
+                <button class="btn btn-outline-secondary w-100 mt-auto" disabled>Questions being added</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}
+<div class="pn-empty d-none" id="noCourse"><span class="ico"><i class="bi bi-search"></i></span><h3>No course matches</h3><p>Try another keyword, e.g. “engineering” or “law” — or build your own combination above.</p></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function(){
-    var input = document.getElementById('courseSearch'), items = document.querySelectorAll('.course-item'), empty = document.getElementById('noCourse');
+    var input = document.getElementById('courseSearch'), items = document.querySelectorAll('.course-item'), groups = document.querySelectorAll('.course-group'), empty = document.getElementById('noCourse');
     input.addEventListener('input', function(){
         var q = input.value.trim().toLowerCase(), shown = 0;
         items.forEach(function(it){ var ok = !q || it.dataset.name.indexOf(q) > -1; it.classList.toggle('d-none', !ok); if (ok) shown++; });
+        groups.forEach(function(g){ g.classList.toggle('d-none', !g.querySelector('.course-item:not(.d-none)')); });
         empty.classList.toggle('d-none', shown > 0);
     });
+    // Build my own combination: exactly three electives
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#comboForm input[name="subjects"]')), start = document.getElementById('comboStart'), count = document.getElementById('comboCount'), hint = document.getElementById('comboHint');
+    function sync(){
+        var n = boxes.filter(function(b){ return b.checked; }).length;
+        boxes.forEach(function(b){ b.disabled = !b.checked && n >= 3; b.closest('label').classList.toggle('maxed', !b.checked && n >= 3); b.closest('label').classList.toggle('on', b.checked); });
+        start.disabled = n !== 3;
+        count.textContent = n + ' of 3 chosen';
+        hint.textContent = n === 3 ? 'Ready: Use of English + your three subjects.' : (n > 3 ? 'Untick one subject.' : 'Pick ' + (3 - n) + ' more subject' + (3 - n === 1 ? '' : 's') + ' to continue.');
+    }
+    boxes.forEach(function(b){ b.addEventListener('change', sync); });
+    sync();
 })();
 </script>
 {% endblock %}

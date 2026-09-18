@@ -31,7 +31,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import exam_engine as engine
 from admin_routes import admin_bp
 from db import connect, init_db
-from helpers import (activate_subscription, COURSE_ICONS, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, LEGACY_TO_V2,
+from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
                      TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_ENABLED, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
@@ -163,6 +163,17 @@ def _post_utme_ready():
     return _POST_UTME_CACHE["ready"]
 
 
+REPORT_REASONS = {
+    "wrong_answer": "The marked answer is wrong",
+    "typo": "Typo or unclear wording",
+    "no_correct": "No option is correct / options repeat",
+    "explanation": "Explanation is wrong or unhelpful",
+    "off_syllabus": "Not in the JAMB syllabus",
+    "other": "Something else",
+}
+REPORTS_PER_DAY = 20
+
+
 @app.context_processor
 def inject_globals():
     return {
@@ -181,6 +192,7 @@ def inject_globals():
         "fmt_duration": fmt_duration,
         "mask_email": mask_email,
         "paystack_public_key": PAYSTACK_PUBLIC_KEY,
+        "report_reasons": REPORT_REASONS,
     }
 
 
@@ -425,7 +437,7 @@ def home():
     ).fetchall()
     conn.close()
     exam_date = _next_utme_date()
-    return render_template("index.html", plans=plans, stats=stats, courses=list(JAMB_COURSES.keys())[:8],
+    return render_template("index.html", plans=plans, stats=stats, courses=["Medicine & Surgery", "Law", "Engineering", "Nursing", "Accounting", "Mass Communication", "Computer Science", "Economics"],
                            ticker=ticker, exam_date=exam_date, days_to_exam=(exam_date - datetime.now().date()).days)
 
 
@@ -1028,13 +1040,30 @@ def exam_types():
 @login_required
 def jamb_courses():
     avail = available_subjects("JAMB")
-    courses = []
-    for course, subjects in JAMB_COURSES.items():
-        ready = all(s in avail for s in subjects)
-        icon, tint = COURSE_ICONS.get(course, ("bi-mortarboard", "tint-green"))
-        courses.append({"name": course, "subjects": subjects, "ready": ready, "icon": icon, "tint": tint,
-                        "missing": [s for s in subjects if s not in avail]})
-    return render_template("jamb_courses.html", courses=courses, duration=JAMB_DURATION_MIN)
+    groups = []
+    for group_name, items in COURSE_GROUPS:
+        courses = []
+        for course, subjects in items:
+            ready = all(s in avail for s in subjects)
+            icon, tint = COURSE_ICONS.get(course, ("bi-mortarboard", "tint-green"))
+            courses.append({"name": course, "subjects": subjects, "ready": ready, "icon": icon, "tint": tint,
+                            "missing": [s for s in subjects if s not in avail]})
+        groups.append({"name": group_name, "courses": courses})
+    electives = [s for s in JAMB_ELECTIVES if s in avail]
+    conn = connect()
+    last = conn.execute(
+        "SELECT subjects_json FROM exam_attempts WHERE username = ? AND exam_type = 'JAMB' AND exam_name LIKE ? ORDER BY id DESC LIMIT 1",
+        (session["user"], CUSTOM_COURSE_PREFIX + "%"),
+    ).fetchone()
+    conn.close()
+    last_custom = []
+    if last:
+        try:
+            last_custom = [x for x in json.loads(last["subjects_json"]) if x in electives]
+        except (TypeError, ValueError):
+            last_custom = []
+    return render_template("jamb_courses.html", groups=groups, duration=JAMB_DURATION_MIN, electives=electives,
+                           last_custom=last_custom, total=len(JAMB_COURSES))
 
 
 @app.route("/waec_subjects")
@@ -1066,6 +1095,37 @@ def start_jamb(course):
         return redirect(url_for("exam_types"))
     try:
         attempt_id = engine.create_jamb_attempt(session["user"], course, client_ip(), request.headers.get("User-Agent"))
+    except engine.ExamError as e:
+        flash(str(e), "danger")
+        return redirect(url_for("jamb_courses"))
+    return redirect(url_for("exam_room", attempt_id=attempt_id))
+
+
+@app.route("/start_jamb_custom", methods=["POST"])
+@login_required
+def start_jamb_custom():
+    """'Build my own combination': English + any three subjects the site can examine."""
+    picked = []
+    for s_ in request.form.getlist("subjects"):
+        if s_ in JAMB_ELECTIVES and s_ not in picked:
+            picked.append(s_)
+    if len(picked) != 3:
+        flash("Choose exactly three subjects to go with Use of English.", "warning")
+        return redirect(url_for("jamb_courses"))
+    avail = available_subjects("JAMB")
+    missing = [s_ for s_ in picked if s_ not in avail]
+    if missing:
+        flash(f"Questions for {', '.join(missing)} are still being added. Please choose other subjects for now.", "warning")
+        return redirect(url_for("jamb_courses"))
+    if (r := _require_subscription()):
+        return r
+    if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
+        flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
+        return redirect(url_for("exam_types"))
+    name = f"{CUSTOM_COURSE_PREFIX}: " + " · ".join(SHORT_SUBJECT.get(s_, s_) for s_ in picked)
+    try:
+        attempt_id = engine.create_jamb_attempt(session["user"], name, client_ip(), request.headers.get("User-Agent"),
+                                                subjects=["Use of English"] + picked)
     except engine.ExamError as e:
         flash(str(e), "danger")
         return redirect(url_for("jamb_courses"))
@@ -1322,7 +1382,10 @@ def practice_question(exam_type, subject):
         flash("No practice questions are available for that subject yet.", "warning")
         return redirect(url_for("practice"))
 
-    key = f"practice:{exam_type}:{subject}"
+    topic = (request.args.get("topic") or request.form.get("topic") or "").strip()[:120]
+    if topic and source != "questions_v2":
+        topic = ""
+    key = f"practice:{exam_type}:{subject}" + (f":{topic}" if topic else "")
     state = session.get(key) or {"seen": [], "correct": 0, "total": 0}
     feedback = None
 
@@ -1333,7 +1396,7 @@ def practice_question(exam_type, subject):
         if not q or chosen not in ("A", "B", "C", "D"):
             conn.close()
             flash("Please choose an option.", "warning")
-            return redirect(url_for("practice_question", exam_type=exam_type, subject=subject))
+            return redirect(url_for("practice_question", exam_type=exam_type, subject=subject, topic=topic or None))
         is_correct = chosen == q["correct"]
         state["total"] += 1
         state["correct"] += 1 if is_correct else 0
@@ -1348,7 +1411,7 @@ def practice_question(exam_type, subject):
         q["source"] = source
         feedback = {"q": q, "chosen": chosen, "is_correct": is_correct}
         return render_template("practice_question.html", exam_type=exam_type, subject=subject, q=q, feedback=feedback,
-                               state=state, remaining=None, bookmarked=_is_bookmarked(qid, source))
+                               state=state, remaining=None, bookmarked=_is_bookmarked(qid, source), topic=topic)
 
     allowed, remaining = practice_allowance(session["user"], cur)
     if not allowed:
@@ -1356,7 +1419,11 @@ def practice_question(exam_type, subject):
         conn.close()
         flash(f"You have used your {FREE_PRACTICE_PER_DAY} free practice questions for today. Subscribe for unlimited practice.", "warning")
         return redirect(url_for("subscribe"))
-    q = random_question(cur, source, exam_type, subject, exclude_ids=state["seen"][-200:])
+    q = random_question(cur, source, exam_type, subject, exclude_ids=state["seen"][-200:], topic=topic or None)
+    if not q and topic:
+        conn.close()
+        flash(f"No practice questions are filed under '{topic}' yet — here is the whole subject instead.", "info")
+        return redirect(url_for("practice_question", exam_type=exam_type, subject=subject))
     if not q:
         conn.close()
         flash("No practice questions are available for that subject yet.", "warning")
@@ -1371,14 +1438,15 @@ def practice_question(exam_type, subject):
     bookmarked = _is_bookmarked(q["id"], source)
     conn.close()
     return render_template("practice_question.html", exam_type=exam_type, subject=subject, q=q_public, feedback=None,
-                           state=state, remaining=(None if remaining is None else remaining - 1), bookmarked=bookmarked)
+                           state=state, remaining=(None if remaining is None else remaining - 1), bookmarked=bookmarked, topic=topic)
 
 
 @app.route("/practice/<exam_type>/<subject>/reset", methods=["POST"])
 @login_required
 def practice_reset(exam_type, subject):
-    session.pop(f"practice:{exam_type.upper()}:{subject}", None)
-    return redirect(url_for("practice_question", exam_type=exam_type, subject=subject))
+    topic = (request.args.get("topic") or request.form.get("topic") or "").strip()[:120]
+    session.pop(f"practice:{exam_type.upper()}:{subject}" + (f":{topic}" if topic else ""), None)
+    return redirect(url_for("practice_question", exam_type=exam_type, subject=subject, topic=topic or None))
 
 
 # ---------------------------------------------------------------------------
@@ -1420,6 +1488,68 @@ def bookmark_question():
         return jsonify({"ok": True, "message": msg, "bookmarked": not existing})
     flash(msg, "success")
     return redirect(request.referrer or url_for("my_bookmarks"))
+
+
+@app.route("/report_question", methods=["POST"])
+@login_required
+def report_question():
+    """Students flag a faulty question; it lands in Admin -> Reported questions."""
+    data = request.get_json(silent=True) or request.form
+    try:
+        qid = int(data.get("question_id") or 0)
+    except (TypeError, ValueError):
+        qid = 0
+    source = (data.get("source") or "questions_v2")[:30]
+    reason = (data.get("reason") or "")[:30]
+    note = " ".join(str(data.get("note") or "").split())[:500]
+    subject = str(data.get("subject") or "")[:80]
+    exam_type = str(data.get("exam_type") or "").upper()[:20]
+    attempt_id = data.get("attempt_id")
+    result_id = str(data.get("result_id") or "")[:60] or None
+    wants_json = request.is_json or request.headers.get("X-Requested-With") == "fetch"
+
+    def fail(msg, code=400):
+        if wants_json:
+            return jsonify({"ok": False, "message": msg}), code
+        flash(msg, "warning")
+        return redirect(request.referrer or url_for("dashboard"))
+
+    if source not in ("questions_v2", "questions", "post_utme_questions") or not qid or reason not in REPORT_REASONS:
+        return fail("Please choose what is wrong with the question.")
+    if reason == "other" and len(note) < 5:
+        return fail("Please describe the problem in a few words.")
+    try:
+        attempt_id = int(attempt_id) if attempt_id not in (None, "") else None
+    except (TypeError, ValueError):
+        attempt_id = None
+    conn = connect()
+    cur = conn.cursor()
+    if not fetch_questions(cur, source, [qid], with_answers=False).get(qid):
+        conn.close()
+        return fail("That question no longer exists.", 404)
+    today = cur.execute("SELECT COUNT(*) FROM question_reports WHERE username = ? AND created_at >= datetime('now', '-1 day')",
+                        (session["user"],)).fetchone()[0]
+    if today >= REPORTS_PER_DAY:
+        conn.close()
+        return fail("You have sent many reports today. Thank you — please continue tomorrow.", 429)
+    dup = cur.execute("SELECT id FROM question_reports WHERE username = ? AND question_source = ? AND question_id = ? AND status = 'open'",
+                      (session["user"], source, qid)).fetchone()
+    if dup:
+        conn.close()
+        msg = "You already reported this question. Our team will look at it."
+        return jsonify({"ok": True, "message": msg, "duplicate": True}) if wants_json else (flash(msg, "info") or redirect(request.referrer or url_for("dashboard")))
+    cur.execute(
+        """INSERT INTO question_reports (username, question_source, question_id, subject, exam_type, attempt_id, result_id, reason, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (session["user"], source, qid, subject, exam_type, attempt_id, result_id, reason, note or None),
+    )
+    conn.commit()
+    conn.close()
+    msg = "Thank you. The question has been sent to our team for checking."
+    if wants_json:
+        return jsonify({"ok": True, "message": msg})
+    flash(msg, "success")
+    return redirect(request.referrer or url_for("dashboard"))
 
 
 @app.route("/my_bookmarks")
@@ -1494,9 +1624,10 @@ def result_details(result_id):
     target = target["target_score"] if target else None
     share_url = f"{app_url()}/verify_result/{r['verification_code']}" if r["verification_code"] else app_url()
     share = share_text(session.get("name"), f"{r['exam_type']} {r['exam_name'] or ''}".strip(), score_txt, pct, share_url)
+    topics = engine.topic_report(result_id, session["user"])
     return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=data["attempt"], verdict=verdict, tone=tone,
                            just_finished=request.args.get("done") == "1", share=share, share_url=share_url,
-                           pace=pace, projection=projection, target=target)
+                           pace=pace, projection=projection, target=target, topics=topics)
 
 
 @app.route("/review_answers/<int:result_id>")

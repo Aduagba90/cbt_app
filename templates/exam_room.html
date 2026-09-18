@@ -36,6 +36,7 @@
                     <div class="pn-qhead">
                         <div class="pn-qnum">Question <strong id="qNum">1</strong> of {{ attempt.total }} <span class="text-muted fw-semibold ms-2" id="qSubject"></span></div>
                         <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-calc" id="calcBtn" type="button" title="Calculator (X)"><i class="bi bi-calculator"></i> <span class="d-none d-sm-inline">Calculator</span></button>
                             <button class="btn btn-sm btn-flag" id="flagBtn" type="button"><i class="bi bi-flag"></i> <span>Flag for review</span></button>
                         </div>
                     </div>
@@ -55,13 +56,14 @@
                         <div class="left">
                             <button class="btn btn-outline-secondary" id="prevBtn" type="button"><i class="bi bi-chevron-left"></i> Previous</button>
                             <button class="btn btn-outline-secondary" id="clearBtn" type="button" title="Clear selection"><i class="bi bi-eraser"></i><span class="d-none d-sm-inline"> Clear</span></button>
+                            <button class="btn btn-outline-secondary pn-report-link" id="reportBtn" type="button" data-report="{}" title="Report a problem with this question"><i class="bi bi-flag"></i><span class="d-none d-sm-inline"> Report</span></button>
                         </div>
                         <div class="right">
                             <button class="btn btn-primary" id="nextBtn" type="button">Save &amp; Next <i class="bi bi-chevron-right"></i></button>
                         </div>
                     </div>
                 </div>
-                <div class="small text-muted mt-2 d-flex align-items-center gap-2"><i class="bi bi-cloud-check" id="saveIcon"></i><span id="saveStatus">All answers are saved automatically.</span><span class="ms-auto d-none d-md-inline">Keyboard: <kbd>A</kbd>–<kbd>D</kbd> select · <kbd>←</kbd>/<kbd>→</kbd> navigate · <kbd>F</kbd> flag</span></div>
+                <div class="small text-muted mt-2 d-flex align-items-center gap-2"><i class="bi bi-cloud-check" id="saveIcon"></i><span id="saveStatus">All answers are saved automatically.</span><span class="ms-auto d-none d-md-inline">Keyboard: <kbd>A</kbd>–<kbd>D</kbd> select · <kbd>←</kbd>/<kbd>→</kbd> navigate · <kbd>F</kbd> flag · <kbd>X</kbd> calculator</span></div>
             </div>
 
             <!-- ============ Palette (desktop) ============ -->
@@ -120,7 +122,22 @@
     </div>
 </div>
 
+<!-- On-screen calculator (like the one in the real JAMB CBT) -->
+<div class="pn-calc d-none" id="calcPanel" role="dialog" aria-label="Calculator">
+    <div class="pn-calc-head" id="calcHead"><span><i class="bi bi-calculator me-1"></i>Calculator</span><button type="button" class="btn-close btn-close-white" id="calcClose" aria-label="Close calculator"></button></div>
+    <div class="pn-calc-screen"><div class="expr" id="calcExpr">&nbsp;</div><input class="val" id="calcVal" value="0" readonly aria-live="polite"></div>
+    <div class="pn-calc-keys" id="calcKeys">
+        <button type="button" data-k="AC" class="fn">AC</button><button type="button" data-k="DEL" class="fn">⌫</button><button type="button" data-k="(" class="fn">(</button><button type="button" data-k=")" class="fn">)</button><button type="button" data-k="/" class="op">÷</button>
+        <button type="button" data-k="sqrt" class="fn">√</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="*" class="op">×</button>
+        <button type="button" data-k="^" class="fn">xʸ</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="-" class="op">−</button>
+        <button type="button" data-k="%" class="fn">%</button><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="+" class="op">+</button>
+        <button type="button" data-k="pi" class="fn">π</button><button type="button" data-k="0">0</button><button type="button" data-k=".">.</button><button type="button" data-k="neg" class="fn">±</button><button type="button" data-k="=" class="eq">=</button>
+    </div>
+    <div class="pn-calc-foot">Type numbers on your keyboard · Enter = equals · Esc closes</div>
+</div>
+
 <div class="pn-integrity" id="integrityToast"></div>
+{% include "_report_modal.html" %}
 {% endblock %}
 
 {% block scripts %}
@@ -130,6 +147,8 @@
     "use strict";
     var DATA = JSON.parse(document.getElementById("attemptData").textContent);
     var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+    window.reportContext = function () { var q = Q[idx]; return { question_id: q.qid, source: q.src, subject: q.subject, exam_type: DATA.exam_type, attempt_id: DATA.id }; };
+    document.addEventListener("click", function (e) { if (e.target.closest("#reportBtn")) { Q[idx].reported = true; } });
     var Q = DATA.questions, TOTAL = Q.length, idx = 0;
     var subjects = DATA.subjects || [];
     var BASE = "/exam/" + DATA.id;
@@ -239,6 +258,7 @@
         });
         flagBtn.classList.toggle("on", !!q.flagged);
         flagBtn.querySelector("span").textContent = q.flagged ? "Flagged" : "Flag for review";
+        var rb = el("reportBtn"); if (rb) { rb.classList.toggle("reported", !!q.reported); rb.querySelector("span").textContent = q.reported ? " Reported" : " Report"; rb.title = q.reported ? "You reported this question — thank you" : "Report a problem with this question"; }
         prevBtn.disabled = idx === 0;
         nextBtn.innerHTML = idx === TOTAL - 1 ? 'Finish <i class="bi bi-check2-circle"></i>' : 'Save &amp; Next <i class="bi bi-chevron-right"></i>';
         document.querySelectorAll(".pn-pal.current").forEach(function (b) { b.classList.remove("current"); });
@@ -312,12 +332,125 @@
 
     document.addEventListener("keydown", function (e) {
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (calcOpen()) { if (calcKey(e)) { e.preventDefault(); } return; }
         var k = e.key.toUpperCase();
         if (["A", "B", "C", "D"].indexOf(k) > -1) { select(k); e.preventDefault(); }
         else if (e.key === "ArrowRight" || k === "N") { go(idx + 1); }
         else if (e.key === "ArrowLeft" || k === "P") { go(idx - 1); }
         else if (k === "F") { flagBtn.click(); }
+        else if (k === "X") { toggleCalc(); }
     });
+
+    /* ---------------- Calculator ---------------- */
+    // Safe expression evaluator (tokeniser + shunting-yard); nothing is ever eval()'d.
+    var calcPanel = el("calcPanel"), calcExprEl = el("calcExpr"), calcValEl = el("calcVal"), calcExpr = "", calcDone = false;
+    function calcOpen() { return !calcPanel.classList.contains("d-none"); }
+    function toggleCalc(force) {
+        var open = typeof force === "boolean" ? force : !calcOpen();
+        calcPanel.classList.toggle("d-none", !open);
+        el("calcBtn").classList.toggle("on", open);
+        if (open) calcRender();
+    }
+    function calcPretty(x) { return x.replace(/\*/g, "×").replace(/\//g, "÷").replace(/-/g, "−").replace(/sqrt\(/g, "√(").replace(/pi/g, "π"); }
+    function calcRender() {
+        calcExprEl.textContent = calcPretty(calcExpr) || "\u00a0";
+        if (!calcDone) { var v = calcEval(calcExpr); calcValEl.value = v === null ? (calcExpr ? "…" : "0") : calcFmt(v); }
+    }
+    function calcFmt(v) {
+        if (!isFinite(v)) return "Error";
+        var s = Math.abs(v) >= 1e12 || (Math.abs(v) < 1e-9 && v !== 0) ? v.toExponential(6) : String(parseFloat(v.toPrecision(12)));
+        return s;
+    }
+    function calcTokens(src) {
+        var out = [], i = 0, m;
+        while (i < src.length) {
+            var ch = src[i];
+            if (ch === " ") { i++; continue; }
+            if ((m = /^\d*\.?\d+(e[+-]?\d+)?/i.exec(src.slice(i)))) { out.push({ t: "n", v: parseFloat(m[0]) }); i += m[0].length; continue; }
+            if (src.slice(i, i + 4) === "sqrt") { out.push({ t: "f", v: "sqrt" }); i += 4; continue; }
+            if (src.slice(i, i + 2) === "pi") { out.push({ t: "n", v: Math.PI }); i += 2; continue; }
+            if ("+-*/^%()".indexOf(ch) > -1) { out.push({ t: ch }); i++; continue; }
+            return null;
+        }
+        return out;
+    }
+    function calcEval(src) {
+        var tk = calcTokens(src); if (!tk || !tk.length) return null;
+        var prec = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "^": 3, "u-": 4 }, right = { "^": 1, "u-": 1 };
+        var out = [], ops = [], prev = null;
+        for (var i = 0; i < tk.length; i++) {
+            var x = tk[i];
+            if (x.t === "n") { out.push(x.v); }
+            else if (x.t === "f") { ops.push("f:" + x.v); }
+            else if (x.t === "(") { ops.push("("); }
+            else if (x.t === ")") {
+                while (ops.length && ops[ops.length - 1] !== "(") { if (!apply(ops.pop())) return null; }
+                if (!ops.length) return null; ops.pop();
+                if (ops.length && ops[ops.length - 1].slice(0, 2) === "f:") { if (!apply(ops.pop())) return null; }
+            } else {
+                var op = x.t;
+                if (op === "-" && (!prev || (prev.t !== "n" && prev.t !== ")"))) op = "u-";
+                else if (op !== "u-" && (!prev || (prev.t !== "n" && prev.t !== ")"))) return null;
+                while (ops.length) {
+                    var top = ops[ops.length - 1];
+                    if (top === "(" || top.slice(0, 2) === "f:") break;
+                    if (prec[top] > prec[op] || (prec[top] === prec[op] && !right[op])) { if (!apply(ops.pop())) return null; } else break;
+                }
+                ops.push(op);
+            }
+            prev = x;
+        }
+        while (ops.length) { var o = ops.pop(); if (o === "(") return null; if (!apply(o)) return null; }
+        return out.length === 1 ? out[0] : null;
+        function apply(op) {
+            if (op === "u-") { if (!out.length) return false; out.push(-out.pop()); return true; }
+            if (op === "f:sqrt") { if (!out.length) return false; out.push(Math.sqrt(out.pop())); return true; }
+            if (out.length < 2) return false;
+            var b = out.pop(), a = out.pop();
+            out.push(op === "+" ? a + b : op === "-" ? a - b : op === "*" ? a * b : op === "/" ? a / b : op === "%" ? a % b : Math.pow(a, b));
+            return true;
+        }
+    }
+    function calcPress(k) {
+        if (k === "AC") { calcExpr = ""; calcDone = false; calcValEl.value = "0"; }
+        else if (k === "DEL") { if (calcDone) { calcExpr = ""; calcDone = false; } else calcExpr = calcExpr.replace(/(sqrt\(|pi|.)$/, ""); }
+        else if (k === "=") { var v = calcEval(calcExpr); if (v !== null) { var shown = calcPretty(calcExpr); calcValEl.value = calcFmt(v); calcExpr = calcFmt(v) === "Error" ? "" : calcFmt(v); calcDone = true; calcExprEl.textContent = shown + " ="; return; } }
+        else if (k === "neg") { var n = calcEval(calcExpr); if (n !== null) { calcExpr = calcFmt(-n); calcDone = false; } }
+        else {
+            if (calcDone) { calcDone = false; if (/^[0-9.]$/.test(k) || k === "pi" || k === "sqrt") calcExpr = ""; }
+            calcExpr += (k === "sqrt" ? "sqrt(" : k);
+        }
+        calcRender();
+    }
+    function calcKey(e) {
+        var k = e.key;
+        if (k === "Escape") { toggleCalc(false); return true; }
+        if (k === "Enter" || k === "=") { calcPress("="); return true; }
+        if (k === "Backspace") { calcPress("DEL"); return true; }
+        if (k === "Delete") { calcPress("AC"); return true; }
+        if (/^[0-9.+\-*/^%()]$/.test(k)) { calcPress(k); return true; }
+        if (k.toUpperCase() === "X") { toggleCalc(false); return true; }
+        return false;
+    }
+    el("calcKeys").addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) calcPress(b.dataset.k); });
+    el("calcBtn").addEventListener("click", function () { toggleCalc(); });
+    el("calcClose").addEventListener("click", function () { toggleCalc(false); });
+    // Drag on desktop
+    (function () {
+        var head = el("calcHead"), sx, sy, ox, oy, dragging = false;
+        head.addEventListener("pointerdown", function (e) {
+            if (e.target.closest("button") || window.innerWidth < 768) return;
+            dragging = true; head.setPointerCapture(e.pointerId);
+            var r = calcPanel.getBoundingClientRect(); sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
+            calcPanel.style.right = "auto"; calcPanel.style.bottom = "auto"; calcPanel.style.left = ox + "px"; calcPanel.style.top = oy + "px";
+        });
+        head.addEventListener("pointermove", function (e) {
+            if (!dragging) return;
+            var x = Math.max(0, Math.min(window.innerWidth - 60, ox + e.clientX - sx)), y = Math.max(0, Math.min(window.innerHeight - 60, oy + e.clientY - sy));
+            calcPanel.style.left = x + "px"; calcPanel.style.top = y + "px";
+        });
+        head.addEventListener("pointerup", function () { dragging = false; });
+    })();
 
     /* ---------------- Submit ---------------- */
     var modal = new bootstrap.Modal(el("submitModal"));
