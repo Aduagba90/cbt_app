@@ -364,3 +364,35 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   Biology/Agric, Physics/Maths). 80 course cards in total. The Agric chip is now visible in "Build my own
   combination" and Live Mock because the bank is ≥10 questions.
 - All 14 JAMB subjects with banks are now ≥479 tier-1 questions. Next: Post-UTME bank, then WAEC, then offline mode.
+
+## Post-UTME release 1 (Sept 2026)
+- **How it works now.** `post_utme.py` holds the real screening formats: each `post_utme_universities` row has
+  `sections_json` = list of `[kind, count]` — `ALL` (student's 4 UTME subjects, shared evenly), `PICK2` (two
+  electives the student ticks, e.g. LASU), `CA` (Current Affairs) or a named subject (e.g. `Use of English`, 20).
+  `build_plan()` turns sections + the student's course into an ordered `[(subject, n)]`; the engine
+  (`create_post_utme_attempt(..., plan_counts, duration)`) draws each UTME subject from the **JAMB bank**
+  (`resolve_source("JAMB", subject)`) and Current Affairs from the **POST-UTME bank**; a university-specific upload
+  in `post_utme_questions` takes over for a subject once it has ≥10 rows. Post-UTME papers skip the JAMB-only
+  set-novel block and English section quotas and use at most one passage in short papers (`_arrange(..., exam_type)`).
+- **Formats seeded once** by the guarded fix `post_utme_formats_2026_09` in `db.py`: UNILAG 40 q/30 min; UI 100/90;
+  OAU 100/75; UNN 60/60; ABU 60/60; UNIBEN 100/60; UNILORIN Eng 20 + Maths 20 + CA 10 in 30; UNIPORT 50/30; UNIZIK
+  50/60; FUTA & FUTO 5×4 subjects + 5 CA in 30; LASU Eng 20 + PICK2×20 in 45; IMSU Eng 20 + Maths 10 + CA 10 in 30;
+  UNICAL Eng 10 + Maths 15 + CA 25 in 30; "Any other university (general format)" 40 + 10 CA in 40 min.
+  Babcock/Covenant (unverified sample rows) are `status = 'Hidden'`. Admin → Post-UTME edits/adds rows
+  (`/edit_post_utme_university/<id>`, `/add_post_utme_university`); the old courses/subject-combination admin pages
+  are no longer used by the student flow (course cards come from `helpers.COURSE_GROUPS`, same as JAMB).
+- **Student flow:** `/post_utme` (tiles with real timing + chips, search) → `/post_utme_courses?university=` (JAMB
+  course cards + "use my own combination") → `/post_utme_subjects` (confirm page listing every section and count;
+  LASU-style papers ask the student to tick 2 subjects) → `POST /start_post_utme` (fields `university`, `course`
+  or `subjects[]`, `pick[]`). Fixed papers (UNILORIN, IMSU, UNICAL) skip the course step. Results are percentage
+  only with a screening verdict (50 % bar); pace meter uses 60 s/q.
+- **Current Affairs bank:** batch 041 = 235 tier-1 questions in 10 topics under subject `Current Affairs`
+  (exam_type POST-UTME, subject id 31 in the tracked DB): officeholders, constitution, history/symbols, economy &
+  institutions, elections, security agencies, geography/culture, Africa & world, sports & entertainment, everyday
+  ICT. Facts verified Sept 2026 (see script docstring); items that age say "as at 2026" in the stem — **re-check
+  officeholder items after the January 2027 elections**. Practice mode has a "Current affairs" tab
+  (`/practice/POST-UTME/Current Affairs`). `batch_common.build_batch(..., exam_type="POST-UTME")` for future rounds.
+- `_post_utme_ready()` now means "≥1 active university format and a JAMB English bank" (not the empty upload
+  table); landing/exam-types/dashboard copy updated ("15 formats"). Tests: `_work/putme_test.py` (63 checks) +
+  `_work/regress.py` 75/75, feat1/feat2 green.
+- Next: WAEC bank, then offline mode (separate release; do not mention to testers until live).

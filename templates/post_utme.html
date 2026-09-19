@@ -1,33 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Post-UTME — choose a university{% endblock %}
+{% block title %}Post-UTME — choose your university{% endblock %}
 
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>Post-UTME</span></div>
         <h1>Choose your university</h1>
-        <p class="lead">Each school is set up with its own screening format, duration and question count.</p>
+        <p class="lead">Each school is set up with its real screening format — timing, number of questions and subject mix. Questions come from the same UTME subjects you wrote in JAMB, plus Nigeria current affairs where the school asks them.</p>
     </div>
+    <div class="input-group" style="max-width:320px"><span class="input-group-text"><i class="bi bi-search"></i></span><input type="search" class="form-control" id="uniSearch" placeholder="Search, e.g. UNILAG…" aria-label="Search university"></div>
 </div>
 
-{% set mode_labels = {"CBT": ("CBT with course subjects", "tint-green", "bi-display"), "APTITUDE": ("Aptitude test", "tint-purple", "bi-puzzle"), "CURRENT_AFFAIRS": ("Current affairs & general knowledge", "tint-gold", "bi-newspaper"), "SCREENING": ("Document screening only", "tint-blue", "bi-file-earmark-check")} %}
-<div class="row g-3">
+<div class="row g-3" id="uniGrid">
     {% for u in universities %}
-    {% set label, tint, icon = mode_labels.get(u['exam_mode'], ("Screening", "tint-blue", "bi-building")) %}
-    <div class="col-md-6 col-xl-4">
-        <div class="pn-tile anim-rise d{{ loop.index0 % 4 }}">
+    <div class="col-md-6 col-xl-4 uni-item" data-name="{{ u.name|lower }}">
+        <div class="pn-tile anim-rise d{{ loop.index0 % 4 }} {% if not u.ready %}pn-tile-soon{% endif %}">
             <div class="d-flex justify-content-between align-items-start">
-                <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
-                {% if u['n'] > 0 %}<span class="badge bg-success">{{ u['n'] }} questions</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+                <span class="pn-tile-icon {{ 'tint-gold' if u.needs_course else 'tint-purple' }}"><i class="bi {{ 'bi-building' if u.needs_course else 'bi-newspaper' }}"></i></span>
+                {% if u.ready %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
             </div>
-            <h3>{{ u['university_name'] }}</h3>
-            <p class="mb-2">{{ label }}</p>
-            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> {{ u['duration'] }} min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> {{ u['total_questions'] }} questions</span></div>
-            {% if u['n'] > 0 %}
-                {% if u['exam_mode'] == 'CBT' %}
-                <a href="{{ url_for('post_utme_courses', university=u['university_name']) }}" class="btn btn-primary w-100 mt-auto">Choose course <i class="bi bi-arrow-right ms-1"></i></a>
+            <h3>{{ u.name }}</h3>
+            <p class="mb-2 small">{{ u.note }}</p>
+            <div class="d-flex flex-wrap gap-1 mb-3">
+                <span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> {{ u.duration }} min</span>
+                <span class="pn-subject-chip"><i class="bi bi-list-ol"></i> {{ u.total }} questions</span>
+                {% for c in u.chips %}<span class="pn-subject-chip">{{ c }}</span>{% endfor %}
+            </div>
+            {% if u.ready %}
+                {% if u.needs_course %}
+                <a href="{{ url_for('post_utme_courses', university=u.name) }}" class="btn btn-primary w-100 mt-auto">Choose my course <i class="bi bi-arrow-right ms-1"></i></a>
                 {% else %}
-                <a href="{{ url_for('post_utme_subjects', university=u['university_name']) }}" class="btn btn-primary w-100 mt-auto">Continue <i class="bi bi-arrow-right ms-1"></i></a>
+                <a href="{{ url_for('post_utme_subjects', university=u.name) }}" class="btn btn-primary w-100 mt-auto">Continue <i class="bi bi-arrow-right ms-1"></i></a>
                 {% endif %}
             {% else %}
                 <button class="btn btn-outline-secondary w-100 mt-auto" disabled>Questions being added</button>
@@ -36,4 +39,24 @@
     </div>
     {% endfor %}
 </div>
+<div class="pn-empty d-none" id="noUni"><span class="ico"><i class="bi bi-search"></i></span><h3>No university matches</h3><p>Try the short name, e.g. “UNN” — or pick <b>Any other university</b> for the commonest format.</p></div>
+
+<div class="card mt-4 anim-rise">
+    <div class="card-body small text-muted">
+        <i class="bi bi-info-circle me-1"></i> Formats follow each university's most recent screening notice. Schools sometimes change the split between subjects from year to year, so always read your own school's instructions on exam day. Some universities (for example LASU in 2025) skip the test in some years and admit on UTME and O'level aggregate only.
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var input = document.getElementById('uniSearch'), items = document.querySelectorAll('.uni-item'), empty = document.getElementById('noUni');
+    input.addEventListener('input', function(){
+        var q = input.value.trim().toLowerCase(), shown = 0;
+        items.forEach(function(it){ var ok = !q || it.dataset.name.indexOf(q) > -1; it.classList.toggle('d-none', !ok); if (ok) shown++; });
+        empty.classList.toggle('d-none', shown > 0);
+    });
+})();
+</script>
 {% endblock %}

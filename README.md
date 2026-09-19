@@ -100,8 +100,12 @@ manually*. This records a payment, extends any remaining time, and is written to
 **WAEC is switched off ("Coming soon") by default** until genuine WAEC questions are
 uploaded. Students — including subscribers — can only take JAMB mocks/practice meanwhile,
 and the WAEC routes are blocked server-side (not just hidden). To open WAEC: set
-`WAEC_ENABLED=1` in `.env` (or the host's environment) and restart. Post-UTME shows
-"Coming soon" automatically while its question table is empty.
+`WAEC_ENABLED=1` in `.env` (or the host's environment) and restart.
+
+**Post-UTME** is live: each university row (Admin → Post-UTME) describes its real paper
+(minutes + sections, see `post_utme.py`). UTME subjects are drawn from the JAMB bank and
+"Current Affairs" from the POST-UTME bank (`content/batch_041_*`); a school's own upload
+(`post_utme_questions`) takes over for a subject once it has ≥10 questions.
 
 Import questions from the admin panel (`Import` → Excel template at
 `/download_question_template`). Full JAMB mocks need ≥10 active questions per subject

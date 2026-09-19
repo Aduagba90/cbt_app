@@ -5,6 +5,7 @@ Every table/column/index needed by the application is created here at start-up,
 so the old "visit /create_xxx_table" routes are no longer required (or exposed).
 """
 
+import json
 import os
 import sqlite3
 import shutil
@@ -309,6 +310,10 @@ def init_db():
     """)
     _add_column(cur, "post_utme_questions", "explanation", "TEXT")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_putme_q ON post_utme_questions(university_name, subject)")
+    # How each university's paper is made up (see post_utme.py) and a one-line note for students.
+    _add_column(cur, "post_utme_universities", "sections_json", "TEXT")
+    _add_column(cur, "post_utme_universities", "note", "TEXT")
+    _add_column(cur, "post_utme_universities", "status", "TEXT DEFAULT 'Active'")
 
     # ----------------------------------------------------------- exam attempts
     cur.execute("""
@@ -669,6 +674,37 @@ def init_db():
                  AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
             (name, code, name),
         )
+
+    # Post-UTME release 1 (Sept 2026): real screening formats for the main universities, questions
+    # drawn from the JAMB bank per UTME subject plus a current-affairs bank. Runs once; afterwards
+    # Admin -> Post-UTME owns the rows. The sample rows whose formats were never verified are hidden.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'post_utme_formats_2026_09'").fetchone():
+        try:
+            from post_utme import FORMATS, RETIRED, sections_total
+            for name, minutes, sections, note in FORMATS:
+                total = sections_total(sections)
+                row = cur.execute("SELECT id FROM post_utme_universities WHERE university_name = ?", (name,)).fetchone()
+                if row:
+                    cur.execute(
+                        "UPDATE post_utme_universities SET exam_mode = 'CBT', duration = ?, total_questions = ?, sections_json = ?, note = ?, status = 'Active' WHERE id = ?",
+                        (minutes, total, json.dumps(sections), note, row[0]),
+                    )
+                else:
+                    cur.execute(
+                        "INSERT INTO post_utme_universities (university_name, exam_mode, duration, total_questions, pass_mark, sections_json, note, status) VALUES (?, 'CBT', ?, ?, 50, ?, ?, 'Active')",
+                        (name, minutes, total, json.dumps(sections), note),
+                    )
+            for name in RETIRED:
+                cur.execute("UPDATE post_utme_universities SET status = 'Hidden' WHERE university_name = ?", (name,))
+            cur.execute(
+                """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                   SELECT 'POST-UTME', 'Current Affairs', 'CA', 'Active', e.id FROM exam_types e
+                   WHERE e.exam_name = 'POST-UTME'
+                     AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = 'Current Affairs' AND s.exam_type_id = e.id)"""
+            )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('post_utme_formats_2026_09', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[post-utme] setup skipped: {exc}")
 
     # Question batches written in content/*.json (applied-style questions). Each batch is
     # applied once per database, so a live site with student data picks new questions up on

@@ -1,79 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
-    <title>Manage Universities</title>
-
-    <link href="/static/vendor/bootstrap/bootstrap.min.css"
-          rel="stylesheet">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-UTME formats — PrepNova Admin</title>
+<link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+<style>
+  .chip { display:inline-block; font-size:.74rem; font-weight:600; background:#f1f3f7; border:1px solid #e3e7ee; border-radius:999px; padding:.1rem .55rem; margin:.1rem .15rem .1rem 0; }
+  .hidden-row td { color:#8a94a6; background:#fafbfc; }
+</style>
 </head>
 <body>
+<div class="container-xl my-4">
 
-<div class="container mt-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+      <h2 class="mb-1">🏫 Post-UTME formats</h2>
+      <p class="text-muted mb-0">One row per university: how long the paper is and how it is made up. Questions come from the JAMB bank for each UTME subject and from the <b>Current Affairs</b> bank ({{ ca_count }} active questions). A university-specific upload is used instead whenever it has 10 or more questions for a subject.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin_bp.edit_post_utme_university', university_id=None) }}" class="btn btn-success">+ Add university</a>
+      <a href="{{ url_for('admin_bp.add_post_utme_question') }}" class="btn btn-outline-secondary">Upload a school's own question</a>
+    </div>
+  </div>
 
-    <h2 class="mb-4">
-        🏫 POST-UTME University Management
-    </h2>
-
-    <a href="/admin"
-       class="btn btn-secondary mb-3">
-
-        ← Back
-
-    </a>
-
-    <table class="table table-bordered table-striped">
-
-        <thead class="table-dark">
-
-            <tr>
-
-                <th>ID</th>
-                <th>University</th>
-                <th>Mode</th>
-                <th>Duration</th>
-                <th>Questions</th>
-                <th>Pass Mark</th>
-                <th>Action</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            {% for u in universities %}
-
-            <tr>
-
-                <td>{{ u[0] }}</td>
-                <td>{{ u[1] }}</td>
-                <td>{{ u[2] }}</td>
-                <td>{{ u[3] }}</td>
-                <td>{{ u[4] }}</td>
-                <td>{{ u[5] }}</td>
-
-                <td>
-
-                    <a href="/edit_post_utme_university/{{ u[0] }}"
-                       class="btn btn-warning btn-sm">
-
-                        ✏️ Edit
-
-                    </a>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
+  <div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle bg-white">
+    <thead class="table-dark">
+      <tr><th>University</th><th>Time</th><th>Questions</th><th>Paper make-up</th><th>Note students see</th><th>Own uploads</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for u in universities %}
+      <tr class="{{ 'hidden-row' if u.status != 'Active' }}">
+        <td class="fw-semibold">{{ u.name }}</td>
+        <td>{{ u.duration }} min</td>
+        <td>{{ u.total }}</td>
+        <td>{% for c in u.chips %}<span class="chip">{{ c }}</span>{% endfor %}</td>
+        <td class="small text-muted">{{ u.note }}</td>
+        <td>{{ u.uploads }}</td>
+        <td>{% if u.status == 'Active' %}<span class="badge bg-success">Shown</span>{% else %}<span class="badge bg-secondary">Hidden</span>{% endif %}</td>
+        <td><a href="{{ url_for('admin_bp.edit_post_utme_university', university_id=u.id) }}" class="btn btn-warning btn-sm">✏️ Edit</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="small text-muted">Hidden universities never appear to students. “Any other university” is the general format students pick when their school is not listed.</p>
 </div>
-
 </body>
 </html>

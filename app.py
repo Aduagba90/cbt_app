@@ -29,6 +29,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import exam_engine as engine
+import post_utme as putme
 from admin_routes import admin_bp
 from db import connect, init_db
 import study
@@ -147,21 +148,32 @@ init_db()
 # Template helpers
 # ---------------------------------------------------------------------------
 
-_POST_UTME_CACHE = {"t": 0.0, "ready": False}
+_POST_UTME_CACHE = {"t": 0.0, "ready": False, "n": 0}
 
 
 def _post_utme_ready():
-    """True once at least one Post-UTME question exists (cached 60 s). Flips automatically after an upload."""
+    """True once Post-UTME mocks can run: at least one active university format and a JAMB bank to
+    draw from (cached 60 s)."""
     now = time.time()
     if now - _POST_UTME_CACHE["t"] > 60:
         try:
             conn = connect()
-            n = conn.execute("SELECT COUNT(*) FROM post_utme_questions").fetchone()[0]
+            n = conn.execute("SELECT COUNT(*) FROM post_utme_universities WHERE COALESCE(status, 'Active') = 'Active'").fetchone()[0]
+            banks = conn.execute(
+                """SELECT COUNT(DISTINCT s.id) FROM subjects s JOIN exam_types e ON e.id = s.exam_type_id
+                   JOIN questions_v2 q ON q.subject_id = s.id AND q.status = 'Active'
+                   WHERE e.exam_name = 'JAMB' AND s.subject_name = 'Use of English'"""
+            ).fetchone()[0]
             conn.close()
-            _POST_UTME_CACHE.update(t=now, ready=n > 0)
+            _POST_UTME_CACHE.update(t=now, ready=n > 0 and banks > 0, n=n)
         except Exception:
-            _POST_UTME_CACHE.update(t=now, ready=False)
+            _POST_UTME_CACHE.update(t=now, ready=False, n=0)
     return _POST_UTME_CACHE["ready"]
+
+
+def _post_utme_count():
+    _post_utme_ready()
+    return _POST_UTME_CACHE["n"]
 
 
 REPORT_REASONS = {
@@ -185,6 +197,7 @@ def inject_globals():
         "support_whatsapp": SUPPORT_WHATSAPP,
         "waec_enabled": WAEC_ENABLED,
         "post_utme_ready": _post_utme_ready(),
+        "post_utme_count": _post_utme_count(),
         "current_year": datetime.now().year,
         "initials": initials,
         "subject_icon": subject_icon,
@@ -1168,61 +1181,115 @@ def start_waec(subject):
 
 # ----------------------------------------------------------------- Post-UTME
 
+def _post_utme_university(cur, name):
+    row = cur.execute("SELECT * FROM post_utme_universities WHERE university_name = ? AND COALESCE(status, 'Active') = 'Active'",
+                      (name,)).fetchone()
+    return row
+
+
+def _post_utme_ca_ready(cur):
+    source, _ = resolve_source(cur, putme.CA_EXAM, putme.CA_SUBJECT)
+    return bool(source)
+
+
 @app.route("/post_utme")
 @login_required
 def post_utme():
     conn = connect()
-    rows = conn.execute(
-        """
-        SELECT u.university_name, u.exam_mode, u.duration, u.total_questions,
-               (SELECT COUNT(*) FROM post_utme_questions q WHERE q.university_name = u.university_name) AS n
-        FROM post_utme_universities u ORDER BY u.university_name
-        """
+    cur = conn.cursor()
+    rows = cur.execute(
+        "SELECT * FROM post_utme_universities WHERE COALESCE(status, 'Active') = 'Active' ORDER BY university_name LIKE 'Any other%', university_name"
     ).fetchall()
+    ca_ready = _post_utme_ca_ready(cur)
     conn.close()
-    return render_template("post_utme.html", universities=rows)
+    avail = available_subjects("JAMB")
+    unis = []
+    for u in rows:
+        sections = putme.parse_sections(u["sections_json"], u["total_questions"])
+        needs_ca = any(k == "CA" for k, _ in sections)
+        fixed = [k for k, _ in sections if k not in ("ALL", "CA") and k not in putme.PICK_KINDS]
+        ready = bool(avail) and (ca_ready or not needs_ca) and all(k in avail for k in fixed)
+        unis.append({
+            "name": u["university_name"], "short": putme.short_name(u["university_name"]),
+            "duration": u["duration"], "total": putme.sections_total(sections), "note": u["note"] or "",
+            "chips": putme.describe(sections), "ready": ready, "needs_course": putme.needs_course(sections),
+        })
+    return render_template("post_utme.html", universities=unis, ready_count=sum(1 for u in unis if u["ready"]))
 
 
 @app.route("/post_utme_courses")
 @login_required
 def post_utme_courses():
+    """Course picker for one university (same cards as the JAMB page, plus 'build my own')."""
     university = (request.args.get("university") or "").strip()
-    conn = connect()
-    uni = conn.execute("SELECT * FROM post_utme_universities WHERE university_name = ?", (university,)).fetchone()
-    if not uni:
-        conn.close()
-        abort(404)
-    if uni["exam_mode"] != "CBT":
-        conn.close()
-        return redirect(url_for("post_utme_subjects", university=university))
-    courses = conn.execute("SELECT course_name FROM post_utme_courses WHERE university_name = ? ORDER BY course_name", (university,)).fetchall()
-    conn.close()
-    return render_template("post_utme_courses.html", university=uni, courses=[c[0] for c in courses])
-
-
-@app.route("/post_utme_subjects")
-@login_required
-def post_utme_subjects():
-    university = (request.args.get("university") or "").strip()
-    course = (request.args.get("course") or "").strip()
     conn = connect()
     cur = conn.cursor()
-    uni = cur.execute("SELECT * FROM post_utme_universities WHERE university_name = ?", (university,)).fetchone()
+    uni = _post_utme_university(cur, university)
+    conn.close()
+    if not uni:
+        abort(404)
+    sections = putme.parse_sections(uni["sections_json"], uni["total_questions"])
+    if not putme.needs_course(sections):
+        return redirect(url_for("post_utme_subjects", university=university))
+    avail = available_subjects("JAMB")
+    groups = []
+    for group_name, items in COURSE_GROUPS:
+        courses = []
+        for course, subjects in items:
+            icon, tint = COURSE_ICONS.get(course, ("bi-mortarboard", "tint-green"))
+            courses.append({"name": course, "subjects": subjects, "ready": all(s_ in avail for s_ in subjects),
+                            "icon": icon, "tint": tint, "missing": [s_ for s_ in subjects if s_ not in avail]})
+        groups.append({"name": group_name, "courses": courses})
+    electives = [s_ for s_ in JAMB_ELECTIVES if s_ in avail]
+    return render_template("post_utme_courses.html", university=uni, groups=groups, electives=electives,
+                           total=len(JAMB_COURSES), short=putme.short_name(university))
+
+
+@app.route("/post_utme_subjects", methods=["GET", "POST"])
+@login_required
+def post_utme_subjects():
+    """Confirm page: shows the exact paper (subjects and counts) before the timer starts."""
+    src = request.form if request.method == "POST" else request.args
+    university = (src.get("university") or "").strip()
+    course = (src.get("course") or "").strip()
+    custom = src.getlist("subjects")
+    conn = connect()
+    cur = conn.cursor()
+    uni = _post_utme_university(cur, university)
     if not uni:
         conn.close()
         abort(404)
-    if uni["exam_mode"] == "CBT":
-        if not course:
+    sections = putme.parse_sections(uni["sections_json"], uni["total_questions"])
+    label, subjects = (None, None)
+    if putme.needs_course(sections):
+        label, subjects = putme.course_subjects(course, custom)
+        if not subjects:
             conn.close()
+            if course or custom:
+                flash("Please choose a course card, or tick exactly three subjects to build your combination.", "warning")
             return redirect(url_for("post_utme_courses", university=university))
-        subjects = [r[0] for r in cur.execute("SELECT subject_name FROM post_utme_course_subjects WHERE course_name = ?", (course,)).fetchall()]
+    pick = putme.pick_count(sections)
+    picked = [s_ for s_ in src.getlist("pick") if subjects and s_ in subjects and s_ != putme.ENGLISH]
+    plan, problem = None, None
+    if pick and len(picked) != pick:
+        problem = f"Tick the {pick} subjects your course is examined on." if not picked else f"Tick exactly {pick} subjects."
     else:
-        subjects = [r[0] for r in cur.execute("SELECT subject_name FROM post_utme_subjects WHERE university_name = ?", (university,)).fetchall()]
-    counts = {}
-    for s in subjects:
-        counts[s] = cur.execute("SELECT COUNT(*) FROM post_utme_questions WHERE university_name = ? AND subject = ?", (university, s)).fetchone()[0]
+        try:
+            plan = putme.build_plan(sections, subjects, picked)
+        except ValueError as e:
+            problem = str(e)
+    avail = available_subjects("JAMB")
+    ca_ready = _post_utme_ca_ready(cur)
     conn.close()
-    return render_template("post_utme_subjects.html", university=uni, course=course, subjects=subjects, counts=counts)
+    rows = []
+    for s_, n in (plan or []):
+        ok = ca_ready if s_ == putme.CA_SUBJECT else s_ in avail
+        rows.append({"subject": s_, "n": n, "ok": ok})
+    startable = bool(rows) and all(r["ok"] for r in rows)
+    return render_template("post_utme_subjects.html", university=uni, short=putme.short_name(university), course=course,
+                           label=label, subjects=subjects or [], custom=[s_ for s_ in custom if s_ in JAMB_ELECTIVES],
+                           pick=pick, picked=picked, rows=rows, total=sum(r["n"] for r in rows), problem=problem,
+                           startable=startable, note=uni["note"] or "")
 
 
 @app.route("/start_post_utme", methods=["POST"])
@@ -1230,28 +1297,34 @@ def post_utme_subjects():
 def start_post_utme():
     university = (request.form.get("university") or "").strip()
     course = (request.form.get("course") or "").strip()
-    if (r := _require_subscription()):
-        return r
+    custom = request.form.getlist("subjects")
+    picked = request.form.getlist("pick")
     conn = connect()
     cur = conn.cursor()
-    uni = cur.execute("SELECT * FROM post_utme_universities WHERE university_name = ?", (university,)).fetchone()
-    if not uni:
-        conn.close()
-        abort(404)
-    if uni["exam_mode"] == "CBT":
-        subjects = [r[0] for r in cur.execute("SELECT subject_name FROM post_utme_course_subjects WHERE course_name = ?", (course,)).fetchall()]
-    else:
-        subjects = [r[0] for r in cur.execute("SELECT subject_name FROM post_utme_subjects WHERE university_name = ?", (university,)).fetchall()]
+    uni = _post_utme_university(cur, university)
     conn.close()
-    if not subjects:
-        flash("No subjects are configured for this selection yet.", "warning")
-        return redirect(url_for("post_utme"))
+    if not uni:
+        abort(404)
+    sections = putme.parse_sections(uni["sections_json"], uni["total_questions"])
+    label, subjects = (None, None)
+    if putme.needs_course(sections):
+        label, subjects = putme.course_subjects(course, custom)
+        if not subjects:
+            flash("Please choose your course first.", "warning")
+            return redirect(url_for("post_utme_courses", university=university))
+    try:
+        plan = putme.build_plan(sections, subjects, [p for p in picked if subjects and p in subjects])
+    except ValueError as e:
+        flash(str(e), "warning")
+        return redirect(url_for("post_utme_subjects", university=university, course=course, subjects=custom))
+    if (r := _require_subscription()):
+        return r
     if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
         flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
         attempt_id = engine.create_post_utme_attempt(
-            session["user"], university, course, subjects, uni["duration"], uni["total_questions"], client_ip(), request.headers.get("User-Agent")
+            session["user"], university, label, plan, uni["duration"], client_ip(), request.headers.get("User-Agent")
         )
     except engine.ExamError as e:
         flash(str(e), "danger")
@@ -1371,18 +1444,19 @@ def abandon_exam():
 def practice():
     jamb = sorted(available_subjects("JAMB").items())
     waec = sorted(available_subjects("WAEC").items()) if WAEC_ENABLED else []
+    putme_subjects = sorted(available_subjects("POST-UTME").items())
     conn = connect()
     allowed, remaining = practice_allowance(session["user"], conn.cursor())
     conn.commit()
     conn.close()
-    return render_template("practice.html", jamb=jamb, waec=waec, remaining=remaining, free_quota=FREE_PRACTICE_PER_DAY)
+    return render_template("practice.html", jamb=jamb, waec=waec, putme=putme_subjects, remaining=remaining, free_quota=FREE_PRACTICE_PER_DAY)
 
 
 @app.route("/practice/<exam_type>/<subject>", methods=["GET", "POST"])
 @login_required
 def practice_question(exam_type, subject):
     exam_type = exam_type.upper()
-    if exam_type not in ("JAMB", "WAEC"):
+    if exam_type not in ("JAMB", "WAEC", "POST-UTME"):
         abort(404)
     if exam_type == "WAEC" and not WAEC_ENABLED:
         flash("WAEC practice is coming soon — genuine WAEC questions are being added. Try a JAMB subject meanwhile.", "info")
@@ -1621,7 +1695,15 @@ def result_details(result_id):
         abort(404)
     r = data["result"]
     pct = r["percentage"] or 0
-    if pct >= 70:
+    if r["exam_type"] == "POST-UTME":
+        # Screening scores are usually combined with UTME and O'level; 50% is the common pass bar.
+        if pct >= 70:
+            verdict, tone = "Strong screening score — this is the range competitive courses admit from.", "success"
+        elif pct >= 50:
+            verdict, tone = "Above the usual 50% screening bar. Push higher: admission lists rank by aggregate.", "warning"
+        else:
+            verdict, tone = "Below the usual 50% screening bar — review each section's corrections and try again.", "danger"
+    elif pct >= 70:
         verdict, tone = "Excellent performance — keep it up!", "success"
     elif pct >= 50:
         verdict, tone = "Good effort. Review your weak subjects and try again.", "warning"

@@ -87,93 +87,100 @@ def _audit(action, target=None):
 
 @admin_bp.route("/manage_post_utme_universities")
 def manage_post_utme_universities():
-    conn = sqlite3.connect(DB_PATH, timeout=15)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            id,
-            university_name,
-            exam_mode,
-            duration,
-            total_questions,
-            pass_mark
-        FROM post_utme_universities
-        ORDER BY university_name
-    """)
-
-    universities = cursor.fetchall()
-
+    """Post-UTME formats: one row per university with its timing and paper make-up (post_utme.py)."""
+    import post_utme as putme
+    conn = connect()
+    rows = conn.execute(
+        "SELECT * FROM post_utme_universities ORDER BY COALESCE(status, 'Active') != 'Active', university_name LIKE 'Any other%', university_name"
+    ).fetchall()
+    uploads = {r["university_name"]: r["n"] for r in conn.execute(
+        "SELECT university_name, COUNT(*) AS n FROM post_utme_questions GROUP BY university_name").fetchall()}
+    ca = conn.execute(
+        """SELECT COUNT(*) FROM questions_v2 q JOIN subjects s ON s.id = q.subject_id JOIN exam_types e ON e.id = s.exam_type_id
+           WHERE e.exam_name = 'POST-UTME' AND s.subject_name = 'Current Affairs' AND q.status = 'Active'"""
+    ).fetchone()[0]
     conn.close()
+    unis = []
+    for u in rows:
+        sections = putme.parse_sections(u["sections_json"], u["total_questions"])
+        unis.append({"id": u["id"], "name": u["university_name"], "duration": u["duration"], "total": putme.sections_total(sections),
+                     "status": u["status"] or "Active", "chips": putme.describe(sections), "note": u["note"] or "",
+                     "uploads": uploads.get(u["university_name"], 0)})
+    return render_template("manage_post_utme_universities.html", universities=unis, ca_count=ca)
 
-    return render_template(
-        "manage_post_utme_universities.html",
-        universities=universities
-    )
+
+def _sections_from_form(form):
+    """Rows of (kind, count) from the edit form -> JSON list; returns (json, total, error)."""
+    import post_utme as putme
+    kinds = form.getlist("sec_kind")
+    counts = form.getlist("sec_count")
+    out = []
+    for kind, n in zip(kinds, counts):
+        kind = (kind or "").strip()
+        if not kind:
+            continue
+        try:
+            n = int(n)
+        except (TypeError, ValueError):
+            return None, 0, "Every section needs a whole number of questions."
+        if n <= 0:
+            continue
+        if kind not in ("ALL", "CA") and kind not in putme.PICK_KINDS and kind not in putme.JAMB_ELECTIVES and kind != putme.ENGLISH:
+            return None, 0, f"Unknown section type: {kind}"
+        out.append([kind, n])
+    if not out:
+        return None, 0, "Add at least one section."
+    return json.dumps(out), putme.sections_total(out), None
 
 
-@admin_bp.route(
-    "/edit_post_utme_university/<int:university_id>",
-    methods=["GET", "POST"]
-)
+@admin_bp.route("/edit_post_utme_university/<int:university_id>", methods=["GET", "POST"])
+@admin_bp.route("/add_post_utme_university", methods=["GET", "POST"], defaults={"university_id": None})
 def edit_post_utme_university(university_id):
-    conn = sqlite3.connect(DB_PATH, timeout=15)
-    cursor = conn.cursor()
-
+    import post_utme as putme
+    conn = connect()
+    uni = conn.execute("SELECT * FROM post_utme_universities WHERE id = ?", (university_id,)).fetchone() if university_id else None
+    if university_id and not uni:
+        conn.close()
+        abort(404)
     if request.method == "POST":
-
-        university_name = request.form["university_name"]
-        exam_mode = request.form["exam_mode"]
-
-        duration = request.form["duration"]
-        total_questions = request.form["total_questions"]
-        pass_mark = request.form["pass_mark"]
-
-        cursor.execute(
-            """
-            UPDATE post_utme_universities
-            SET
-                university_name=?,
-                exam_mode=?,
-                duration=?,
-                total_questions=?,
-                pass_mark=?
-            WHERE id=?
-            """,
-            (
-                university_name,
-                exam_mode,
-                duration,
-                total_questions,
-                pass_mark,
-                university_id
+        name = (request.form.get("university_name") or "").strip()[:120]
+        note = (request.form.get("note") or "").strip()[:200]
+        status = "Active" if request.form.get("status") == "Active" else "Hidden"
+        try:
+            duration = int(request.form.get("duration") or 0)
+        except ValueError:
+            duration = 0
+        sections_json, total, err = _sections_from_form(request.form)
+        if not name or not 5 <= duration <= 240:
+            err = err or "Enter the university name and a duration between 5 and 240 minutes."
+        if err:
+            conn.close()
+            flash(err, "danger")
+            return redirect(request.url)
+        clash = conn.execute("SELECT id FROM post_utme_universities WHERE university_name = ? AND id != ?", (name, university_id or 0)).fetchone()
+        if clash:
+            conn.close()
+            flash("Another university already has that name.", "danger")
+            return redirect(request.url)
+        if uni:
+            conn.execute(
+                "UPDATE post_utme_universities SET university_name = ?, exam_mode = 'CBT', duration = ?, total_questions = ?, sections_json = ?, note = ?, status = ? WHERE id = ?",
+                (name, duration, total, sections_json, note, status, university_id),
             )
-        )
-
+        else:
+            conn.execute(
+                "INSERT INTO post_utme_universities (university_name, exam_mode, duration, total_questions, pass_mark, sections_json, note, status) VALUES (?, 'CBT', ?, ?, 50, ?, ?, ?)",
+                (name, duration, total, sections_json, note, status),
+            )
         conn.commit()
         conn.close()
-
-        return redirect(
-            "/manage_post_utme_universities"
-        )
-
-    cursor.execute(
-        """
-        SELECT *
-        FROM post_utme_universities
-        WHERE id=?
-        """,
-        (university_id,)
-    )
-
-    university = cursor.fetchone()
-
+        flash(f"Saved {name}: {total} questions in {duration} minutes.", "success")
+        return redirect(url_for("admin_bp.manage_post_utme_universities"))
+    sections = putme.parse_sections(uni["sections_json"], uni["total_questions"]) if uni else [("ALL", 40), ("CA", 10)]
     conn.close()
-
-    return render_template(
-        "edit_post_utme_university.html",
-        university=university
-    )
+    kinds = [("ALL", "Student's 4 UTME subjects (shared evenly)"), ("PICK2", "2 subjects the student ticks"), ("CA", "Current affairs / general knowledge"),
+             (putme.ENGLISH, putme.ENGLISH)] + [(s, s) for s in putme.JAMB_ELECTIVES]
+    return render_template("edit_post_utme_university.html", university=uni, sections=sections, kinds=kinds)
 
 
 @admin_bp.route("/manage_post_utme_courses")
@@ -1942,6 +1949,9 @@ def admin():
         "SELECT COUNT(*) FROM post_utme_questions"
     )
     post_utme_questions = cursor.fetchone()[0]
+    post_utme_universities = cursor.execute(
+        "SELECT COUNT(*) FROM post_utme_universities WHERE COALESCE(status, 'Active') = 'Active'"
+    ).fetchone()[0]
 
     # Results
     cursor.execute(
@@ -1999,6 +2009,7 @@ def admin():
     waec_questions=waec_questions,
     jamb_questions=jamb_questions,
     post_utme_questions=post_utme_questions,
+    post_utme_universities=post_utme_universities,
 
     total_results=total_results,
 
@@ -5613,7 +5624,8 @@ def add_post_utme_question():
         conn.commit()
         conn.close()
 
-        return "POST-UTME Question Added Successfully."
+        flash("Post-UTME question saved.", "success")
+        return redirect(url_for("admin_bp.add_post_utme_question"))
 
     # Load universities for dropdown
     conn = sqlite3.connect(DB_PATH, timeout=15)
@@ -5640,27 +5652,8 @@ def add_post_utme_question():
 @admin_bp.route("/get_post_utme_subjects")
 def get_post_utme_subjects():
 
-    university = request.args.get("university")
-
-    conn = sqlite3.connect(DB_PATH, timeout=15)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT subject_name
-        FROM post_utme_subjects
-        WHERE university_name=?
-        ORDER BY subject_name
-        """,
-        (university,)
-    )
-
-    subjects = cursor.fetchall()
-
-    conn.close()
-
-    return {
-        "subjects": [s[0] for s in subjects]
-    }
+    """Subjects a school-specific upload can be filed under: every UTME subject plus Current Affairs."""
+    import post_utme as putme
+    return {"subjects": [putme.ENGLISH] + list(putme.JAMB_ELECTIVES) + [putme.CA_SUBJECT]}
 
 

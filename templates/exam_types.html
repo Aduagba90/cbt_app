@@ -57,8 +57,8 @@
                 {% if post_utme_ready %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
             </div>
             <h3>Post-UTME</h3>
-            <p>University screening practice in the format your school uses — CBT with course subjects, aptitude tests or current affairs.</p>
-            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 30 min</span><span class="pn-subject-chip"><i class="bi bi-bank"></i> 9 universities</span></div>
+            <p>Screening practice in the exact format your university uses — its real timing, question count and subject mix, with Nigeria current affairs where the school asks them.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 30–90 min</span><span class="pn-subject-chip"><i class="bi bi-bank"></i> {{ post_utme_count or 15 }} formats</span><span class="pn-subject-chip"><i class="bi bi-newspaper"></i> Current affairs</span></div>
             {% if post_utme_ready %}
             <a href="{{ url_for('post_utme') }}" class="btn btn-accent w-100">Choose university <i class="bi bi-arrow-right ms-1"></i></a>
             {% else %}

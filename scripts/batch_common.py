@@ -77,7 +77,7 @@ def _near_duplicates(subject, questions, out_name):
     return warnings
 
 
-def build_batch(subject, out_name, batch_id, note, passages, pq, q, fix=None, deactivate=None, retire_topics=None):
+def build_batch(subject, out_name, batch_id, note, passages, pq, q, fix=None, deactivate=None, retire_topics=None, exam_type="JAMB"):
     questions, bad = [], []
     topic_of = {k: t for k, t, _, _ in passages}
     for row in pq:
@@ -154,7 +154,7 @@ def build_batch(subject, out_name, batch_id, note, passages, pq, q, fix=None, de
         wrapped[key] = "\n".join(lines)
     batch = {
         "batch_id": batch_id,
-        "exam_type": "JAMB",
+        "exam_type": exam_type,
         "note": note,
         "passages": [{"key": k, "title": t, "text": wrapped[k]} for k, _, t, _ in passages],
         "questions": questions,

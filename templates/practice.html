@@ -16,6 +16,7 @@
 <ul class="nav nav-pills gap-2 mb-3" role="tablist">
     <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#jambTab" type="button"><i class="bi bi-mortarboard me-1"></i> JAMB ({{ jamb|length }})</button></li>
     <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#waecTab" type="button"><i class="bi bi-journal-text me-1"></i> WAEC {% if waec_enabled %}({{ waec|length }}){% else %}<span class="badge bg-secondary ms-1" style="font-size:.62rem">Soon</span>{% endif %}</button></li>
+    <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#putmeTab" type="button"><i class="bi bi-newspaper me-1"></i> Current affairs {% if putme %}({{ putme|length }}){% else %}<span class="badge bg-secondary ms-1" style="font-size:.62rem">Soon</span>{% endif %}</button></li>
 </ul>
 
 <div class="tab-content">
@@ -48,6 +49,22 @@
             {% endfor %}
         </div>
         {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-hourglass-split"></i></span><span class="badge bg-secondary mb-2">Coming soon</span><h3>WAEC questions are being added</h3><p>Genuine WAEC past questions with explanations are on the way. Practise JAMB subjects meanwhile — many topics overlap.</p><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="pill" data-bs-target="#jambTab" type="button">Switch to JAMB</button></div>{% endif %}
+    </div>
+    <div class="tab-pane fade" id="putmeTab">
+        {% if putme %}
+        <p class="small text-muted">Nigeria and world general knowledge, the way universities ask it in Post-UTME screening. Your UTME subjects are practised under the JAMB tab.</p>
+        <div class="row g-3">
+            {% for name, count in putme %}
+            <div class="col-sm-6 col-lg-4">
+                <a href="{{ url_for('practice_question', exam_type='POST-UTME', subject=name) }}" class="pn-subject-link anim-rise d{{ loop.index0 % 4 }}">
+                    <span class="pn-stat-icon tint-purple"><i class="bi {{ subject_icon(name) }}"></i></span>
+                    <span>{{ name }}<small>{{ count }} questions</small></span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}<div class="pn-empty card"><span class="ico"><i class="bi bi-hourglass-split"></i></span><span class="badge bg-secondary mb-2">Coming soon</span><h3>Current-affairs questions are being added</h3><p>Post-UTME general-knowledge practice is on the way.</p></div>{% endif %}
     </div>
 </div>
 {% endblock %}

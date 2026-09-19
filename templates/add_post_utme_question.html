@@ -32,9 +32,10 @@
 
     <div class="box">
 
-        <h2 class="mb-4">
-            ➕ Add POST-UTME Question
+        <h2 class="mb-2">
+            ➕ Add a school's own Post-UTME question
         </h2>
+        <p class="text-muted small mb-4">Only needed when you have a university's genuine past questions. Mocks already draw from the JAMB bank for each UTME subject and from the Current Affairs bank; a school's own questions take over for a subject once it has 10 or more of them. <a href="{{ url_for('admin_bp.manage_post_utme_universities') }}">← Back to Post-UTME formats</a></p>
 
         <form method="POST">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

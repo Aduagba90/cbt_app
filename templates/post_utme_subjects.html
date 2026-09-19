@@ -1,26 +1,50 @@
 {% extends "base.html" %}
-{% block title %}{{ university['university_name'] }} — confirm exam{% endblock %}
+{% block title %}{{ short }} Post-UTME — confirm your paper{% endblock %}
 
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
-        <div class="pn-breadcrumb"><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('post_utme') }}">Post-UTME</a><i class="bi bi-chevron-right"></i><span>{{ university['university_name'] }}</span></div>
-        <h1>{{ university['university_name'] }}{% if course %} — {{ course }}{% endif %}</h1>
-        <p class="lead">Review the exam details below, then start when you are ready.</p>
+        <div class="pn-breadcrumb"><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('post_utme') }}">Post-UTME</a><i class="bi bi-chevron-right"></i><span>{{ short }}</span></div>
+        <h1>{{ university['university_name'] }}</h1>
+        <p class="lead">{% if label %}<b>{{ label }}</b> — {% endif %}{{ note }}</p>
     </div>
 </div>
 
-{% set total_available = counts.values()|sum %}
 <div class="row g-4">
     <div class="col-lg-7">
-        <div class="card anim-rise">
-            <div class="card-header"><i class="bi bi-list-check me-2 text-primary"></i>Subjects in this exam</div>
+        {% if pick %}
+        <div class="card anim-rise mb-3">
+            <div class="card-header"><i class="bi bi-check2-square me-2 text-primary"></i>Which {{ pick }} of your subjects does {{ short }} examine for your course?</div>
             <div class="card-body">
-                {% for s in subjects %}
+                <p class="small text-muted">Besides Use of English, {{ short }} tests the {{ pick }} subjects most relevant to the course you applied for. Tick them below.</p>
+                <form method="GET" action="{{ url_for('post_utme_subjects') }}" id="pickForm">
+                    <input type="hidden" name="university" value="{{ university['university_name'] }}">
+                    {% if course %}<input type="hidden" name="course" value="{{ course }}">{% endif %}
+                    {% for s in custom %}<input type="hidden" name="subjects" value="{{ s }}">{% endfor %}
+                    <div class="pn-combo-grid">
+                        {% for s in subjects if s != 'Use of English' %}
+                        <label class="pn-combo-chip {% if s in picked %}on{% endif %}"><input type="checkbox" name="pick" value="{{ s }}" {% if s in picked %}checked{% endif %}><i class="bi {{ subject_icon(s) }}"></i> {{ s }}</label>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                        <button class="btn btn-outline-primary" id="pickApply"><i class="bi bi-arrow-repeat me-1"></i> Update my paper</button>
+                        <span class="small text-muted" id="pickHint"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        <div class="card anim-rise">
+            <div class="card-header"><i class="bi bi-list-check me-2 text-primary"></i>Your paper, section by section</div>
+            <div class="card-body">
+                {% if problem %}
+                <div class="alert alert-warning py-2 px-3 small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ problem }}</div>
+                {% endif %}
+                {% for r in rows %}
                 <div class="d-flex align-items-center gap-3 py-2 {% if not loop.last %}border-bottom{% endif %}">
-                    <span class="pn-stat-icon tint-gold" style="width:38px;height:38px;font-size:1rem"><i class="bi {{ subject_icon(s) }}"></i></span>
-                    <div class="flex-grow-1"><div class="fw-semibold">{{ s }}</div><div class="small text-muted">{{ counts[s] }} question{{ '' if counts[s] == 1 else 's' }} available</div></div>
-                    {% if counts[s] > 0 %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<span class="badge bg-secondary">Empty</span>{% endif %}
+                    <span class="pn-stat-icon {{ 'tint-purple' if r.subject == 'Current Affairs' else 'tint-gold' }}" style="width:38px;height:38px;font-size:1rem"><i class="bi {{ subject_icon(r.subject) }}"></i></span>
+                    <div class="flex-grow-1"><div class="fw-semibold">{{ r.subject }}</div><div class="small text-muted">{{ r.n }} question{{ '' if r.n == 1 else 's' }}{% if r.subject == 'Current Affairs' %} · Nigeria &amp; world general knowledge{% endif %}</div></div>
+                    {% if r.ok %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -32,25 +56,48 @@
                 <h3 class="h6 text-uppercase text-muted ls-1 mb-3">Exam summary</h3>
                 <div class="row g-2 mb-3">
                     <div class="col-6"><div class="pn-kpi"><b>{{ university['duration'] }}</b><small>minutes</small></div></div>
-                    <div class="col-6"><div class="pn-kpi"><b>{{ [university['total_questions'], total_available]|min }}</b><small>questions</small></div></div>
+                    <div class="col-6"><div class="pn-kpi"><b>{{ total }}</b><small>questions</small></div></div>
                 </div>
                 <ul class="small text-muted ps-3 mb-3">
                     <li>The timer starts immediately and runs on our server.</li>
-                    <li>You can move between questions freely and flag any for review.</li>
-                    <li>Answers are saved automatically; submit when done.</li>
+                    <li>Move between questions freely, flag any for review, submit when done.</li>
+                    <li>Scored as a percentage, like the real screening. Your result slip shows each section.</li>
                 </ul>
-                {% if total_available > 0 %}
+                {% if startable %}
                 <form method="POST" action="{{ url_for('start_post_utme') }}" data-once>
                     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
                     <input type="hidden" name="university" value="{{ university['university_name'] }}">
                     <input type="hidden" name="course" value="{{ course }}">
-                    <button class="btn btn-primary btn-lg w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ university['university_name'] }} screening mock now?"><i class="bi bi-play-fill"></i> Start exam</button>
+                    {% for s in custom %}<input type="hidden" name="subjects" value="{{ s }}">{% endfor %}
+                    {% for s in picked %}<input type="hidden" name="pick" value="{{ s }}">{% endfor %}
+                    <button class="btn btn-primary btn-lg w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ short }} screening mock now? The {{ university['duration'] }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start exam</button>
                 </form>
+                {% elif problem %}
+                <button class="btn btn-outline-secondary w-100" disabled>Complete the step on the left first</button>
                 {% else %}
-                <button class="btn btn-outline-secondary w-100" disabled>No questions available yet</button>
+                <button class="btn btn-outline-secondary w-100" disabled>Some sections are not ready yet</button>
                 {% endif %}
+                {% if label %}<a href="{{ url_for('post_utme_courses', university=university['university_name']) }}" class="btn btn-link btn-sm w-100 mt-2">Change course</a>{% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if pick %}
+<script>
+(function(){
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#pickForm input[name="pick"]')), apply = document.getElementById('pickApply'), hint = document.getElementById('pickHint'), want = {{ pick }};
+    function sync(){
+        var n = boxes.filter(function(b){ return b.checked; }).length;
+        boxes.forEach(function(b){ b.disabled = !b.checked && n >= want; b.closest('label').classList.toggle('maxed', !b.checked && n >= want); b.closest('label').classList.toggle('on', b.checked); });
+        apply.disabled = n !== want;
+        hint.textContent = n === want ? 'Good — click “Update my paper”.' : 'Pick ' + (want - n) + ' more subject' + (want - n === 1 ? '' : 's') + '.';
+    }
+    boxes.forEach(function(b){ b.addEventListener('change', sync); });
+    sync();
+})();
+</script>
+{% endif %}
 {% endblock %}

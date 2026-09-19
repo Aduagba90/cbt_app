@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 from db import connect
 from helpers import (
-    JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ENGLISH_QUESTIONS, JAMB_OTHER_QUESTIONS,
+    JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ENGLISH_QUESTIONS, JAMB_OTHER_QUESTIONS, MIN_BANK_FOR_V2,
     WAEC_DURATION_MIN, WAEC_QUESTIONS, fetch_question_ids, fetch_questions,
     new_verification_code, resolve_source, reward_referral_if_due, clear_mistake, record_mistake,
 )
@@ -66,29 +66,51 @@ def _seen_questions(cur, username, source):
     return {r[0] for r in rows}
 
 
-def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, english_count=None, username=None):
-    """Return a list of (subject, source, [question_ids]) with randomised, capped ids."""
+def _post_utme_source(cur, subject, university):
+    """Where a Post-UTME subject's questions come from.
+
+    A university-specific upload (post_utme_questions) wins when it is big enough; otherwise the
+    UTME subject is drawn from the JAMB bank and 'Current Affairs' from the POST-UTME bank.
+    """
+    from post_utme import bank_for, CA_SUBJECT
+    if university:
+        ids = fetch_question_ids(cur, "post_utme_questions", "POST-UTME", subject, university)
+        if len(ids) >= MIN_BANK_FOR_V2:
+            return "post_utme_questions", ids
+    source, _ = resolve_source(cur, bank_for(subject), subject)
+    if not source and subject == CA_SUBJECT:
+        return None, []
+    return source, (fetch_question_ids(cur, source, bank_for(subject), subject) if source else [])
+
+
+def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, english_count=None, username=None,
+                   counts=None):
+    """Return a list of (subject, source, [question_ids]) with randomised, capped ids.
+
+    counts: optional {subject: n} overriding per_subject (Post-UTME papers with uneven sections).
+    """
     plan = []
     seen_cache = {}
     for subject in subjects:
         if exam_type == "POST-UTME":
-            source = "post_utme_questions"
-            ids = fetch_question_ids(cur, source, exam_type, subject, university)
+            source, ids = _post_utme_source(cur, subject, university)
         else:
             source, _ = resolve_source(cur, exam_type, subject)
             ids = fetch_question_ids(cur, source, exam_type, subject) if source else []
         if not ids:
             raise ExamError(f"No questions are available yet for {subject}. Please try another subject or check back soon.")
         cap = per_subject
+        if counts and subject in counts:
+            cap = counts[subject]
         if english_count and subject in ("Use of English", "English"):
             cap = english_count
         if source not in seen_cache:
             seen_cache[source] = _seen_questions(cur, username, source)
-        plan.append((subject, source, _arrange(cur, source, ids, cap, seen_cache[source])))
+        plan.append((subject, source, _arrange(cur, source, ids, cap, seen_cache[source], exam_type=exam_type)))
     return plan
 
 
-def _arrange(cur, source, ids, cap, seen=None):
+def _arrange(cur, source, ids, cap, seen=None, exam_type=None):
     """Choose and order one subject's questions the way the real CBT does.
 
     * Passage-linked questions stay together, at the start of the subject (max two passages).
@@ -145,15 +167,17 @@ def _arrange(cur, source, ids, cap, seen=None):
     general = fresh_first(general)
     limit = cap or (len(ids))
     max_groups = 2 if limit >= 40 else 1
+    if exam_type == "POST-UTME" and limit < 20:
+        max_groups = 1 if limit >= 10 else 0
     chosen = [q for g in group_list[:max_groups] for q in g][:limit]
     # Reading-text (recommended novel) block: a fixed number of questions right after the passages,
     # as in the real UTME paper. Only used when the block is a small share of the subject.
-    if novel and limit >= 4 * READING_TEXT_QUESTIONS:
+    if novel and limit >= 4 * READING_TEXT_QUESTIONS and exam_type != "POST-UTME":
         block = fresh_first(novel)[:READING_TEXT_QUESTIONS]
         random.shuffle(block)
         chosen = (chosen + block)[:limit]
     room = limit - len(chosen)
-    if room > 0 and all(t in by_topic for t in SECTION_QUOTAS):
+    if room > 0 and exam_type != "POST-UTME" and all(t in by_topic for t in SECTION_QUOTAS):
         # Fixed sections (English): so many of each kind, unseen first, then anything left over.
         body, used = [], set()
         for topic_name, quota in SECTION_QUOTAS.items():
@@ -201,12 +225,14 @@ def abandon_open_attempts(username, cur):
 
 
 def create_attempt(username, exam_type, exam_name, subjects, *, university=None, duration_min=None,
-                   per_subject=None, english_count=None, mode="full", ip=None, ua=None, plan=None, live_id=None):
+                   per_subject=None, english_count=None, mode="full", ip=None, ua=None, plan=None, live_id=None,
+                   counts=None):
     conn = connect()
     cur = conn.cursor()
     try:
         if plan is None:
-            plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count, username=username)
+            plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count, username=username,
+                                  counts=counts)
         abandon_open_attempts(username, cur)
 
         total = sum(len(ids) for _, _, ids in plan)
@@ -279,12 +305,14 @@ def create_live_attempt(username, live_id, subjects, ip=None, ua=None):
                           mode="live", ip=ip, ua=ua, plan=plan, live_id=live_id)
 
 
-def create_post_utme_attempt(username, university, course, subjects, duration_min, total_questions, ip=None, ua=None):
-    per_subject = max(5, int(total_questions / max(1, len(subjects)))) if total_questions else None
+def create_post_utme_attempt(username, university, course, plan_counts, duration_min, ip=None, ua=None):
+    """plan_counts: ordered [(subject, n)] from post_utme.build_plan."""
+    subjects = [s for s, _ in plan_counts]
+    counts = {s: n for s, n in plan_counts}
     name = f"{university}" + (f" — {course}" if course else "")
     return create_attempt(
         username, "POST-UTME", name, subjects, university=university, duration_min=duration_min or 30,
-        per_subject=per_subject, ip=ip, ua=ua,
+        counts=counts, ip=ip, ua=ua,
     )
 
 
