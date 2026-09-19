@@ -2094,7 +2094,7 @@ def live_mock():
     my_rank = next((i for i, r in enumerate(board, start=1) if r["username"] == user), None)
     return render_template("live_mock.html", win=win, live=row, mine=mine, board=board, my_rank=my_rank, prev=prev,
                            prev_board=prev_board, prev_mine=prev_mine, subjects=subjects, players=players, me=user,
-                           now=study.lagos_now())
+                           electives=[s_ for s_ in JAMB_ELECTIVES if s_ in available_subjects("JAMB")], now=study.lagos_now())
 
 
 @app.route("/live/start", methods=["POST"])

@@ -25,6 +25,7 @@ log = logging.getLogger("prepnova")
 # group is roughly by popularity.
 E, MTH, PHY, CHM, BIO = "Use of English", "Mathematics", "Physics", "Chemistry", "Biology"
 ECO, GOV, LIT, COM, CRS, IRS = "Economics", "Government", "Literature in English", "Commerce", "Christian Religious Studies", "Islamic Religious Studies"
+ACC, GEO, AGR = "Accounting", "Geography", "Agricultural Science"
 COURSE_GROUPS = [
     ("Medicine & Health Sciences", [
         ("Medicine & Surgery", [E, BIO, CHM, PHY]),
@@ -114,7 +115,8 @@ JAMB_COURSES = {name: subs for _, group in COURSE_GROUPS for name, subs in group
 
 # Any UTME subject the site can currently examine, for students whose course is not listed
 # ("Build my own combination": English + any three of these).
-JAMB_ELECTIVES = [MTH, PHY, CHM, BIO, ECO, GOV, LIT, COM, CRS, IRS]
+# Subjects with no question bank yet are filtered out of the pages automatically (available_subjects).
+JAMB_ELECTIVES = [MTH, PHY, CHM, BIO, ECO, GOV, LIT, COM, ACC, CRS, IRS, GEO, AGR]
 CUSTOM_COURSE_PREFIX = "My combination"
 SHORT_SUBJECT = {"Use of English": "English", "Literature in English": "Literature", "Christian Religious Studies": "CRS",
                  "Islamic Religious Studies": "IRS", "Mathematics": "Maths"}

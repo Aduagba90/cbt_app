@@ -322,3 +322,17 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   Ranking = `results.jamb_score` desc, duration asc (`study.live_leaderboard`); last week's top 10 shown after.
   Menu: avatar dropdown (Study plan, Live Mock, Parent link), dashboard tiles, Mock-exams page button.
 - Cache-bust css `?v=13`.
+
+## Content round 6 — Principles of Accounts (batches 035–036, Sept 2026)
+- `Accounting` (JAMB "Principles of Accounts") now has **479 curated tier-1 questions in 25 topics** covering the
+  full UTME syllabus (nature/concepts, books of original entry, ledger, trial balance, errors & suspense, ethics &
+  regulatory bodies, cash book, petty cash, bank reconciliation, sole-trader final accounts, adjustments,
+  depreciation, stock valuation, control accounts, incomplete records, manufacturing, not-for-profit, departmental,
+  branch, partnership, company, public sector, IT in accounting, ratios). 14 data passages (trial-balance extract,
+  bank reconciliation case, petty-cash table, stock movements, control account, statement of affairs, manufacturing
+  costs, club receipts/payments, partnership appropriation, share issue, LG budget, two-department table).
+- `helpers.JAMB_ELECTIVES` now lists Accounting, Geography and Agricultural Science too; pages filter by
+  `available_subjects()` so Geography/Agric stay hidden until their banks exist (≥10 active questions).
+  `db.init_db` inserts the three subject rows if a database lacks them. Live Mock chips come from the same list.
+- Course cards using Accounting: none directly (JAMB's Accounting course is English/Maths/Econ/Commerce); students
+  pick it through "Build my own combination". Next: Geography (037–038), Agricultural Science (039–040).

@@ -659,6 +659,17 @@ def init_db():
     _add_column(cur, "questions_v2", "tier", "INTEGER DEFAULT 0")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_q2_tier ON questions_v2(subject_id, status, tier)")
 
+    # UTME subjects the content batches write into. Databases created from older seeds may lack
+    # some of them; add any that are missing (never touches existing rows).
+    for name, code in (("Accounting", "ACC"), ("Geography", "GEO"), ("Agricultural Science", "AGR")):
+        cur.execute(
+            """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+               SELECT 'JAMB', ?, ?, 'Active', e.id FROM exam_types e
+               WHERE e.exam_name = 'JAMB'
+                 AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
+            (name, code, name),
+        )
+
     # Question batches written in content/*.json (applied-style questions). Each batch is
     # applied once per database, so a live site with student data picks new questions up on
     # the next restart without any import step.

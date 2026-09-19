@@ -28,7 +28,7 @@
                         <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
                         <div class="pn-combo-grid mb-3">
                             <label class="pn-combo-chip fixed"><input type="checkbox" checked disabled> Use of English</label>
-                            {% for s in ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics', 'Government', 'Literature in English', 'Commerce', 'Christian Religious Studies', 'Islamic Religious Studies'] %}
+                            {% for s in electives %}
                             <label class="pn-combo-chip {{ 'on' if s in subjects }}"><input type="checkbox" name="subjects" value="{{ s }}" {% if s in subjects %}checked{% endif %}> {{ s }}</label>
                             {% endfor %}
                         </div>
