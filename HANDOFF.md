@@ -347,3 +347,20 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
 - New course cards: **Geography** (Eng/Geo/Econ/Gov) and **Surveying and Geoinformatics** (Eng/Maths/Phy/Geo);
   Urban and Regional Planning now uses Geography; Accounting, Banking & Finance and Insurance now use Accounting
   instead of Commerce. 73 course cards in total. Next: Agricultural Science (039–040) + Agriculture-type courses.
+
+## Content round 8 — Agricultural Science (batches 039–040, Sept 2026)
+- `Agricultural Science` (subject id 30) now has **569 curated tier-1 questions in 34 topics** covering the full
+  UTME syllabus: general agriculture (meaning/scope, ecology, genetics & improvement, inputs/history/agencies),
+  agronomy (rocks & soils, soil water/conservation, fertility, tillage, plant growth, propagation, cropping
+  systems, husbandry, pasture/floriculture, weeds, diseases, pests, forestry), animal production (classification,
+  anatomy/physiology, reproduction, nutrition, management, health, fisheries/wildlife/bees), agric economics &
+  extension (factors of production, economic principles, farm management/records, marketing, extension) and
+  agric technology (surveying/farmstead, tools, machinery, processing/storage, biotech/ICT/research).
+  8 data passages (genetics cross, fertiliser calculation, variety-trial table, plant-population case, broiler
+  enterprise record, pig-ration table, tomato demand schedule, farm-survey case).
+- New "Agriculture" course group: Agriculture (Eng/Chem/Bio/Maths, unchanged), plus **Agricultural Science
+  (B.Agric), Agricultural Economics and Extension, Animal Science, Crop Science, Soil Science, Forestry and
+  Wildlife Management, Fisheries and Aquaculture** — all Eng/Chem/Agric/Maths (JAMB brochure: Chemistry,
+  Biology/Agric, Physics/Maths). 80 course cards in total. The Agric chip is now visible in "Build my own
+  combination" and Live Mock because the bank is ≥10 questions.
+- All 14 JAMB subjects with banks are now ≥479 tier-1 questions. Next: Post-UTME bank, then WAEC, then offline mode.
