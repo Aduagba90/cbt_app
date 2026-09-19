@@ -336,3 +336,14 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   `db.init_db` inserts the three subject rows if a database lacks them. Live Mock chips come from the same list.
 - Course cards using Accounting: none directly (JAMB's Accounting course is English/Maths/Econ/Commerce); students
   pick it through "Build my own combination". Next: Geography (037–038), Agricultural Science (039–040).
+
+## Content round 7 — Geography (batches 037–038, Sept 2026)
+- `Geography` (subject id 9) now has **557 curated tier-1 questions in 32 topics**: practical geography (scale,
+  map reading, statistical diagrams, surveying, GIS), physical geography (earth, rocks, volcanism, denudation,
+  water bodies, weather/climate, climate types, vegetation, soils, resources, hazards), human geography
+  (population, migration, settlement, urbanisation, agriculture, mining/power, industry, transport, trade/tourism),
+  Nigeria (six topics) and ECOWAS. 9 data passages (two climatic tables, map-extract case, longitude/time case,
+  pie-chart data, population/density/export tables, settlement case).
+- New course cards: **Geography** (Eng/Geo/Econ/Gov) and **Surveying and Geoinformatics** (Eng/Maths/Phy/Geo);
+  Urban and Regional Planning now uses Geography; Accounting, Banking & Finance and Insurance now use Accounting
+  instead of Commerce. 73 course cards in total. Next: Agricultural Science (039–040) + Agriculture-type courses.

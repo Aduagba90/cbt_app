@@ -48,6 +48,8 @@ COURSE_GROUPS = [
         ("Mathematics", [E, MTH, PHY, CHM]),
         ("Statistics", [E, MTH, PHY, ECO]),
         ("Geology", [E, PHY, CHM, MTH]),
+        ("Geography", [E, GEO, ECO, GOV]),
+        ("Surveying and Geoinformatics", [E, MTH, PHY, GEO]),
         ("Agriculture", [E, CHM, BIO, MTH]),
         ("Food Science and Technology", [E, CHM, BIO, MTH]),
     ]),
@@ -65,7 +67,7 @@ COURSE_GROUPS = [
         ("Building", [E, MTH, PHY, CHM]),
         ("Estate Management", [E, MTH, ECO, GOV]),
         ("Quantity Surveying", [E, MTH, PHY, ECO]),
-        ("Urban and Regional Planning", [E, MTH, ECO, GOV]),
+        ("Urban and Regional Planning", [E, MTH, GEO, ECO]),
     ]),
     ("Law, Arts & Social Sciences", [
         ("Law", [E, LIT, GOV, CRS]),
@@ -86,12 +88,12 @@ COURSE_GROUPS = [
         ("Criminology and Security Studies", [E, GOV, ECO, LIT]),
     ]),
     ("Business & Management", [
-        ("Accounting", [E, MTH, ECO, COM]),
+        ("Accounting", [E, MTH, ECO, ACC]),
         ("Business Administration", [E, MTH, ECO, COM]),
         ("Economics", [E, MTH, ECO, GOV]),
-        ("Banking and Finance", [E, MTH, ECO, COM]),
+        ("Banking and Finance", [E, MTH, ECO, ACC]),
         ("Marketing", [E, MTH, ECO, COM]),
-        ("Insurance", [E, MTH, ECO, COM]),
+        ("Insurance", [E, MTH, ECO, ACC]),
         ("Public Administration", [E, GOV, ECO, COM]),
         ("Industrial Relations and Personnel Management", [E, MTH, ECO, GOV]),
         ("Entrepreneurship", [E, MTH, ECO, COM]),
@@ -119,7 +121,7 @@ JAMB_COURSES = {name: subs for _, group in COURSE_GROUPS for name, subs in group
 JAMB_ELECTIVES = [MTH, PHY, CHM, BIO, ECO, GOV, LIT, COM, ACC, CRS, IRS, GEO, AGR]
 CUSTOM_COURSE_PREFIX = "My combination"
 SHORT_SUBJECT = {"Use of English": "English", "Literature in English": "Literature", "Christian Religious Studies": "CRS",
-                 "Islamic Religious Studies": "IRS", "Mathematics": "Maths"}
+                 "Islamic Religious Studies": "IRS", "Mathematics": "Maths", "Agricultural Science": "Agric"}
 
 COURSE_ICONS = {
     "Medicine & Surgery": ("bi-heart-pulse", "tint-red"),
@@ -140,6 +142,8 @@ COURSE_ICONS = {
     "Mathematics": ("bi-plus-slash-minus", "tint-blue"),
     "Statistics": ("bi-bar-chart", "tint-blue"),
     "Geology": ("bi-gem", "tint-gold"),
+    "Geography": ("bi-globe-africa", "tint-green"),
+    "Surveying and Geoinformatics": ("bi-geo-alt", "tint-cyan"),
     "Agriculture": ("bi-tree", "tint-green"),
     "Food Science and Technology": ("bi-egg-fried", "tint-green"),
     "Computer Science": ("bi-cpu", "tint-blue"),
