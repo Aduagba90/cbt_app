@@ -295,3 +295,30 @@ on a persistent disk (seeded from repo `database.db` on first boot), `APP_URL`, 
   `question_report:<action>`. Red badge with the open count in the admin bar (`open_report_count`, injected by an
   `app_context_processor` in `admin_routes.py`) and a Quick Action card on the dashboard.
 - Cache-bust: css `?v=12` (base.html + _admin_bar.html). Tests: `_work/regress.py` 75 PASS, `_work/feat1_test.py`.
+
+## Feature release 2 — study tools (Sept 2026)
+All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2_test.py`).
+- **Exam-day countdown + weekly plan** (`/study_plan`, `POST /set_exam_date` → `users.exam_date`):
+  `study.weekly_plan()` builds 7 days from the student's last JAMB attempt subjects and last-3-mock averages
+  (`result_subjects`). Phases: >30 days "steady" = 1 mock/week (Sat); ≤30 "intense" = 2 (Wed+Sat); ≤7 "final" = 3
+  (Tue/Thu/Sat) with a rest day before the exam. Non-mock days: 20 questions in a weak subject, 10 in another,
+  "fix 5 mistakes" (if any), Daily Challenge. Dashboard tile turns red inside 14 days.
+- **Syllabus coverage** (`/syllabus`, `/syllabus/<subject>`): table `topic_progress(username, exam_type, subject,
+  topic, seen, correct, last_seen)`. Written by `finalize_attempt` (all mock answers via `study.record_many`),
+  practice, Fix-my-mistakes and the Daily Challenge (`study.record_topic_progress`). "Syllabus" = topics with ≥3
+  active `questions_v2` (`study.syllabus_topics`). States: new / learning / weak (<50%) / mastered (≥4 seen, ≥70%).
+  Every non-mastered topic links to the topic drill (`/practice/JAMB/<subject>?topic=`). `fetch_questions` now also
+  returns `subject` for `questions_v2` rows.
+- **Parent link** (`/parent_link` GET = show/create, POST = rotate; public `/parent/<code>` rate-limited 60/10 min):
+  `users.parent_code` = 8 chars `XXXX-XXXX` (unambiguous alphabet, unique index). `study.parent_summary()` exposes
+  name, exam date, streak, projection, last 8 results, subject averages, 4 weekly activity rows — never e-mail/phone.
+  WhatsApp share text is prepared on the page.
+- **Saturday Live Mock** (`/live`, `POST /live/start`): window is **Saturday 08:00–20:00 Africa/Lagos** (fixed
+  UTC+1, `study.lagos_now`; the server may run on UTC). `live_mocks(week_key=Saturday date)` is created lazily by
+  the first starter; `live_mock_papers(live_id, subject)` stores one fixed id list per subject (built with
+  `_arrange` under `random.seed(f"live-{id}-{subject}")`, so every student gets the same 60/40 questions for their
+  own 4 subjects). `engine.create_live_attempt` → `create_attempt(..., plan=…, mode="live", live_id=…)`;
+  `exam_attempts.live_id` set. One attempt per student per week; needs an active plan/trial like any mock.
+  Ranking = `results.jamb_score` desc, duration asc (`study.live_leaderboard`); last week's top 10 shown after.
+  Menu: avatar dropdown (Study plan, Live Mock, Parent link), dashboard tiles, Mock-exams page button.
+- Cache-bust css `?v=13`.

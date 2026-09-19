@@ -11,7 +11,7 @@ Administration routes live in admin_routes.py.
 import hashlib
 import hmac
 import json
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 import logging
 import os
 import re
@@ -31,6 +31,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import exam_engine as engine
 from admin_routes import admin_bp
 from db import connect, init_db
+import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
                      TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_ENABLED, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
@@ -890,8 +891,14 @@ def dashboard():
     challenge_score = challenge_row["score"] if challenge_done else None
     mistakes = mistakes_summary(cur, user)
     projection = jamb_projection(cur, user)
-    target_row = cur.execute("SELECT target_score FROM users WHERE email = ?", (user,)).fetchone()
+    target_row = cur.execute("SELECT target_score, exam_date FROM users WHERE email = ?", (user,)).fetchone()
     target = target_row["target_score"] if target_row else None
+    exam_date = target_row["exam_date"] if target_row else None
+    days_left = study.countdown(exam_date)
+    live_row, live_win = study.current_live_mock(cur)
+    live_mine = study.my_live_attempt(cur, user, live_row["id"]) if live_row else None
+    coverage = study.syllabus_coverage(cur, user, "JAMB", study.student_subjects(cur, user))
+    cov_avg = round(sum(c["coverage"] for c in coverage) / len(coverage)) if coverage else 0
     conn.commit()
     rank_row = cur.execute(
         """
@@ -921,6 +928,12 @@ def dashboard():
         mistakes=mistakes,
         projection=projection,
         target=target,
+        exam_date=exam_date,
+        days_left=days_left,
+        live_win=live_win,
+        live_mine=live_mine,
+        cov_avg=cov_avg,
+        coverage_n=len(coverage),
     )
 
 
@@ -1398,6 +1411,8 @@ def practice_question(exam_type, subject):
             flash("Please choose an option.", "warning")
             return redirect(url_for("practice_question", exam_type=exam_type, subject=subject, topic=topic or None))
         is_correct = chosen == q["correct"]
+        if q.get("topic"):
+            study.record_topic_progress(cur, session["user"], exam_type, subject, q["topic"], is_correct)
         state["total"] += 1
         state["correct"] += 1 if is_correct else 0
         session[key] = state
@@ -1803,6 +1818,9 @@ def daily_challenge():
             if pick in ("A", "B", "C", "D"):
                 answers[str(q["id"])] = pick
         score = sum(1 for q in ordered if answers.get(str(q["id"])) == q["correct"])
+        for q in ordered:
+            if q.get("topic") and q.get("subject"):
+                study.record_topic_progress(cur, user, "JAMB", q["subject"], q["topic"], answers.get(str(q["id"])) == q["correct"])
         cur.execute("UPDATE daily_challenge SET answers = ?, score = ?, completed_at = ? WHERE id = ?",
                     (json.dumps(answers), score, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), row["id"]))
         conn.commit()
@@ -1873,7 +1891,11 @@ def fix_mistakes(subject=None):
             conn.close()
             flash("Please choose an option.", "warning")
             return redirect(url_for("fix_mistakes", subject=subject))
+        m_row = cur.execute("SELECT subject FROM mistakes WHERE username = ? AND question_source = ? AND question_id = ?", (user, source, qid)).fetchone()
+        item_subject = (m_row["subject"] if m_row else None) or subject
         is_correct = chosen == q["correct"]
+        if q.get("topic") and item_subject:
+            study.record_topic_progress(cur, user, "JAMB", item_subject, q["topic"], is_correct)
         state["tried"] += 1
         if is_correct:
             state["fixed"] += 1
@@ -1961,6 +1983,157 @@ def redeem_pin():
     conn.close()
     flash(message, "success" if ok else "danger")
     return redirect(url_for("dashboard") if ok else url_for("subscribe", pin=1))
+
+
+@app.route("/set_exam_date", methods=["POST"])
+@login_required
+def set_exam_date():
+    raw = (request.form.get("exam_date") or "").strip()[:10]
+    if raw:
+        try:
+            d = datetime.strptime(raw, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Please pick a valid date.", "warning")
+            return redirect(request.referrer or url_for("study_plan"))
+        if not (datetime.now().date() - timedelta(days=1) <= d <= datetime.now().date() + timedelta(days=730)):
+            flash("Pick a date between today and two years from now.", "warning")
+            return redirect(request.referrer or url_for("study_plan"))
+    conn = connect()
+    conn.execute("UPDATE users SET exam_date = ? WHERE email = ?", (raw or None, session["user"]))
+    conn.commit()
+    conn.close()
+    flash("Exam date saved. Your countdown and weekly plan are updated." if raw else "Exam date cleared.", "success")
+    return redirect(request.referrer or url_for("study_plan"))
+
+
+@app.route("/study_plan")
+@login_required
+def study_plan():
+    conn = connect()
+    cur = conn.cursor()
+    user = session["user"]
+    row = cur.execute("SELECT exam_date, target_score FROM users WHERE email = ?", (user,)).fetchone()
+    plan = study.weekly_plan(cur, user, row["exam_date"] if row else None)
+    coverage = study.syllabus_coverage(cur, user, "JAMB", [x["subject"] for x in plan["subjects"]])
+    conn.close()
+    return render_template("study_plan.html", plan=plan, exam_date=(row["exam_date"] if row else None),
+                           target=(row["target_score"] if row else None), coverage=coverage, today=datetime.now().date())
+
+
+@app.route("/syllabus")
+@app.route("/syllabus/<subject>")
+@login_required
+def syllabus(subject=None):
+    conn = connect()
+    cur = conn.cursor()
+    user = session["user"]
+    subjects = study.student_subjects(cur, user)
+    avail = available_subjects("JAMB")
+    if subject and subject in avail and subject not in subjects:
+        subjects = [subject] + subjects
+    coverage = study.syllabus_coverage(cur, user, "JAMB", subjects)
+    conn.close()
+    if subject and subject not in [c["subject"] for c in coverage]:
+        abort(404)
+    return render_template("syllabus.html", coverage=coverage, focus=subject, all_subjects=sorted(avail))
+
+
+@app.route("/parent_link", methods=["GET", "POST"])
+@login_required
+def parent_link():
+    conn = connect()
+    cur = conn.cursor()
+    if request.method == "POST":
+        code = study.reset_parent_code(cur, session["user"])
+        conn.commit()
+        flash("A new parent link was created. The old link no longer works.", "success")
+    else:
+        code = study.ensure_parent_code(cur, session["user"])
+        conn.commit()
+    conn.close()
+    link = f"{app_url()}/parent/{code}"
+    first = (session.get("name") or "your child").split(" ")[0]
+    wa = ("https://wa.me/?text=" + quote(f"Hello! You can follow {first}'s JAMB preparation on PrepNova CBT here: {link} "
+                                        f"(no login needed — it shows mocks written, scores and study days)."))
+    return render_template("parent_link.html", code=code, link=link, wa=wa)
+
+
+@app.route("/parent/<code>")
+@rate_limit(60, 600, scope="parent_view", methods=("GET",))
+def parent_view(code):
+    code = code.strip().upper()[:12]
+    conn = connect()
+    cur = conn.cursor()
+    data = study.parent_summary(cur, code)
+    conn.close()
+    if not data:
+        abort(404)
+    return render_template("parent_view.html", d=data, code=code)
+
+
+# ---------------------------------------------------------------------------
+# Saturday Live Mock
+# ---------------------------------------------------------------------------
+
+@app.route("/live")
+@login_required
+def live_mock():
+    conn = connect()
+    cur = conn.cursor()
+    user = session["user"]
+    row, win = study.current_live_mock(cur)
+    mine = study.my_live_attempt(cur, user, row["id"]) if row else None
+    board = study.live_leaderboard(cur, row["id"]) if row else []
+    # last week's board for the "how it went" section
+    prev = cur.execute("SELECT * FROM live_mocks WHERE week_key < ? ORDER BY week_key DESC LIMIT 1", (win["week_key"],)).fetchone()
+    prev_board = study.live_leaderboard(cur, prev["id"], 10) if prev else []
+    prev_mine = study.my_live_attempt(cur, user, prev["id"]) if prev else None
+    subjects = study.student_subjects(cur, user)
+    players = cur.execute("SELECT COUNT(DISTINCT username) FROM exam_attempts WHERE live_id = ?", (row["id"],)).fetchone()[0] if row else 0
+    conn.close()
+    my_rank = next((i for i, r in enumerate(board, start=1) if r["username"] == user), None)
+    return render_template("live_mock.html", win=win, live=row, mine=mine, board=board, my_rank=my_rank, prev=prev,
+                           prev_board=prev_board, prev_mine=prev_mine, subjects=subjects, players=players, me=user,
+                           now=study.lagos_now())
+
+
+@app.route("/live/start", methods=["POST"])
+@login_required
+def live_start():
+    user = session["user"]
+    conn = connect()
+    cur = conn.cursor()
+    row, win = study.current_live_mock(cur, create=True)
+    conn.commit()
+    if win["state"] != "open":
+        conn.close()
+        flash(f"The Live Mock opens on Saturday {win['saturday'].strftime('%d %b')} at {win['opens_at'].strftime('%I:%M %p').lstrip('0')}.", "info")
+        return redirect(url_for("live_mock"))
+    mine = study.my_live_attempt(cur, user, row["id"])
+    conn.close()
+    if mine and mine["status"] == "IN_PROGRESS":
+        return redirect(url_for("exam_room", attempt_id=mine["id"]))
+    if mine:
+        flash("You have already written this week's Live Mock. See your rank below.", "info")
+        return redirect(url_for("live_mock"))
+    if (r := _require_subscription()):
+        return r
+    if request.form.get("discard") != "1" and engine.get_open_attempt(user):
+        flash("You already have an exam in progress. Resume it below, or discard it to start the Live Mock.", "warning")
+        return redirect(url_for("exam_types"))
+    picked = []
+    for s_ in request.form.getlist("subjects"):
+        if s_ in JAMB_ELECTIVES and s_ not in picked:
+            picked.append(s_)
+    if len(picked) != 3:
+        flash("Choose exactly three subjects to go with Use of English.", "warning")
+        return redirect(url_for("live_mock"))
+    try:
+        attempt_id = engine.create_live_attempt(user, row["id"], ["Use of English"] + picked, client_ip(), request.headers.get("User-Agent"))
+    except engine.ExamError as e:
+        flash(str(e), "danger")
+        return redirect(url_for("live_mock"))
+    return redirect(url_for("exam_room", attempt_id=attempt_id))
 
 
 @app.route("/set_target", methods=["POST"])

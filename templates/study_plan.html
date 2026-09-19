@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}My study plan{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Study plan</span></div>
+        <h1>My study plan</h1>
+        <p class="lead">A week at a time, built from your own results. It changes as your scores change.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Countdown -->
+    <div class="col-lg-5">
+        <div class="pn-countdown anim-rise {{ 'urgent' if plan.days_left is not none and plan.days_left <= 14 else '' }}">
+            {% if plan.days_left is none %}
+                <div class="lbl">Exam-day countdown</div>
+                <div class="big">— days</div>
+                <p class="mb-3">Tell us your UTME date and the plan below will get stricter as the day approaches.</p>
+            {% elif plan.days_left < 0 %}
+                <div class="lbl">Your exam date has passed</div>
+                <div class="big">Done 🎓</div>
+                <p class="mb-3">We hope it went well! Update the date if you are preparing for another sitting.</p>
+            {% else %}
+                <div class="lbl">{{ 'Exam day is today!' if plan.days_left == 0 else 'Days to your UTME' }}</div>
+                <div class="big">{{ plan.days_left }}<small>{{ ' day' if plan.days_left == 1 else ' days' }}</small></div>
+                <p class="mb-3">{% if plan.phase == 'final' %}Final week: three mocks, light revision, early nights.{% elif plan.phase == 'intense' %}Under a month: two full mocks every week plus daily practice on weak topics.{% else %}Steady phase: one full mock a week and daily practice.{% endif %}</p>
+            {% endif %}
+            <form method="POST" action="{{ url_for('set_exam_date') }}" class="d-flex flex-wrap gap-2 align-items-end">
+                <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                <div><label class="form-label small mb-1" for="examDate">My exam date</label><input type="date" id="examDate" name="exam_date" class="form-control form-control-sm" value="{{ exam_date or '' }}" min="{{ today.isoformat() }}"></div>
+                <button class="btn btn-sm btn-light fw-bold" type="submit">{{ 'Update' if exam_date else 'Save date' }}</button>
+                {% if exam_date %}<button class="btn btn-sm btn-link text-white-50" type="submit" name="exam_date" value="">Clear</button>{% endif %}
+            </form>
+        </div>
+    </div>
+    <!-- Subject standing -->
+    <div class="col-lg-7">
+        <div class="card h-100 anim-rise d1">
+            <div class="card-header"><i class="bi bi-speedometer me-2 text-primary"></i>Where you stand (last 3 mocks per subject)</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for s in plan.subjects %}
+                    <div class="col-6 col-md-3">
+                        <div class="pn-stand {{ s.level }}">
+                            <i class="bi {{ subject_icon(s.subject) }}"></i>
+                            <b>{{ s.score if s.score is not none else '—' }}{% if s.score is not none %}%{% endif %}</b>
+                            <small>{{ s.subject }}</small>
+                            <span>{{ {'strong': 'Strong', 'okay': 'Okay', 'weak': 'Needs work', 'unknown': 'No mock yet'}[s.level] }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Subjects come from your last JAMB mock. {% if plan.weakest %}This week leans on <b>{{ plan.weakest|join(' and ') }}</b>.{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Week plan -->
+<h2 class="h5 mb-3"><i class="bi bi-calendar-week me-2 text-primary"></i>Your next 7 days · {{ plan.mocks_per_week }} full mock{{ '' if plan.mocks_per_week == 1 else 's' }} this week</h2>
+<div class="pn-week anim-rise">
+    {% for d in plan.week %}
+    <div class="pn-day {{ 'today' if loop.first }}">
+        <div class="pn-day-head"><b>{{ d.label }}</b>{% if not loop.first and not loop.index == 2 %}<span>{{ d.day }}</span>{% endif %}</div>
+        <ul>
+            {% for t in d.tasks %}
+            <li class="k-{{ t.kind }}">
+                {% set href = url_for(t.url, exam_type='JAMB', subject=t.subject) if t.url == 'practice_question' else url_for(t.url) %}
+                <a href="{{ href }}"><i class="bi {{ {'mock': 'bi-stopwatch', 'review': 'bi-journal-check', 'practice': 'bi-lightning-charge', 'fix': 'bi-bandaid', 'challenge': 'bi-fire', 'rest': 'bi-moon-stars'}[t.kind] }}"></i>{{ t.text }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Coverage summary -->
+{% if coverage %}
+<div class="card mt-4 anim-rise d1">
+    <div class="card-header d-flex justify-content-between align-items-center"><span><i class="bi bi-map me-2 text-primary"></i>Syllabus coverage</span><a href="{{ url_for('syllabus') }}" class="small fw-bold">Topic by topic <i class="bi bi-arrow-right"></i></a></div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for c in coverage %}
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between small mb-1"><span class="fw-semibold"><i class="bi {{ subject_icon(c.subject) }} me-1 text-muted"></i>{{ c.subject }}</span><span class="text-muted">{{ c.touched }}/{{ c.total }} topics seen · {{ c.mastered }} mastered</span></div>
+                <div class="progress pn-cov"><div class="progress-bar bg-success" style="width:{{ c.mastery }}%" title="Mastered"></div><div class="progress-bar bg-warning" style="width:{{ c.coverage - c.mastery }}%" title="Seen"></div></div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="small text-muted mt-3 mb-0"><span class="pn-dot bg-success"></span> mastered (≥4 questions, ≥70% right) <span class="pn-dot bg-warning ms-2"></span> seen <span class="pn-dot bg-light border ms-2"></span> not yet touched</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mt-2">
+    <div class="col-md-6"><a href="{{ url_for('live_mock') }}" class="pn-boost pn-boost-live anim-rise"><span class="pn-boost-icon"><i class="bi bi-broadcast"></i></span><span class="pn-boost-body"><b>Saturday Live Mock</b><small>Same paper for every student, ranked after. Every Saturday 8 am – 8 pm.</small></span><span class="pn-boost-cta">Open <i class="bi bi-arrow-right"></i></span></a></div>
+    <div class="col-md-6"><a href="{{ url_for('parent_link') }}" class="pn-boost pn-boost-parent anim-rise d1"><span class="pn-boost-icon"><i class="bi bi-people"></i></span><span class="pn-boost-body"><b>Share progress with a parent</b><small>A read-only link that shows your mocks, scores and study days.</small></span><span class="pn-boost-cta">Get link <i class="bi bi-arrow-right"></i></span></a></div>
+</div>
+{% endblock %}

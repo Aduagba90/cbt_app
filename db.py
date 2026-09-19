@@ -606,6 +606,45 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_qreports_status ON question_reports(status, created_at)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_qreports_q ON question_reports(question_source, question_id)")
 
+    # ------------------------------------------------------------ feature release 2: countdown, syllabus, parents, live mock
+    _add_column(cur, "users", "exam_date", "TEXT")          # YYYY-MM-DD, student's UTME date
+    _add_column(cur, "users", "parent_code", "TEXT")        # read-only progress link for a parent/guardian
+    _add_column(cur, "exam_attempts", "live_id", "INTEGER") # set when the attempt is a Saturday Live Mock entry
+    cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_parent_code ON users(parent_code) WHERE parent_code IS NOT NULL")
+    # Every graded answer (mock, practice, challenge, fix-mistakes) updates this: syllabus coverage + mastery per topic.
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS topic_progress (
+            username TEXT NOT NULL,
+            exam_type TEXT NOT NULL DEFAULT 'JAMB',
+            subject TEXT NOT NULL,
+            topic TEXT NOT NULL,
+            seen INTEGER NOT NULL DEFAULT 0,
+            correct INTEGER NOT NULL DEFAULT 0,
+            last_seen TIMESTAMP,
+            PRIMARY KEY (username, exam_type, subject, topic)
+        )"""
+    )
+    # Saturday Live Mock: one shared paper per week (same questions for everyone), ranked afterwards.
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS live_mocks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            week_key TEXT NOT NULL UNIQUE,
+            opens_at TEXT NOT NULL,
+            closes_at TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS live_mock_papers (
+            live_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            question_source TEXT NOT NULL,
+            ids_json TEXT NOT NULL,
+            PRIMARY KEY (live_id, subject)
+        )"""
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_attempts_live ON exam_attempts(live_id, status)")
+
     # ------------------------------------------------------------ app settings + one-off data fixes
     cur.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     # Launch pricing (Sept 2026): Monthly 1,000 / Quarterly 2,500 / Yearly 8,000. Runs once; afterwards

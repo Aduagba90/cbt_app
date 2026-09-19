@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ d.name.split(' ')[0] if d.name else 'Student' }}'s progress{% endblock %}
+{% block description %}Read-only progress report for a PrepNova CBT student, shared with a parent or guardian.{% endblock %}
+
+{% block content %}
+{% set first = (d.name or 'Your child').split(' ')[0] %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="text-center mb-4 anim-rise">
+            <span class="pn-brand justify-content-center mb-3"><span class="pn-logo">PN</span><span>PrepNova CBT</span></span>
+            <h1 class="h3">{{ first }}'s JAMB preparation</h1>
+            <p class="text-muted mb-0">Progress report for parents and guardians · updated live · code <code>{{ code }}</code></p>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3"><div class="pn-stat anim-rise"><span class="pn-stat-icon tint-red"><i class="bi bi-calendar-event"></i></span><div><div class="pn-stat-value">{% if d.days_left is none %}—{% elif d.days_left < 0 %}Done{% else %}{{ d.days_left }}{% endif %}</div><div class="pn-stat-label">{{ 'Days to exam' if d.days_left is not none and d.days_left >= 0 else 'Exam date not set' if d.days_left is none else 'Exam written' }}</div></div></div></div>
+            <div class="col-6 col-md-3"><div class="pn-stat anim-rise d1"><span class="pn-stat-icon tint-gold"><i class="bi bi-fire"></i></span><div><div class="pn-stat-value">{{ d.streak }}</div><div class="pn-stat-label">Day study streak</div></div></div></div>
+            <div class="col-6 col-md-3"><div class="pn-stat anim-rise d2"><span class="pn-stat-icon tint-green"><i class="bi bi-journal-check"></i></span><div><div class="pn-stat-value">{{ d.total_mocks }}</div><div class="pn-stat-label">Mocks written</div></div></div></div>
+            <div class="col-6 col-md-3"><div class="pn-stat anim-rise d3"><span class="pn-stat-icon tint-blue"><i class="bi bi-graph-up-arrow"></i></span><div><div class="pn-stat-value">{{ d.projection if d.projection else '—' }}</div><div class="pn-stat-label">Projected /400{% if d.target %} · target {{ d.target }}{% endif %}</div></div></div></div>
+        </div>
+
+        <div class="card mb-3 anim-rise">
+            <div class="card-header"><i class="bi bi-calendar-week me-2 text-primary"></i>Study activity, last 4 weeks</div>
+            <div class="card-body p-0">
+                <table class="table mb-0 pn-table pn-parent-weeks">
+                    <thead><tr><th>Week</th><th class="text-center">Days<br class="d-sm-none"> studied</th><th class="text-center">Mocks</th><th class="text-center d-none d-sm-table-cell">Practice questions</th><th></th></tr></thead>
+                    <tbody>
+                    {% for w in d.weeks %}
+                    <tr>
+                        <td class="fw-semibold">{{ w.label if loop.index <= 2 else w.start.strftime('%d %b') }}</td>
+                        <td class="text-center">{{ w.active_days }}/7</td>
+                        <td class="text-center">{{ w.mocks }}</td>
+                        <td class="text-center d-none d-sm-table-cell">{{ w.practice }}</td>
+                        <td class="text-end">{% if w.active_days >= 5 %}<span class="badge bg-success">Great</span>{% elif w.active_days >= 3 %}<span class="badge bg-warning text-dark">Fair</span>{% elif loop.first %}<span class="badge bg-light text-dark border">Ongoing</span>{% else %}<span class="badge bg-danger">Low</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer small text-muted">A serious candidate studies at least 5 days a week and writes one full 2-hour mock every week (more in the last month).</div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100 anim-rise d1">
+                    <div class="card-header"><i class="bi bi-bullseye me-2 text-danger"></i>Subjects</div>
+                    <div class="card-body">
+                        {% if d.subjects %}
+                        {% for s in d.subjects %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1"><span class="fw-semibold">{{ s['subject'] }}</span><span class="text-muted">{{ s['pct']|int }}%</span></div>
+                            <div class="progress"><div class="progress-bar {{ 'bg-danger' if s['pct'] < 50 else ('bg-warning' if s['pct'] < 70 else 'bg-success') }}" style="width:{{ s['pct']|int }}%"></div></div>
+                        </div>
+                        {% endfor %}
+                        <p class="small text-muted mb-0">Average of recent mocks. Red = below 50%, needs a tutor's attention.</p>
+                        {% else %}<p class="text-muted small mb-0">No mock written yet.</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100 anim-rise d2">
+                    <div class="card-header"><i class="bi bi-clock-history me-2 text-primary"></i>Recent mocks</div>
+                    <div class="card-body p-0">
+                        {% if d.results %}
+                        <table class="table table-sm mb-0 pn-table">
+                            <tbody>
+                            {% for r in d.results %}
+                            <tr>
+                                <td><div class="fw-semibold small">{{ r['exam_type'] }}</div><div class="small text-muted">{{ r['date_taken']|nicedate('%d %b') }}</div></td>
+                                <td class="text-end"><b>{% if r['jamb_score'] is not none %}{{ r['jamb_score'] }}/400{% else %}{{ r['score'] }}/{{ r['total'] }}{% endif %}</b><div class="small"><span class="badge {{ 'bg-success' if r['percentage'] >= 70 else ('bg-warning text-dark' if r['percentage'] >= 50 else 'bg-danger') }}">{{ r['percentage'] }}%</span></div></td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}<div class="p-3 text-muted small">No mock written yet.</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border mt-4 small">
+            <b>How to help:</b> ask about the weekly plan on Sundays, make sure there is a quiet 2-hour block for each mock, and celebrate a rising projected score rather than a single result. Practice mock results are not official JAMB scores.
+            <div class="mt-2 text-muted">This page is read-only. Only {{ first }} can change the account or create a new link. <a href="{{ url_for('home') }}">About PrepNova CBT</a></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

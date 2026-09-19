@@ -201,11 +201,12 @@ def abandon_open_attempts(username, cur):
 
 
 def create_attempt(username, exam_type, exam_name, subjects, *, university=None, duration_min=None,
-                   per_subject=None, english_count=None, mode="full", ip=None, ua=None):
+                   per_subject=None, english_count=None, mode="full", ip=None, ua=None, plan=None, live_id=None):
     conn = connect()
     cur = conn.cursor()
     try:
-        plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count, username=username)
+        if plan is None:
+            plan = _plan_subjects(cur, exam_type, subjects, university, per_subject, english_count, username=username)
         abandon_open_attempts(username, cur)
 
         total = sum(len(ids) for _, _, ids in plan)
@@ -217,11 +218,11 @@ def create_attempt(username, exam_type, exam_name, subjects, *, university=None,
             """
             INSERT INTO exam_attempts
               (username, exam_type, exam_name, university, subjects_json, mode, status, started_at,
-               duration_seconds, expires_at, total_questions, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?, ?, 'IN_PROGRESS', ?, ?, ?, ?, ?, ?)
+               duration_seconds, expires_at, total_questions, ip_address, user_agent, live_id)
+            VALUES (?, ?, ?, ?, ?, ?, 'IN_PROGRESS', ?, ?, ?, ?, ?, ?, ?)
             """,
             (username, exam_type, exam_name, university, json.dumps(subjects), mode,
-             started.strftime(FMT), duration, expires.strftime(FMT), total, ip, (ua or "")[:255]),
+             started.strftime(FMT), duration, expires.strftime(FMT), total, ip, (ua or "")[:255], live_id),
         )
         attempt_id = cur.lastrowid
 
@@ -256,6 +257,26 @@ def create_waec_attempt(username, subject, ip=None, ua=None):
         username, "WAEC", subject, [subject], duration_min=WAEC_DURATION_MIN,
         per_subject=WAEC_QUESTIONS, ip=ip, ua=ua,
     )
+
+
+def create_live_attempt(username, live_id, subjects, ip=None, ua=None):
+    """Saturday Live Mock: the same fixed paper (per subject) for every student that week."""
+    from study import live_paper
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        plan = []
+        for subject in subjects:
+            cap = JAMB_ENGLISH_QUESTIONS if subject == "Use of English" else JAMB_OTHER_QUESTIONS
+            source, ids = live_paper(cur, live_id, subject, cap)
+            if not ids:
+                raise ExamError(f"No questions are available yet for {subject}.")
+            plan.append((subject, source, ids))
+        conn.commit()
+    finally:
+        conn.close()
+    return create_attempt(username, "JAMB", "Saturday Live Mock", subjects, duration_min=JAMB_DURATION_MIN,
+                          mode="live", ip=ip, ua=ua, plan=plan, live_id=live_id)
 
 
 def create_post_utme_attempt(username, university, course, subjects, duration_min, total_questions, ip=None, ua=None):
@@ -484,6 +505,13 @@ def finalize_attempt(attempt_id, username=None, cur=None, auto=False):
             "UPDATE exam_attempts SET status = ?, submitted_at = ?, score = ?, percentage = ?, result_id = ? WHERE id = ?",
             ("AUTO_SUBMITTED" if auto else "SUBMITTED", now.strftime(FMT), score, percentage, result_id, attempt["id"]),
         )
+        # Syllabus coverage: every graded answer updates the student's per-topic record.
+        try:
+            from study import record_many
+            record_many(cur, attempt["username"], attempt["exam_type"],
+                        [(r["subject"], r["question_source"], r["question_id"], r["is_correct"]) for r in reviews])
+        except Exception:
+            logging.getLogger("prepnova").exception("topic progress failed")
         # "Fix my mistakes": remember every wrong/blank answer, clear the ones answered correctly.
         try:
             for r in reviews:

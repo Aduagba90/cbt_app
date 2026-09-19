@@ -67,6 +67,40 @@
     </div>
 </div>
 
+<!-- Countdown · Live Mock · Syllabus -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-4">
+        <a href="{{ url_for('study_plan') }}" class="pn-boost pn-boost-countdown anim-rise {{ 'urgent' if days_left is not none and 0 <= days_left <= 14 }}">
+            <span class="pn-boost-icon"><i class="bi bi-calendar-event"></i></span>
+            <span class="pn-boost-body">
+                <b>{% if days_left is none %}Set your exam date{% elif days_left < 0 %}Exam written — update your date{% elif days_left == 0 %}Exam day is today. Good luck!{% else %}{{ days_left }} day{{ '' if days_left == 1 else 's' }} to your UTME{% endif %}</b>
+                <small>{% if days_left is none %}Get a countdown and a weekly study plan built from your results.{% else %}Open your weekly plan: what to practise and when to write mocks.{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">{{ 'Plan' if days_left is not none else 'Set' }} <i class="bi bi-arrow-right"></i></span>
+        </a>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <a href="{{ url_for('live_mock') }}" class="pn-boost pn-boost-live anim-rise d1 {{ 'is-open' if live_win.state == 'open' }}">
+            <span class="pn-boost-icon"><i class="bi bi-broadcast"></i></span>
+            <span class="pn-boost-body">
+                <b>{% if live_win.state == 'open' %}{% if live_mine and live_mine['status'] == 'IN_PROGRESS' %}Live Mock in progress — resume{% elif live_mine %}Live Mock done — see your rank{% else %}Live Mock is open now{% endif %}{% else %}Saturday Live Mock · {{ live_win.saturday.strftime('%d %b') }}{% endif %}</b>
+                <small>{% if live_win.state == 'open' %}Same paper for everyone today, 8 am – 8 pm. Ranked when you submit.{% else %}Everyone writes the same paper, 8 am – 8 pm. Ranked live.{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">{{ 'Go' if live_win.state == 'open' else 'Details' }} <i class="bi bi-arrow-right"></i></span>
+        </a>
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <a href="{{ url_for('syllabus') }}" class="pn-boost pn-boost-syllabus anim-rise d2">
+            <span class="pn-boost-icon"><i class="bi bi-map"></i></span>
+            <span class="pn-boost-body">
+                <b>{% if coverage_n %}Syllabus covered: {{ cov_avg }}%{% else %}Syllabus coverage{% endif %}</b>
+                <small>{% if coverage_n %}Topics you have met across your {{ coverage_n }} subjects. Tap to find the gaps.{% else %}See every JAMB topic and which ones you have never been tested on.{% endif %}</small>
+            </span>
+            <span class="pn-boost-cta">Gaps <i class="bi bi-arrow-right"></i></span>
+        </a>
+    </div>
+</div>
+
 <!-- Daily challenge + fix mistakes + invite -->
 <div class="row g-3 mb-4">
     <div class="col-md-6 col-xl-4">

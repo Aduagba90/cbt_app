@@ -337,16 +337,18 @@ def fetch_questions(cur, source, ids, with_answers=False):
             rows = cur.execute(
                 f"""
                 SELECT q.id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
-                       q.correct_answer, q.explanation, q.difficulty, t.topic_name, p.passage_text
+                       q.correct_answer, q.explanation, q.difficulty, t.topic_name, p.passage_text, s.subject_name
                 FROM questions_v2 q
                 LEFT JOIN topics t ON q.topic_id = t.id
                 LEFT JOIN passages p ON q.passage_id = p.id
+                LEFT JOIN subjects s ON s.id = q.subject_id
                 WHERE q.id IN ({marks})
                 """,
                 part,
             ).fetchall()
             for r in rows:
                 out[r[0]] = _pack(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], with_answers, r[8], r[9], r[10])
+                out[r[0]]["subject"] = r[11]
         elif source == "questions":
             rows = cur.execute(
                 f"SELECT id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation FROM questions WHERE id IN ({marks})",

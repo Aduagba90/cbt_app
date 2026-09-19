@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Saturday Live Mock{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Live Mock</span></div>
+        <h1><span class="pn-live-dot {{ 'on' if win.state == 'open' }}"></span> Saturday Live Mock</h1>
+        <p class="lead">Every Saturday, 8 am to 8 pm, everyone writes the <b>same</b> paper. Full JAMB format, 2 hours, ranked when you finish.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="pn-live-card anim-rise {{ win.state }}">
+            {% if win.state == 'open' %}
+                <div class="lbl">Live now · closes {{ win.closes_at.strftime('%I:%M %p').lstrip('0') }} today</div>
+                <h2>This week's paper is open</h2>
+                {% if mine and mine['status'] == 'IN_PROGRESS' %}
+                    <p>You started already — your timer is running.</p>
+                    <a href="{{ url_for('exam_room', attempt_id=mine['id']) }}" class="btn btn-warning fw-bold"><i class="bi bi-play-fill"></i> Resume my Live Mock</a>
+                {% elif mine %}
+                    <p>You have written this week's paper. {% if my_rank %}You are currently <b>#{{ my_rank }}</b> of {{ board|length }}.{% endif %} The final ranking is settled at 8 pm.</p>
+                    <a href="{{ url_for('result_details', result_id=mine['result_id']) }}" class="btn btn-light fw-bold"><i class="bi bi-bar-chart-line"></i> See my result</a>
+                {% else %}
+                    <p>Pick your three subjects (Use of English is fixed) and start. Everyone answers the same questions, so the ranking is fair.</p>
+                    <form method="POST" action="{{ url_for('live_start') }}" id="liveForm" data-once>
+                        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                        <div class="pn-combo-grid mb-3">
+                            <label class="pn-combo-chip fixed"><input type="checkbox" checked disabled> Use of English</label>
+                            {% for s in ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics', 'Government', 'Literature in English', 'Commerce', 'Christian Religious Studies', 'Islamic Religious Studies'] %}
+                            <label class="pn-combo-chip {{ 'on' if s in subjects }}"><input type="checkbox" name="subjects" value="{{ s }}" {% if s in subjects %}checked{% endif %}> {{ s }}</label>
+                            {% endfor %}
+                        </div>
+                        <button class="btn btn-light fw-bold" id="liveStart" data-loading="Preparing your paper…" data-confirm="Start the Live Mock now? The 2-hour timer begins immediately and you can write it only once this week."><i class="bi bi-broadcast"></i> Start Live Mock</button>
+                        <span class="small ms-2" id="liveHint"></span>
+                    </form>
+                {% endif %}
+            {% else %}
+                <div class="lbl">Next Live Mock</div>
+                <h2>Saturday {{ win.saturday.strftime('%d %B') }} · {{ win.opens_at.strftime('%I %p').lstrip('0') }} – {{ win.closes_at.strftime('%I %p').lstrip('0') }}</h2>
+                <p>Opens in <b id="liveCountdown" data-opens="{{ win.opens_at.strftime('%Y-%m-%dT%H:%M:%S') }}+01:00">…</b> (Nigerian time). Set your alarm — students who write timed mocks weekly score higher on the day.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('jamb_courses') }}" class="btn btn-light fw-bold"><i class="bi bi-pencil-square"></i> Write a normal mock now</a>
+                    <a href="{{ url_for('study_plan') }}" class="btn btn-outline-light"><i class="bi bi-calendar-week"></i> My study plan</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100 anim-rise d1">
+            <div class="card-body">
+                <h3 class="h6 text-uppercase text-muted ls-1 mb-3">How it works</h3>
+                <ul class="pn-check-list">
+                    <li><i class="bi bi-1-circle-fill text-primary"></i> One paper per week — the same questions for every student in your subjects.</li>
+                    <li><i class="bi bi-2-circle-fill text-primary"></i> Open 8 am – 8 pm on Saturday. Start any time in that window; you get the full 2 hours.</li>
+                    <li><i class="bi bi-3-circle-fill text-primary"></i> One attempt only. Your score joins the live ranking the moment you submit.</li>
+                    <li><i class="bi bi-4-circle-fill text-primary"></i> Ranking is by JAMB score /400, then by time. Ties are rare.</li>
+                </ul>
+                <p class="small text-muted mb-0">Needs an active plan or trial, like every full mock. Practice mode stays free.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if live and board %}
+<div class="card mb-4 anim-rise">
+    <div class="card-header d-flex justify-content-between align-items-center"><span><i class="bi bi-trophy me-2 text-warning"></i>This week's ranking</span><span class="small text-muted">{{ players }} student{{ '' if players == 1 else 's' }} so far</span></div>
+    <div class="card-body p-0">
+        <table class="table mb-0 pn-table">
+            <thead><tr><th style="width:60px">#</th><th>Student</th><th class="text-end">Score</th><th class="text-end d-none d-sm-table-cell">Time</th></tr></thead>
+            <tbody>
+            {% for r in board %}
+            <tr class="{{ 'table-primary' if r['username'] == me }}">
+                <td class="fw-bold">{{ loop.index }}</td>
+                <td><span class="pn-avatar me-2" style="width:28px;height:28px;font-size:.7rem">{{ initials(r['name']) }}</span>{{ (r['name'] or mask_email(r['username'])).split(' ')[0] }}{% if r['username'] == me %} <span class="badge bg-primary ms-1">You</span>{% endif %}</td>
+                <td class="text-end fw-bold">{{ r['jamb_score'] }}/400</td>
+                <td class="text-end d-none d-sm-table-cell text-muted">{{ fmt_duration(r['duration']) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if prev and prev_board %}
+<div class="card anim-rise d1">
+    <div class="card-header"><i class="bi bi-clock-history me-2 text-primary"></i>Last Saturday's top 10 ({{ prev['week_key']|nicedate('%d %b') }})</div>
+    <div class="card-body p-0">
+        <table class="table mb-0 pn-table">
+            <tbody>
+            {% for r in prev_board %}
+            <tr class="{{ 'table-primary' if r['username'] == me }}"><td style="width:60px" class="fw-bold">{{ loop.index }}</td><td>{{ (r['name'] or mask_email(r['username'])).split(' ')[0] }}{% if r['username'] == me %} <span class="badge bg-primary ms-1">You</span>{% endif %}</td><td class="text-end fw-bold">{{ r['jamb_score'] }}/400</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if prev_mine and prev_mine['result_id'] %}<div class="card-footer small"><a href="{{ url_for('result_details', result_id=prev_mine['result_id']) }}">See my paper from last week <i class="bi bi-arrow-right"></i></a></div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+    var cd = document.getElementById('liveCountdown');
+    if (cd) {
+        var opens = new Date(cd.dataset.opens);
+        function tick(){ var s = Math.max(0, Math.floor((opens - new Date()) / 1000)); var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); cd.textContent = (d ? d + 'd ' : '') + h + 'h ' + m + 'm'; if (s === 0) location.reload(); }
+        tick(); setInterval(tick, 30000);
+    }
+    var form = document.getElementById('liveForm'); if (!form) return;
+    var boxes = Array.prototype.slice.call(form.querySelectorAll('input[name="subjects"]')), btn = document.getElementById('liveStart'), hint = document.getElementById('liveHint');
+    function sync(){ var n = boxes.filter(function(b){ return b.checked; }).length; boxes.forEach(function(b){ b.disabled = !b.checked && n >= 3; b.closest('label').classList.toggle('on', b.checked); b.closest('label').classList.toggle('maxed', !b.checked && n >= 3); }); btn.disabled = n !== 3; hint.textContent = n === 3 ? '' : 'Pick ' + (3 - n) + ' more subject' + (3 - n === 1 ? '' : 's') + '.'; }
+    boxes.forEach(function(b){ b.addEventListener('change', sync); }); sync();
+})();
+</script>
+{% endblock %}
