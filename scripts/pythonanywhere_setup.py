@@ -290,6 +290,39 @@ def cmd_paystack(turn_off=False):
     print("=" * 64 + "\n")
 
 
+def cmd_waec():
+    """Open WAEC: make sure the settings switch is on, reload, then check the live page."""
+    say("Checking the WAEC switch in your settings file")
+    env = read_env()
+    if not env:
+        die("Run  python3 setup.py  first (the site has not been installed yet).")
+    before = env.get("WAEC_ENABLED", "(missing)")
+    if before == "1":
+        print("   The switch is already on (WAEC_ENABLED=1).")
+    else:
+        print(f"   The switch was OFF (WAEC_ENABLED={before}). Turning it on.")
+        env["WAEC_ENABLED"] = "1"
+        write_env(env)
+    ok = reload_site()
+    print("   Waiting for the site to come back up...")
+    time.sleep(20)
+    try:
+        with urllib.request.urlopen(f"https://{DOMAIN}/", timeout=60) as r:
+            page = r.read().decode(errors="ignore")
+        open_now = "Real WASSCE objective papers" in page
+    except Exception as exc:  # noqa: BLE001
+        open_now = False
+        print(f"   (could not check the live page yet: {exc})")
+    print("\n" + "=" * 64)
+    if open_now:
+        print("  WAEC is now OPEN on the live site.")
+        print(f"  Open https://{DOMAIN}  →  Log in  →  WAEC / SSCE — English is there.")
+    else:
+        print("  WAEC is still showing 'coming soon'.")
+        print("  Send this whole screen to your developer.")
+    print("=" * 64 + "\n")
+
+
 def main():
     args = sys.argv[1:]
     if args:
@@ -299,8 +332,10 @@ def main():
         elif args[0] == "reload":
             ok = reload_site()
             print("Reloaded." if ok else "Reloaded, but /health did not answer yet — wait a minute and open the site.")
+        elif args[0] == "waec":
+            cmd_waec()
         else:
-            die(f"Unknown command '{args[0]}'. Use:  python3 setup.py  |  python3 setup.py paystack  |  python3 setup.py paystack off  |  python3 setup.py reload")
+            die(f"Unknown command '{args[0]}'. Use:  python3 setup.py  |  python3 setup.py paystack  |  python3 setup.py paystack off  |  python3 setup.py reload  |  python3 setup.py waec")
         return
     if "PYTHONANYWHERE_DOMAIN" not in os.environ and "PYTHONANYWHERE_SITE" not in os.environ:
         die("Run this inside a PythonAnywhere Bash console (Consoles tab → Bash).")
