@@ -1932,15 +1932,15 @@ def admin():
     )
     suspended_students = cursor.fetchone()[0]
 
-    # WAEC Questions
+    # WAEC Questions (inactive legacy seed rows are excluded)
     cursor.execute(
-        "SELECT COUNT(*) FROM questions WHERE exam_type='WAEC'"
+        "SELECT COUNT(*) FROM questions WHERE exam_type='WAEC' AND COALESCE(status, 'Active') = 'Active'"
     )
     waec_questions = cursor.fetchone()[0]
 
     # JAMB Questions
     cursor.execute(
-        "SELECT COUNT(*) FROM questions WHERE exam_type='JAMB'"
+        "SELECT COUNT(*) FROM questions WHERE exam_type='JAMB' AND COALESCE(status, 'Active') = 'Active'"
     )
     jamb_questions = cursor.fetchone()[0]
 

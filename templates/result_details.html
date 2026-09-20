@@ -23,6 +23,9 @@
                 <div class="pn-score-ring mx-auto" style="--p:{{ pct }};--c:{{ color }};width:170px;height:170px"><div><b style="font-size:2.4rem">{{ pct }}%</b><small>{{ r['score'] }} / {{ r['total'] }} correct</small></div></div>
                 <span class="badge mt-3 px-3 py-2 {{ 'bg-success' if r['status'] == 'PASS' else ('bg-warning text-dark' if r['status'] == 'AVERAGE' else 'bg-danger') }}" style="font-size:.8rem">{{ r['status'] }}</span>
                 <p class="mt-3 mb-0 text-{{ tone }} fw-semibold">{{ verdict }}</p>
+                {% if waec_grade %}
+                <p class="mt-2 mb-0"><span class="badge bg-primary px-2 py-1">WAEC grade guidance: {{ waec_grade.band }}</span><br><span class="small text-muted">{{ waec_grade.line }} Official grade boundaries are set per session and can shift slightly.</span></p>
+                {% endif %}
             </div>
             <div class="card-footer bg-transparent">
                 <div class="row g-2 text-center">

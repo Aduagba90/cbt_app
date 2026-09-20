@@ -395,4 +395,36 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
 - `_post_utme_ready()` now means "≥1 active university format and a JAMB English bank" (not the empty upload
   table); landing/exam-types/dashboard copy updated ("15 formats"). Tests: `_work/putme_test.py` (63 checks) +
   `_work/regress.py` 75/75, feat1/feat2 green.
-- Next: WAEC bank, then offline mode (separate release; do not mention to testers until live).
+- Next: WAEC bank (English live — see below), then Maths, Bio, Chem, Phys, Eco, Gov, then offline mode
+  (separate release; do not mention to testers until live).
+
+## WAEC / NECO (SSCE) release 1 — English (Sept 2026)
+- **Product.** WAEC is now live (no more "coming soon"): real WASSCE **objective** papers in the same CBT exam
+  room (timer, palette, flag, calculator, autosave, partial submit, review + PDF). Same bank serves **NECO**
+  (same SSCE syllabus) — brand everywhere is "WAEC / NECO (SSCE)". MCQ only, no theory.
+- **`waec.py` (new).** `PAPERS` registry: English = 2 papers — **Paper 1 Lexis & Structure** (80 MCQ, 60 min,
+  topics tagged "Lexis — " / "Structure — ", auto 40/40 split in `exam_engine._arrange`) and **Paper 3 Test of
+  Orals** (60 MCQ, 45 min, topics "Test of Orals — "). Planned single papers (50 MCQ): Maths 90 min, Physics
+  75, Chemistry/Economics/Government 60, Biology 50. `papers_for(subject)` returns only papers whose bank ≥10,
+  so **a subject card appears only once it has a real bank** (English today; others appear as banks land).
+  `grade(pct)` = WAEC guidance bands A1≥75 B2 70 B3 65 C4 60 C5 55 C6 50 D7 45 E8 40 F9<40 (advisory label on
+  results, not a real WAEC grade — boundaries shift per session).
+- **Flow:** `/exam_types` (tile flips from "coming soon" when `_waec_ready()` = any WAEC subject row with
+  active questions) → `/waec_subjects` (paper cards, one button per paper) → `POST /start_waec/<subject>`
+  (`paper` hidden field) → `create_waec_attempt(..., paper=...)` → CBT room → results show `WAEC grade
+  guidance` + pace meter (45 s/q target) + "Review corrections". Practice mode has a "WAEC English" tab
+  (`/practice/WAEC/English`) and "WAEC English Test of Orals" (`/practice/WAEC/English (Test of Orals)`).
+- **Content:** batches 042+043 = **268 curated WAEC English questions** (042: 171 = Lexis 80 + Structure 91;
+  043: 97 = Vowels 24, Stress 20, Consonants 15, Rhymes 14, Letters 10, Intonation 8, Homophones 6), all
+  applied to the tracked `database.db` AND shipped as `content/*.json` (so a fresh DB on any server gets them
+  automatically — same mechanism as the JAMB batches). WAEC subject ids in the tracked DB: English 28.
+  Next batches: Maths (50/90 min, verify-heavy), then Biology/Chemistry, Physics/Economics/Government.
+- **Legacy deactivation (app fix, not test-only).** The old `questions` table still held ~130 pre-v2 WAEC seed
+  rows that the legacy query branches would have surfaced. Guard `waec_subjects_2026_09` in `db.py` now also
+  adds `questions.status` and sets all WAEC rows to Inactive; all legacy `questions` reads (helpers.py
+  count/available_subjects/fetch + admin dashboard) filter `COALESCE(status,'Active')='Active'` so JAMB legacy
+  rows (NULL) are unaffected. Never re-activate those old WAEC rows.
+- **Tests:** `_work/waec_test.py` 27/27 (fresh DB: counts, 60 min/2700 s timers, 40/40 split, orals topics,
+  A1+C6 grade bands, 45 s/q pace, no 400s, practice tabs) + regress 75/75, putme 63/63, feat1/feat2 green.
+- **Honesty note (keep saying it):** all new items are AI-written and machine-verified, NOT teacher-reviewed;
+  say so when the user asks where the questions come from.

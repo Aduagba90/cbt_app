@@ -173,7 +173,9 @@ def ensure_env():
     env.setdefault("DATABASE_PATH", os.path.join(DATA, "database.db"))
     env.setdefault("SQLITE_JOURNAL_MODE", "DELETE")
     env.setdefault("SESSION_COOKIE_SECURE", "1")
-    env.setdefault("WAEC_ENABLED", "0")
+    # WAEC opens automatically once genuine WAEC questions exist in the database; this line is
+    # an emergency switch only (set to 0 to force WAEC closed) — keep it at 1.
+    env["WAEC_ENABLED"] = "1"
     write_env(env)
     os.makedirs(DATA, exist_ok=True)
     return env, first

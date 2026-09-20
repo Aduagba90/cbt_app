@@ -97,10 +97,13 @@ manually*. This records a payment, extends any remaining time, and is written to
 
 ## Question bank
 
-**WAEC is switched off ("Coming soon") by default** until genuine WAEC questions are
-uploaded. Students — including subscribers — can only take JAMB mocks/practice meanwhile,
-and the WAEC routes are blocked server-side (not just hidden). To open WAEC: set
-`WAEC_ENABLED=1` in `.env` (or the host's environment) and restart.
+**WAEC / NECO (SSCE) is live** (enabled via `WAEC_ENABLED=1` in `.env`; keep it on).
+It serves real WASSCE objective papers — currently **English: Paper 1 (Lexis & Structure,
+80 MCQ / 60 min) and Paper 3 (Test of Orals, 60 MCQ / 45 min)** — with WAEC grade guidance
+(A1–F9) on the result. A subject appears on the WAEC page only once its bank has ≥10
+questions, so Maths, Biology, Chemistry, Physics, Economics and Government will appear as
+their batches are added (same `content/batch_*.json` mechanism as JAMB). Results carry a
+pace meter and the same review/PDF flow as JAMB.
 
 **Post-UTME** is live: each university row (Admin → Post-UTME) describes its real paper
 (minutes + sections, see `post_utme.py`). UTME subjects are drawn from the JAMB bank and

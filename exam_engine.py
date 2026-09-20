@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from db import connect
 from helpers import (
     JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ENGLISH_QUESTIONS, JAMB_OTHER_QUESTIONS, MIN_BANK_FOR_V2,
-    WAEC_DURATION_MIN, WAEC_QUESTIONS, fetch_question_ids, fetch_questions,
+    fetch_question_ids, fetch_questions,
     new_verification_code, resolve_source, reward_referral_if_due, clear_mistake, record_mistake,
 )
 
@@ -106,11 +106,12 @@ def _plan_subjects(cur, exam_type, subjects, university=None, per_subject=None, 
             cap = english_count
         if source not in seen_cache:
             seen_cache[source] = _seen_questions(cur, username, source)
-        plan.append((subject, source, _arrange(cur, source, ids, cap, seen_cache[source], exam_type=exam_type)))
+        plan.append((subject, source, _arrange(cur, source, ids, cap, seen_cache[source], exam_type=exam_type,
+                                               subject=subject)))
     return plan
 
 
-def _arrange(cur, source, ids, cap, seen=None, exam_type=None):
+def _arrange(cur, source, ids, cap, seen=None, exam_type=None, subject=None):
     """Choose and order one subject's questions the way the real CBT does.
 
     * Passage-linked questions stay together, at the start of the subject (max two passages).
@@ -138,6 +139,20 @@ def _arrange(cur, source, ids, cap, seen=None, exam_type=None):
                 WHERE q.id IN ({','.join('?' * len(chunk))})""", chunk
         ):
             meta[r[0]] = (r[1], r[2], r[3], r[4])
+    # WAEC English Paper 1 is a fixed 40 lexis + 40 structure split — build it exactly that way.
+    if exam_type == "WAEC" and subject == "English" and cap and cap >= 40:
+        lexis, struct = [], []
+        for q in ids:
+            name = meta.get(q, (None, 0, None, ""))[3]
+            if name.startswith("Lexis"):
+                lexis.append(q)
+            elif name.startswith("Structure"):
+                struct.append(q)
+        if lexis and struct:
+            half = cap // 2
+            body = fresh_first(lexis)[:half] + fresh_first(struct)[:cap - half]
+            random.shuffle(body)
+            return body
     groups, group_topic, curated, general, novel, by_topic = {}, {}, [], [], [], {}
     for q in ids:
         p, tier, topic, topic_name = meta.get(q, (None, 0, None, ""))
@@ -278,11 +293,35 @@ def create_jamb_attempt(username, course, ip=None, ua=None, subjects=None):
     )
 
 
-def create_waec_attempt(username, subject, ip=None, ua=None):
-    return create_attempt(
-        username, "WAEC", subject, [subject], duration_min=WAEC_DURATION_MIN,
-        per_subject=WAEC_QUESTIONS, ip=ip, ua=ua,
-    )
+def create_waec_attempt(username, subject, ip=None, ua=None, paper=None):
+    """One WAEC objective paper: the real question count and duration for that subject.
+
+    paper: optional paper label — English has two objective papers (Paper 1 Lexis &
+    Structure, and Paper 3 Test of Orals); everything else has a single paper.
+    """
+    from waec import get_paper, papers_for
+    papers = papers_for(subject)
+    chosen = get_paper(subject, paper) if paper else (papers[0] if papers else None)
+    if not chosen:
+        raise ExamError(f"No WAEC questions are available yet for {subject}. Please try another subject or check back soon.")
+    label, count, minutes, note, topic_filter = chosen
+    name = f"WAEC {subject}" if len(papers) == 1 else f"WAEC {subject} — {label}"
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        source, _ = resolve_source(cur, "WAEC", subject)
+        if not source:
+            raise ExamError(f"No WAEC questions are available yet for {subject}. Please try another subject or check back soon.")
+        ids = fetch_question_ids(cur, source, "WAEC", subject,
+                                 topics=[topic_filter] if (topic_filter and source == "questions_v2") else None)
+        if len(ids) < MIN_BANK_FOR_V2:
+            raise ExamError(f"Not enough questions are available yet for {name}. Please try another subject or check back soon.")
+        seen = _seen_questions(cur, username, source)
+        plan = [(subject, source, _arrange(cur, source, ids, count, seen, exam_type="WAEC", subject=subject))]
+        conn.commit()
+    finally:
+        conn.close()
+    return create_attempt(username, "WAEC", name, [subject], duration_min=minutes, plan=plan, ip=ip, ua=ua)
 
 
 def create_live_attempt(username, live_id, subjects, ip=None, ua=None):

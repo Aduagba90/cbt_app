@@ -30,11 +30,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import exam_engine as engine
 import post_utme as putme
+import waec as waecf
 from admin_routes import admin_bp
 from db import connect, init_db
 import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
-                     TRIAL_DAYS, WAEC_DURATION_MIN, WAEC_ENABLED, WAEC_QUESTIONS, app_url, available_subjects, email_wrap,
+                     TRIAL_DAYS, WAEC_ENABLED, MIN_BANK_FOR_V2, app_url, available_subjects, email_wrap,
+                     fetch_question_ids,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon, CHALLENGE_SIZE, REFERRAL_REWARD_DAYS, ensure_referral_code, referral_stats,
@@ -151,6 +153,34 @@ init_db()
 _POST_UTME_CACHE = {"t": 0.0, "ready": False, "n": 0}
 
 
+_WAEC_CACHE = {"t": 0, "ready": False, "n": 0, "names": []}
+
+
+def _waec_ready():
+    """True once WAEC mocks can run: switch not forced off and at least one subject has a usable
+    bank (cached 60 s)."""
+    if not WAEC_ENABLED:
+        return False
+    now = time.time()
+    if now - _WAEC_CACHE["t"] > 60:
+        try:
+            names = sorted(available_subjects("WAEC"))
+        except Exception:
+            names = []
+        _WAEC_CACHE.update(t=now, ready=len(names) > 0, n=len(names), names=names)
+    return _WAEC_CACHE["ready"]
+
+
+def _waec_count():
+    _waec_ready()
+    return _WAEC_CACHE["n"]
+
+
+def _waec_names():
+    _waec_ready()
+    return _WAEC_CACHE["names"]
+
+
 def _post_utme_ready():
     """True once Post-UTME mocks can run: at least one active university format and a JAMB bank to
     draw from (cached 60 s)."""
@@ -195,7 +225,9 @@ def inject_globals():
         "brand": "PrepNova CBT",
         "support_email": SUPPORT_EMAIL,
         "support_whatsapp": SUPPORT_WHATSAPP,
-        "waec_enabled": WAEC_ENABLED,
+        "waec_enabled": _waec_ready(),
+        "waec_subject_count": _waec_count(),
+        "waec_subject_names": _waec_names(),
         "post_utme_ready": _post_utme_ready(),
         "post_utme_count": _post_utme_count(),
         "current_year": datetime.now().year,
@@ -1095,11 +1127,25 @@ def jamb_courses():
 @app.route("/waec_subjects")
 @login_required
 def waec_subjects():
-    if not WAEC_ENABLED:
-        return render_template("waec_subjects.html", subjects=[], duration=WAEC_DURATION_MIN, per_exam=WAEC_QUESTIONS, coming_soon=True)
+    if not _waec_ready():
+        return render_template("waec_subjects.html", subjects=[], coming_soon=True)
     avail = available_subjects("WAEC")
-    subjects = sorted(avail.items(), key=lambda kv: kv[0])
-    return render_template("waec_subjects.html", subjects=subjects, duration=WAEC_DURATION_MIN, per_exam=WAEC_QUESTIONS)
+    conn = connect()
+    cur = conn.cursor()
+    subjects = []
+    for name in sorted(avail):
+        papers = []
+        for label, count, minutes, note, topic in waecf.papers_for(name):
+            if topic:
+                source, _ = resolve_source(cur, "WAEC", name)
+                n = len(fetch_question_ids(cur, source, "WAEC", name, topics=[topic])) if source else 0
+                if n < MIN_BANK_FOR_V2:
+                    continue
+            papers.append({"label": label, "count": count, "minutes": minutes, "note": note, "bank": n if topic else avail[name]})
+        if papers:
+            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers})
+    conn.close()
+    return render_template("waec_subjects.html", subjects=subjects)
 
 
 def _require_subscription():
@@ -1161,7 +1207,7 @@ def start_jamb_custom():
 @app.route("/start_waec/<subject>", methods=["POST"])
 @login_required
 def start_waec(subject):
-    if not WAEC_ENABLED:
+    if not _waec_ready():
         flash("WAEC mock exams are coming soon — genuine WAEC questions are being added. JAMB mocks are fully available.", "info")
         return redirect(url_for("exam_types"))
     if subject not in available_subjects("WAEC"):
@@ -1172,7 +1218,8 @@ def start_waec(subject):
         flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
-        attempt_id = engine.create_waec_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"))
+        attempt_id = engine.create_waec_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
+                                                paper=request.form.get("paper"))
     except engine.ExamError as e:
         flash(str(e), "danger")
         return redirect(url_for("waec_subjects"))
@@ -1443,7 +1490,7 @@ def abandon_exam():
 @login_required
 def practice():
     jamb = sorted(available_subjects("JAMB").items())
-    waec = sorted(available_subjects("WAEC").items()) if WAEC_ENABLED else []
+    waec = sorted(available_subjects("WAEC").items()) if _waec_ready() else []
     putme_subjects = sorted(available_subjects("POST-UTME").items())
     conn = connect()
     allowed, remaining = practice_allowance(session["user"], conn.cursor())
@@ -1458,7 +1505,7 @@ def practice_question(exam_type, subject):
     exam_type = exam_type.upper()
     if exam_type not in ("JAMB", "WAEC", "POST-UTME"):
         abort(404)
-    if exam_type == "WAEC" and not WAEC_ENABLED:
+    if exam_type == "WAEC" and not _waec_ready():
         flash("WAEC practice is coming soon — genuine WAEC questions are being added. Try a JAMB subject meanwhile.", "info")
         return redirect(url_for("practice"))
     conn = connect()
@@ -1713,7 +1760,10 @@ def result_details(result_id):
         score_txt = f"{r['jamb_score']}/400"
     else:
         score_txt = f"{r['score']}/{r['total']}"
-    pace = pace_info(r["duration"], r["total"], r["exam_type"])
+    attempt = data["attempt"]
+    allowed_pace = (attempt["duration_seconds"] // max(1, r["total"])) if (attempt and attempt["duration_seconds"] and r["total"]) else None
+    pace = pace_info(r["duration"], r["total"], r["exam_type"], allowed=allowed_pace)
+    waec_grade = waecf.grade(pct) if r["exam_type"] == "WAEC" else None
     conn = connect()
     projection = jamb_projection(conn.cursor(), session["user"]) if r["exam_type"] == "JAMB" else None
     target = conn.execute("SELECT target_score FROM users WHERE email = ?", (session["user"],)).fetchone()
@@ -1722,9 +1772,9 @@ def result_details(result_id):
     share_url = f"{app_url()}/verify_result/{r['verification_code']}" if r["verification_code"] else app_url()
     share = share_text(session.get("name"), f"{r['exam_type']} {r['exam_name'] or ''}".strip(), score_txt, pct, share_url)
     topics = engine.topic_report(result_id, session["user"])
-    return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=data["attempt"], verdict=verdict, tone=tone,
+    return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=attempt, verdict=verdict, tone=tone,
                            just_finished=request.args.get("done") == "1", share=share, share_url=share_url,
-                           pace=pace, projection=projection, target=target, topics=topics)
+                           pace=pace, projection=projection, target=target, topics=topics, waec_grade=waec_grade)
 
 
 @app.route("/review_answers/<int:result_id>")

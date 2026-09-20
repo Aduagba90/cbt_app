@@ -128,8 +128,8 @@
                         {% if not waec_enabled %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
                     </div>
                     <h3>WAEC / SSCE</h3>
-                    <p>Subject-by-subject objective practice with 50 questions per session, instant grading and detailed corrections.{% if not waec_enabled %} Genuine WAEC questions are being added now.{% endif %}</p>
-                    <div class="mt-3 d-flex flex-wrap gap-1"><span class="pn-subject-chip">Mathematics</span><span class="pn-subject-chip">English</span><span class="pn-subject-chip">Biology</span><span class="pn-subject-chip">Chemistry</span><span class="pn-subject-chip">+ more</span></div>
+                    <p>{% if waec_enabled %}Real WASSCE objective papers — the same question count and the same clock as the actual exam, with detailed corrections. English includes the Test of Orals paper.{% else %}Subject-by-subject objective practice with instant grading and detailed corrections. Genuine WAEC questions are being added now.{% endif %}</p>
+                    <div class="mt-3 d-flex flex-wrap gap-1">{% if waec_enabled %}{% for n in waec_subject_names[:4] %}<span class="pn-subject-chip">{{ n }}</span>{% endfor %}<span class="pn-subject-chip">+ more</span>{% else %}<span class="pn-subject-chip">Mathematics</span><span class="pn-subject-chip">English</span><span class="pn-subject-chip">Biology</span><span class="pn-subject-chip">Chemistry</span><span class="pn-subject-chip">+ more</span>{% endif %}</div>
                 </div>
             </div>
             <div class="col-md-4 reveal" data-delay="2">

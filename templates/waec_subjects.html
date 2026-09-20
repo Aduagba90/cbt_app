@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}WAEC — choose a subject{% endblock %}
+{% block title %}WAEC / SSCE — choose a paper{% endblock %}
 
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
-        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>WAEC</span></div>
-        <h1>Choose a WAEC subject</h1>
-        <p class="lead">{{ per_exam }} randomised objective questions · {{ duration }} minutes · full corrections afterwards.</p>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>WAEC / SSCE</span></div>
+        <h1>Choose a WAEC paper</h1>
+        <p class="lead">Real WASSCE objective papers — the same question count and the same clock as the actual exam, with full corrections afterwards. Writing NECO SSCE? The question style is the same, so this preparation works for both.</p>
     </div>
 </div>
 
@@ -15,28 +15,41 @@
     <span class="ico"><i class="bi bi-hourglass-split"></i></span>
     <span class="badge bg-secondary mb-2">Coming soon</span>
     <h3>WAEC questions are being added</h3>
-    <p>We are uploading genuine WAEC past questions with full explanations. WAEC mocks will open automatically once the bank is ready — your subscription covers them at no extra cost.</p>
+    <p>We are uploading genuine WAEC-standard questions with full explanations. WAEC mocks will open automatically once the bank is ready — your subscription covers them at no extra cost.</p>
     <div class="d-flex flex-wrap justify-content-center gap-2">
         <a href="{{ url_for('jamb_courses') }}" class="btn btn-primary btn-sm"><i class="bi bi-mortarboard me-1"></i> Take a JAMB mock instead</a>
         <a href="{{ url_for('practice') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-lightning-charge me-1"></i> Practice mode</a>
     </div>
 </div>
-{% elif subjects %}
+{% else %}
 <div class="row g-3">
-    {% for name, count in subjects %}
-    <div class="col-sm-6 col-lg-4">
-        <form method="POST" action="{{ url_for('start_waec', subject=name) }}" data-once>
-            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
-            <button type="submit" class="pn-subject-link w-100 text-start anim-rise d{{ loop.index0 % 4 }}" data-confirm="Start the WAEC {{ name }} mock now? The {{ duration }}-minute timer begins immediately." data-loading="Preparing…">
-                <span class="pn-stat-icon tint-blue"><i class="bi {{ subject_icon(name) }}"></i></span>
-                <span>{{ name }}<small>{{ count }} questions in bank</small></span>
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </form>
+    {% for s in subjects %}
+    <div class="col-12 col-lg-6">
+        <div class="card h-100 anim-rise d{{ loop.index0 % 4 }}">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="pn-stat-icon tint-blue"><i class="bi {{ s.icon }}"></i></span>
+                    <div>
+                        <h3 class="mb-0">{{ s.name }}</h3>
+                        <small class="text-muted">{{ s.count }} questions in the bank</small>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for p in s.papers %}
+                    <form method="POST" action="{{ url_for('start_waec', subject=s.name) }}" data-once class="mb-0">
+                        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                        <input type="hidden" name="paper" value="{{ p.label }}">
+                        <button type="submit" class="pn-subject-link w-100 text-start" data-confirm="Start the WAEC {{ s.name }} {{ p.label }} now? The {{ p.minutes }}-minute timer begins immediately." data-loading="Preparing…">
+                            <span>{{ p.label }}<small>{{ p.count }} questions · {{ p.minutes }} minutes — {{ p.note }}</small></span>
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
     {% endfor %}
 </div>
-{% else %}
-<div class="pn-empty card"><span class="ico"><i class="bi bi-journal-x"></i></span><h3>No WAEC subjects available yet</h3><p>Our team is adding questions. Please check back soon or try a JAMB mock.</p><a href="{{ url_for('jamb_courses') }}" class="btn btn-primary btn-sm">Go to JAMB</a></div>
 {% endif %}
 {% endblock %}

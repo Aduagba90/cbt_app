@@ -238,8 +238,21 @@ JAMB_DURATION_MIN = 120
 WAEC_QUESTIONS = 50
 WAEC_DURATION_MIN = 60
 # WAEC is shown as "coming soon" until the genuine WAEC question bank has been uploaded.
-# Flip to True (or set WAEC_ENABLED=1 in .env) to open WAEC mocks and WAEC practice again.
-WAEC_ENABLED = (os.getenv("WAEC_ENABLED") or "0").strip().lower() in ("1", "true", "yes")
+# WAEC_ENABLED is now an emergency switch only: it stays 1 by default (setup.py writes it)
+# and the real gate is the bank itself — no questions, no mock. Set it to 0 in .env to
+# force WAEC closed even when questions exist (e.g. while fixing a bad batch).
+WAEC_ENABLED = (os.getenv("WAEC_ENABLED") or "1").strip().lower() not in ("0", "false", "no")
+
+
+def waec_ready():
+    """True when WAEC mocks may open: switch not forced off AND at least one subject
+    has a usable bank (>= MIN_BANK_FOR_V2 active questions)."""
+    if not WAEC_ENABLED:
+        return False
+    try:
+        return len(available_subjects("WAEC")) >= 1
+    except Exception:
+        return False
 FREE_PRACTICE_PER_DAY = 10
 TRIAL_DAYS = 7
 
@@ -269,7 +282,7 @@ def _v2_count(cur, exam_type, subject):
 def _legacy_count(cur, exam_type, subject):
     legacy_subject = LEGACY_SUBJECT_ALIASES.get(subject, subject)
     row = cur.execute(
-        "SELECT COUNT(*) FROM questions WHERE exam_type = ? AND subject = ?",
+        "SELECT COUNT(*) FROM questions WHERE exam_type = ? AND subject = ? AND COALESCE(status, 'Active') = 'Active'",
         (exam_type, legacy_subject),
     ).fetchone()
     return row[0] if row else 0
@@ -308,7 +321,7 @@ def available_subjects(exam_type):
         if r["n"] >= MIN_BANK_FOR_V2:
             out[r["subject_name"]] = r["n"]
     rows = cur.execute(
-        "SELECT subject, COUNT(*) AS n FROM questions WHERE exam_type = ? GROUP BY subject",
+        "SELECT subject, COUNT(*) AS n FROM questions WHERE exam_type = ? AND COALESCE(status, 'Active') = 'Active' GROUP BY subject",
         (exam_type,),
     ).fetchall()
     for r in rows:
@@ -319,21 +332,30 @@ def available_subjects(exam_type):
     return out
 
 
-def fetch_question_ids(cur, source, exam_type, subject, university=None):
+def fetch_question_ids(cur, source, exam_type, subject, university=None, topics=None):
     if source == "questions_v2":
+        topic_sql, topic_args = "", []
+        if topics:
+            conds, topic_args = [], []
+            for t_ in topics:
+                conds.append("(t.topic_name = ? OR t.topic_name LIKE ?)")
+                topic_args += [t_, t_ + "%"]
+            topic_sql = " AND (" + " OR ".join(conds) + ")"
         rows = cur.execute(
-            """
+            f"""
             SELECT q.id FROM questions_v2 q
             JOIN exam_types e ON q.exam_type_id = e.id
             JOIN subjects s ON q.subject_id = s.id
+            LEFT JOIN topics t ON t.id = q.topic_id
             WHERE e.exam_name = ? AND s.subject_name = ? AND s.exam_type_id = e.id
               AND e.status = 'Active' AND s.status = 'Active' AND q.status = 'Active'
+              {topic_sql}
             """,
-            (exam_type, subject),
+            (exam_type, subject) + tuple(topic_args),
         ).fetchall()
     elif source == "questions":
         rows = cur.execute(
-            "SELECT id FROM questions WHERE exam_type = ? AND subject = ?",
+            "SELECT id FROM questions WHERE exam_type = ? AND subject = ? AND COALESCE(status, 'Active') = 'Active'",
             (exam_type, LEGACY_SUBJECT_ALIASES.get(subject, subject)),
         ).fetchall()
     elif source == "post_utme_questions":
@@ -872,10 +894,16 @@ def jamb_projection(cur, email):
     return round(sum(r[0] for r in rows) / len(rows))
 
 
-def pace_info(duration_seconds, total_questions, exam_type):
-    """Seconds per question vs what the real exam allows."""
+def pace_info(duration_seconds, total_questions, exam_type, allowed=None):
+    """Seconds per question vs what the real exam allows.
+
+    allowed: explicit seconds-per-question for this paper (WAEC papers vary by
+    subject, e.g. English 45s/q vs Mathematics 108s/q). Falls back to the standard
+    per-exam-type allowance when not given.
+    """
     if not duration_seconds or not total_questions:
         return None
-    allowed = {"JAMB": 40, "WAEC": 72, "POST-UTME": 60}.get((exam_type or "").upper(), 60)
+    if not allowed:
+        allowed = {"JAMB": 40, "WAEC": 72, "POST-UTME": 60}.get((exam_type or "").upper(), 60)
     per_q = round(duration_seconds / total_questions)
     return {"per_q": per_q, "allowed": allowed, "ok": per_q <= allowed}

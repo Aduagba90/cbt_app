@@ -41,10 +41,10 @@
                 {% if waec_enabled %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
             </div>
             <h3>WAEC / SSCE</h3>
-            <p>Subject-by-subject objective paper. 50 randomised questions per session with detailed corrections at the end.</p>
-            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 60 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 50 questions</span><span class="pn-subject-chip"><i class="bi bi-book"></i> Any subject</span></div>
+            <p>Real WASSCE objective papers — the same question count and the same clock as the actual exam, with detailed corrections at the end.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 45–90 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 40–80 questions</span><span class="pn-subject-chip"><i class="bi bi-book"></i> {{ waec_subject_count or 'More' }} subjects</span></div>
             {% if waec_enabled %}
-            <a href="{{ url_for('waec_subjects') }}" class="btn btn-primary w-100" style="background:#1d4ed8;border-color:#1d4ed8">Choose subject <i class="bi bi-arrow-right ms-1"></i></a>
+            <a href="{{ url_for('waec_subjects') }}" class="btn btn-primary w-100" style="background:#1d4ed8;border-color:#1d4ed8">Choose paper <i class="bi bi-arrow-right ms-1"></i></a>
             {% else %}
             <button class="btn btn-outline-secondary w-100 mt-auto" disabled><i class="bi bi-hourglass-split me-1"></i> Questions being added</button>
             {% endif %}

@@ -706,6 +706,30 @@ def init_db():
         except Exception as exc:  # never stop the site from starting
             print(f"[post-utme] setup skipped: {exc}")
 
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_2026_09'").fetchone():
+        try:
+            # The old seed's WAEC rows in the legacy `questions` table are pre-WAEC-recall items,
+            # not genuine WAEC past questions — keep them hidden until the real bank replaces them.
+            _add_column(cur, "questions", "status", "TEXT")
+            cur.execute(
+                "UPDATE questions SET status = 'Inactive' WHERE exam_type = 'WAEC' AND COALESCE(status, 'Active') = 'Active'"
+            )
+            # WAEC bank subjects (release 1). Rows are harmless while empty: a subject only
+            # shows up for students once its questions_v2 bank reaches MIN_BANK_FOR_V2.
+            for name, code in (("English", "ENG"), ("Mathematics", "MTH"), ("Biology", "BIO"),
+                               ("Chemistry", "CHM"), ("Physics", "PHY"), ("Economics", "ECO"),
+                               ("Government", "GOV")):
+                cur.execute(
+                    """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                       SELECT 'WAEC', ?, ?, 'Active', e.id FROM exam_types e
+                       WHERE e.exam_name = 'WAEC'
+                         AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
+                    (name, code, name),
+                )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('waec_subjects_2026_09', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[waec] subject setup skipped: {exc}")
+
     # Question batches written in content/*.json (applied-style questions). Each batch is
     # applied once per database, so a live site with student data picks new questions up on
     # the next restart without any import step.
