@@ -730,6 +730,21 @@ def init_db():
         except Exception as exc:  # never stop the site from starting
             print(f"[waec] subject setup skipped: {exc}")
 
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_active_2026_09'").fetchone():
+        try:
+            # Day-one installs seeded some WAEC subjects (English/Mathematics/Biology) as Inactive for
+            # the old "coming soon" era, and the insert-only guard above skips rows that already exist —
+            # so those subjects stayed hidden even with a full bank. Keep the seven WAEC subjects Active;
+            # an empty subject is still invisible to students (bank >= MIN_BANK_FOR_V2 gate).
+            cur.execute(
+                """UPDATE subjects SET status = 'Active'
+                   WHERE subject_name IN ('English','Mathematics','Biology','Chemistry','Physics','Economics','Government')
+                     AND exam_type_id = (SELECT id FROM exam_types WHERE exam_name = 'WAEC')"""
+            )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('waec_subjects_active_2026_09', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[waec] subject activation skipped: {exc}")
+
     # Question batches written in content/*.json (applied-style questions). Each batch is
     # applied once per database, so a live site with student data picks new questions up on
     # the next restart without any import step.

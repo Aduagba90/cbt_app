@@ -426,5 +426,16 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   rows (NULL) are unaffected. Never re-activate those old WAEC rows.
 - **Tests:** `_work/waec_test.py` 27/27 (fresh DB: counts, 60 min/2700 s timers, 40/40 split, orals topics,
   A1+C6 grade bands, 45 s/q pace, no 400s, practice tabs) + regress 75/75, putme 63/63, feat1/feat2 green.
+- **Live incident (20 Sept 2026, fixed same day).** After the first live push WAEC still showed "coming soon"
+  although the new code and the 268-question bank were on the server (landing counter 8,753 confirmed them):
+  the day-one install had seeded the WAEC subjects **English/Mathematics/Biology as `Inactive`** (old
+  "coming soon" era) and the insert-only guard `waec_subjects_2026_09` skips rows that already exist, so
+  English stayed hidden while Chem/Phys/Eco/Gov (created fresh) were Active. `WAEC_ENABLED` was a red
+  herring — it was already 1. Fixed live via Admin → Subjects toggles (`POST /toggle_subject/<id>`, ids
+  28/26/29) and verified end-to-end on the live site (paper cards, 80-question room, submit, grade band).
+  Made permanent by guard **`waec_subjects_active_2026_09`** in `db.py` (activates the 7 WAEC subject rows
+  on any DB; tested against an Admin-Backup copy of the real live DB + a fresh install). Lesson: for
+  live-only bugs, download the DB via **Admin → Backup** and test against the real data — local test DBs
+  never contained the day-one leftovers.
 - **Honesty note (keep saying it):** all new items are AI-written and machine-verified, NOT teacher-reviewed;
   say so when the user asks where the questions come from.
