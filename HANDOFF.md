@@ -439,3 +439,32 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   never contained the day-one leftovers.
 - **Honesty note (keep saying it):** all new items are AI-written and machine-verified, NOT teacher-reviewed;
   say so when the user asks where the questions come from.
+
+## WAEC / NECO release 2 — Mathematics (Sept 2026)
+- **Content:** batches 044 + 045 = **261 curated WAEC Mathematics questions** (044: 159 number-and-algebra items in
+  15 topics — Number and Numeration, Approximation, Indices, Logarithms, Surds, Sets and Venn Diagrams, Simple
+  Equations/Word Problems, Variation, Change of Subject of Formula, Factorisation and Algebraic Fractions,
+  Quadratic Equations, Linear Inequalities, Graphs, Sequences and Progressions, Financial Arithmetic; 045: 102
+  items in 10 topics — Plane Geometry, Circle Geometry, Mensuration, Latitudes and Longitudes, Trigonometry,
+  Angles of Elevation/Depression, Bearings and Distances, Statistics, Probability, Introductory Calculus).
+  With the 1 legacy v2 Sets item the WAEC Maths bank is **262 active**; the paper draws 50 per sitting (5x
+  variety). Answers: every numeric answer carries an independent `verify` computation in the build script
+  (trig via `math.radians`, quadratics via the formula, financial via the interest formula); ~17 pure
+  expression answers (factorise/subject-of-formula) are hand-checked. Money options like "₦9,000" parse fine
+  (`_num` uses `re.search` and strips commas). Sigs/notes: π stated in stems (22/7 or calculator), proper
+  minus signs, unicode superscripts.
+- **Loader gotcha (cost 20 min):** `content_loader.apply_pending` does `"content_batch_" + batch["batch_id"]`
+  and needs the batch id as the **file basename string** ("batch_044_..."), exactly like 042/043 — passing an
+  int crashes with "can only concatenate str (not int) to str" and db.py just prints `[content] skipped`.
+  If a new batch ever fails to appear, grep the startup output for that line.
+- **Paper:** unchanged `waec.py` registry — single "Paper 1 — Objective", 50 q / 90 min, calculator allowed;
+  attempt name "WAEC Mathematics"; pace meter allowed = duration/total = 108 s/q. No engine changes needed
+  (topic_filter None draws the whole bank).
+- **Tests:** `_work/waec_test.py` now **35 checks, ALL PASS** — added Mathematics presence on /waec_subjects,
+  "50 questions · 90 minutes" card text, start → 50 q / 5400 s / correct name / submit. One flaky check fixed:
+  the pace line needs a non-zero time-used, so the test sleeps 1.2 s before submitting (zero-duration results
+  correctly hide pace — app behaviour, not a bug). regress 75, putme 63, feat1/feat2 all green on fresh copies.
+- **DB:** batches applied to the tracked `database.db` (262 Maths + 268 English = 530 WAEC; 8,740 active v2
+  overall) AND shipped as `content/batch_044/045_*.json` for fresh installs.
+- Next WAEC subjects: Biology and Chemistry (50 q / 50 min and 50 q / 60 min), then Physics, Economics,
+  Government (~2 subjects per turn). After that: offline mode (separate release, do not mention to testers).
