@@ -468,3 +468,28 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   overall) AND shipped as `content/batch_044/045_*.json` for fresh installs.
 - Next WAEC subjects: Biology and Chemistry (50 q / 50 min and 50 q / 60 min), then Physics, Economics,
   Government (~2 subjects per turn). After that: offline mode (separate release, do not mention to testers).
+
+## WAEC / NECO release 3 — Biology and Chemistry (Sept 2026)
+- **Content:** batch 046 = **146 curated WAEC Biology questions** in 14 topics (Cell Structure, Cell Division,
+  Nutrition, Transport, Respiration, Excretion, Reproduction and Growth, Genetics and Heredity, Ecology and
+  Ecosystems, Diseases and Immunity, Nervous Coordination and Sense Organs, Hormones, Support and Movement,
+  Biology Practical Skills) and batch 047 = **166 curated WAEC Chemistry questions** in 17 topics (Particulate
+  Nature of Matter, Atomic Structure, Periodic Table, Bonding, Mole Concept and Stoichiometry, Gas Laws,
+  Solutions and Solubility, Water and Water Treatment, Electrolysis, Energy Changes and Rates, Equilibrium,
+  Acids/Bases/Salts, Redox and Cells, Metals, Non-metals, Organic Chemistry, Separation and Laboratory
+  Techniques). Papers: Biology 50 q / 50 min; Chemistry 50 q / 60 min (registry unchanged from `waec.py`).
+- **Verification:** all numeric answers machine-checked (RAM from isotopes, moles/mass/concentration, titration
+  C₁V₁/C₂V₂, % purity and % composition, gas laws in kelvin, Q = It, Faraday electrolysis, energy transfer
+  and quadrat sampling in Biology, Punnett fractions 3/4, 9/16, 1/4). ~33 word/structure answers are
+  hand-checked. Conventions: s.t.p. molar volume 22.4 dm³, F = 96,500 C, Avogadro 6.02 × 10²³ (options in
+  scientific notation cannot pass the first-number verify rule — leave those verify=None and hand-check).
+- **Bank now (tracked database.db):** WAEC English 268, Mathematics 262, Biology 146, Chemistry 166 = 842;
+  9,052 active v2 overall. No duplicate stems per subject. Tests: `_work/waec_test.py` **49 checks ALL PASS**
+  (added Bio 50/3000 s and Chem 50/3600 s start/name/submit blocks); regress, putme, feat1/feat2 green.
+- **Batch-writing notes (both batches):** the length-bias gate flagged 14 Bio + 19 Chem items whose correct
+  option dwarfed the distractors — the fix is to even out option lengths (shorten the correct answer,
+  lengthen distractors) BEFORE running the builder; letter positions do not matter because `_balance` swaps
+  them afterwards. Verify strings must respect Python operator precedence (write `(48/6)**(1/3)`, not
+  `48/6**(1/3)`).
+- Next WAEC subjects: Physics, Economics, Government (~2 subjects per turn), then offline mode (separate
+  release; do not mention to testers until live).
