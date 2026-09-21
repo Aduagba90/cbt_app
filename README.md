@@ -97,14 +97,14 @@ manually*. This records a payment, extends any remaining time, and is written to
 
 ## Question bank
 
-**WAEC / NECO (SSCE) is live** (enabled via `WAEC_ENABLED=1` in `.env`; keep it on).
-It serves real WASSCE objective papers — currently **English: Paper 1 (Lexis & Structure,
-80 MCQ / 60 min) and Paper 3 (Test of Orals, 60 MCQ / 45 min)**, **Mathematics: Paper 1
-(Objective, 50 MCQ / 90 min)**, **Biology (50 MCQ / 50 min)** and **Chemistry (50 MCQ /
-60 min)** — with WAEC grade guidance (A1–F9) on the result. A subject appears on the WAEC
-page only once its bank has ≥10 questions, so Physics, Economics and Government will
-appear as their batches are added (same `content/batch_*.json` mechanism as JAMB).
-Results carry a pace meter and the same review/PDF flow as JAMB.
+**WAEC / NECO (SSCE) is live** (enabled via `WAEC_ENABLED=1` in `.env`; keep it on)
+with **all seven launch subjects**: English (Paper 1 Lexis & Structure 80 MCQ / 60 min +
+Paper 3 Test of Orals 60 MCQ / 45 min), Mathematics (50 / 90 min), Biology (50 / 50 min),
+Chemistry (50 / 60 min), Physics (50 / 75 min), Economics (50 / 60 min) and Government
+(50 / 60 min) — each mimicking the real WASSCE objective paper, with WAEC grade guidance
+(A1–F9) and a pace meter on the result. Banks: English 268, Maths 262, Biology 146,
+Chemistry 166, Physics 142, Economics 138, Government 138 questions (same
+`content/batch_*.json` mechanism as JAMB, so fresh installs pick them up automatically).
 
 **Post-UTME** is live: each university row (Admin → Post-UTME) describes its real paper
 (minutes + sections, see `post_utme.py`). UTME subjects are drawn from the JAMB bank and

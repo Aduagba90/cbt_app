@@ -493,3 +493,35 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   `48/6**(1/3)`).
 - Next WAEC subjects: Physics, Economics, Government (~2 subjects per turn), then offline mode (separate
   release; do not mention to testers until live).
+
+## WAEC / NECO release 4 — Physics, Economics and Government (Sept 2026)
+- **Content:** batch 048 = **142 WAEC Physics questions** in 12 topics (Measurements and Units, Motion,
+  Force/Momentum/Newton's Laws, Work-Energy-Power, Machines, Pressure and Upthrust, Heat Energy, Waves and
+  Sound, Light and Optics, Electricity, Magnetism and Electromagnetism, Modern Physics); batch 049 =
+  **138 WAEC Economics questions** in 16 topics (Basic Concepts … International Trade, Development and
+  Planning, with Nigerian applications); batch 050 = **138 WAEC Government questions** in 16 topics
+  (Scope, Political Concepts, Constitutions, Organs, Parties, Pressure Groups, Elections, Nigerian
+  Constitutional Development, Colonial Administration, Nationalism, Federalism, Local Government, Civil
+  Service, Public Corporations, Military in Politics, Foreign Policy, International Organisations).
+  Papers: Physics 50 q / 75 min; Economics and Government 50 q / 60 min (registry unchanged).
+- **Verification:** every Physics calculation machine-verified (kinematics, v² = u² + 2as, momentum and
+  impulse, work/energy/power, MA/VR/efficiency, P = ρgh incl. 76 cm mercury, hydraulic press, upthrust,
+  mcΔθ, Charles' law, expansivity, v = fλ, echo 2d, refractive index and critical angle via math.asin,
+  mirror 1/f, lens power 1/f, Q = It, Ohm, series/parallel, P = VI and I²R, kWh cost, transformer turns,
+  half-life, alpha decay mass numbers); Economics numeric items verified (elasticity, mean/median, tax,
+  per-capita, unemployment rate); Government is stable historical fact (dates: 1914, 1922, 1946, 1951,
+  1954, 1956-motion, 1960, 1963, 1966, 1967–70, 1975-ECOWAS, 1976-reforms, 1979, 1999, OPEC 1960/71,
+  AU 2002, NNM = 1963).
+- **Bank now (tracked database.db): WAEC complete — 1,260 questions** (English 268, Maths 262, Biology 146,
+  Chemistry 166, Physics 142, Economics 138, Government 138); 9,470 active v2 overall. All seven subject
+  cards on /waec_subjects. Tests: `_work/waec_test.py` **68 checks ALL PASS** (added Phy 75 min, Eco/Gov
+  60 min start/name/submit loop); regress, putme, feat1/feat2 green on fresh copies.
+- **Batch-writing notes:** concept subjects (Econ/Gov) hit the length-bias gate heavily (41 + 53 items)
+  because full-sentence correct answers dwarfed the short distractors — budget for an "evening-out" pass
+  (lengthen distractors, shorten the correct option) when writing theory subjects; _balance re-letters
+  afterwards. Verify values must be numbers (a word answer like "twenty partners" cannot pass — verify
+  None). Sandbox recycles drop pip packages mid-turn (reinstall dotenv/flask/flask-mail/qrcode/pillow/
+  reportlab) and can crash the whole test run silently with 0 PASS count.
+- **WAEC programme COMPLETE.** Next major release: offline mode (encrypted per-subject packs, PWA, free
+  1×30-question taster; do not mention to testers until live). Later ideas: more questions per WAEC
+  subject, NECO branding toggle, batch 041 officeholder re-check after Jan 2027.
