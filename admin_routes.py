@@ -9,6 +9,7 @@ and every state-changing request is CSRF-checked by the application.
 import io
 import json
 import os
+import secrets
 import time
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -24,6 +25,8 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 from db import connect, DB_PATH
 from helpers import activate_subscription as grant_plan
 from helpers import generate_access_codes, pretty_code
+from security import password_problems
+from werkzeug.security import generate_password_hash
 from security import admin_required
 import sqlite3
 
@@ -1291,6 +1294,40 @@ def manage_students():
         students=students,
         search=search
     )
+
+
+@admin_bp.route("/reset_student_password/<int:user_id>", methods=["POST"])
+def reset_student_password(user_id):
+    """Generate a one-time temporary password for a student (shown to the admin once).
+
+    Used when a student forgets their password and the site cannot send reset e-mails
+    (free hosting blocks SMTP): the admin shares the temporary password on WhatsApp and
+    the student changes it from their profile after logging in.
+    """
+    conn = sqlite3.connect(DB_PATH, timeout=15)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    row = cursor.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not row:
+        conn.close()
+        flash("Student not found.", "danger")
+        return redirect("/manage_students")
+    words = ("Nova", "Lagos", "Smart", "Bright", "Eagle", "Prime", "Focus", "Zenith", "Scholar", "Pioneer")
+    temp = f"{secrets.choice(words)}{secrets.choice(words)}{secrets.randbelow(9000) + 1000}!"
+    if password_problems(temp, row["email"], row["name"]):
+        conn.close()
+        flash("Could not generate a safe password automatically. Please try again.", "danger")
+        return redirect("/view_student/" + str(user_id))
+    cursor.execute("UPDATE users SET password = ? WHERE id = ?", (generate_password_hash(temp), user_id))
+    cursor.execute("UPDATE user_sessions SET is_active = 0 WHERE username = ?", (row["email"],))
+    # The student may be locked out from wrong attempts — a reset proves ownership.
+    cursor.execute("DELETE FROM login_attempts WHERE email = ? AND successful = 0", (row["email"],))
+    conn.commit()
+    conn.close()
+    _audit("student_password_reset", row["email"])
+    flash(f"Temporary password for {row['name'] or row['email']}:  {temp}  — send it to the student on "
+          f"WhatsApp. Ask them to change it after logging in (Profile → Change password).", "success")
+    return redirect("/manage_students")
 
 
 @admin_bp.route("/view_student/<int:user_id>")

@@ -225,6 +225,7 @@ def inject_globals():
         "brand": "PrepNova CBT",
         "support_email": SUPPORT_EMAIL,
         "support_whatsapp": SUPPORT_WHATSAPP,
+        "support_whatsapp_link": _wa_link(),
         "waec_enabled": _waec_ready(),
         "waec_subject_count": _waec_count(),
         "waec_subject_names": _waec_names(),
@@ -581,6 +582,14 @@ def mail_configured():
     return bool(app.config.get("MAIL_USERNAME") and app.config.get("MAIL_PASSWORD"))
 
 
+def _wa_link():
+    """Clickable WhatsApp link from the SUPPORT_WHATSAPP setting (works for 0XX… and 234… forms)."""
+    digits = re.sub(r"\D", "", SUPPORT_WHATSAPP or "")
+    if digits.startswith("0"):
+        digits = "234" + digits[1:]
+    return f"https://wa.me/{digits}" if digits else ""
+
+
 def _send_verification(cur, email, name):
     token = secrets.token_urlsafe(32)
     cur.execute("UPDATE email_verification_tokens SET used = 1 WHERE email = ? AND used = 0", (email,))
@@ -794,6 +803,10 @@ def forgot_password():
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
         if valid_email(email):
+            # No SMTP on this server (e.g. free hosting that blocks e-mail): never pretend a
+            # link was sent — point the student to WhatsApp support instead.
+            if not mail_configured():
+                return render_template("auth_message.html", kind="reset_no_mail", email=email)
             conn = connect()
             cur = conn.cursor()
             user = cur.execute("SELECT name FROM users WHERE email = ?", (email,)).fetchone()
@@ -815,7 +828,7 @@ def forgot_password():
             conn.close()
         # Always the same response — do not reveal whether the email exists
         return render_template("auth_message.html", kind="reset_sent", email=email)
-    return render_template("forgot_password.html")
+    return render_template("forgot_password.html", mail_ready=mail_configured())
 
 
 @app.route("/reset_password/<token>", methods=["GET", "POST"])

@@ -525,3 +525,28 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
 - **WAEC programme COMPLETE.** Next major release: offline mode (encrypted per-subject packs, PWA, free
   1×30-question taster; do not mention to testers until live). Later ideas: more questions per WAEC
   subject, NECO branding toggle, batch 041 officeholder re-check after Jan 2027.
+
+## Password recovery fix (Sept 2026)
+- **Live complaint:** a tester clicked "Forgot password" and never received the reset link. Root cause:
+  **PythonAnywhere free blocks all outbound SMTP** (free accounts only reach whitelisted sites over
+  HTTP/HTTPS), and although registration auto-verifies when mail is off (existing behaviour),
+  `forgot_password` still showed "we have sent a link" after `helpers.send_email` silently skipped the
+  message (`Mail not configured` log). No e-mail can ever leave this server unless MAIL_USERNAME/
+  MAIL_PASSWORD are set AND the host allows SMTP.
+- **Fix 1 — honest forgot-password (app.py):** when `mail_configured()` is false, POST /forgot_password
+  returns `auth_message.html kind="reset_no_mail"` (WhatsApp contact instead of the fake success), and the
+  form page shows a notice box (`mail_ready` flag). `_wa_link()` builds a wa.me link from SUPPORT_WHATSAPP
+  (leading 0 → 234…), injected site-wide as `support_whatsapp_link`. When the site later moves to paid
+  hosting with SMTP credentials in `~/.prepnova.env`, the e-mail flow returns automatically.
+- **Fix 2 — admin reset (admin_routes.py + manage_students.html):** Admin → Students → **🔑 Reset password**
+  per row (`POST /reset_student_password/<id>`, CSRF-checked): generates `WordWord####!` (validated with
+  `password_problems`), updates the hash, deactivates the student's sessions, **clears failed
+  login_attempts** (the student may be locked out), writes audit `student_password_reset`, and flashes the
+  temp password once for the admin to share on WhatsApp. Student then changes it at Profile → Change
+  password. The legacy admin pages are standalone HTML; the admin bar is spliced in by
+  `admin_bp.after_request` `_admin_chrome` — flash blocks must be added inside the standalone templates.
+- **Tests:** `_work/resetpw_test.py` **13/13** (honest message, no fake "sent" message, admin reset,
+  login with temp, change password, old password rejected). regress/feat1/waec green. Gotchas hit:
+  edit_file on manage_students.html silently no-opped once (re-apply with an asserted script); hidden
+  CSRF input must be single-line `name="csrf_token" value="…"` or the test regex (and consistency)
+  breaks; test regexes should use `\s+` between attributes.

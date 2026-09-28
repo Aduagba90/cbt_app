@@ -33,6 +33,14 @@
 
     </form>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" style="font-size:1.05rem">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
     <table class="table table-bordered table-striped">
 
         <thead class="table-dark">
@@ -70,6 +78,22 @@
                         👁 View
 
                     </a>
+
+                    <form method="POST"
+                          action="/reset_student_password/{{ s[0] }}"
+                          class="d-inline"
+                          onsubmit="return confirm('Generate a new temporary password for this student?');">
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <button type="submit"
+                                class="btn btn-warning btn-sm">
+
+                            🔑 Reset password
+
+                        </button>
+
+                    </form>
 
                 </td>
 
