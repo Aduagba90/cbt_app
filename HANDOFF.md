@@ -550,3 +550,29 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   edit_file on manage_students.html silently no-opped once (re-apply with an asserted script); hidden
   CSRF input must be single-line `name="csrf_token" value="…"` or the test regex (and consistency)
   breaks; test regexes should use `\s+` between attributes.
+
+## Parent Dashboard + "Sponsor this child" (Sept 2026)
+- **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
+  existing read-only parent report (`/parent/<code>`, `study.parent_summary`).
+- **Sponsor flow (new):** `/parent/<code>` now passes `plans` + `paystack_ready` and renders a green
+  **"Sponsor {first}'s preparation"** card: the 3 plans (₦1,000 / ₦2,500 / ₦8,000) as Paystack buttons,
+  or a WhatsApp-contact fallback when `PAYSTACK_SECRET_KEY` is unset. `POST /sponsor_payment/<code>/<plan_id>`
+  (public, CSRF-checked, rate-limited 10/600s) creates the `payments` row with **username = the CHILD's
+  email** and reference prefix **`PN-S-`** (marks sponsor payments), then Paystack-initialises with
+  `callback_url = /sponsor_callback`. `GET /sponsor_callback` verifies, runs the standard
+  `_process_paystack_payment` (which calls `activate_subscription` for `payments.username` — i.e. the
+  child, so the existing webhook/verification logic is reused untouched) and renders the public
+  `sponsor_thanks.html` (child's first name + plan; no login). Paystack customer e-mail = child's e-mail.
+- **Student side:** `/parent_link` WhatsApp share now carries real stats (mocks written, streak,
+  projected /400) built from `study_streak` + `jamb_projection`; page gains a "they can sponsor you" tip.
+- **Tests:** `_work/parent_test.py` **19/19** — monkeypatches `appmod.requests.post/get` (fake Paystack
+  initialize/verify) and `appmod.PAYSTACK_SECRET_KEY` (module global! `from app import app` gives the
+  Flask object — setting keys on it does nothing). Covers: share stats, sponsor card, fallback,
+  buttons → checkout → PENDING row on child → callback → SUCCESS + child's Monthly subscription ACTIVE,
+  bad code 404. regress/putme/waec/feat1 all green.
+- **Gotchas:** local `.env` contains Paystack TEST keys (module global truthy in tests — reset it
+  explicitly); `edit_file` silently no-opped on parent_link.html again (use asserted scripts);
+  URL-encoded wa.me text must be `unquote()`d before asserting.
+- **Next features in the agreed order:** Admission Chance Calculator + JAMB Subject Combination Checker
+  (free, bring strangers in), Challenge a Friend, Spoken Test of Orals, School/Lesson-centre plan,
+  offline mode.

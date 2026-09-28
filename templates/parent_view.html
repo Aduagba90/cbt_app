@@ -19,6 +19,38 @@
             <div class="col-6 col-md-3"><div class="pn-stat anim-rise d3"><span class="pn-stat-icon tint-blue"><i class="bi bi-graph-up-arrow"></i></span><div><div class="pn-stat-value">{{ d.projection if d.projection else '—' }}</div><div class="pn-stat-label">Projected /400{% if d.target %} · target {{ d.target }}{% endif %}</div></div></div></div>
         </div>
 
+        <div class="card mb-3 border-success-subtle anim-rise" id="sponsor">
+            <div class="card-body">
+                <div class="d-flex align-items-start gap-3">
+                    <span class="pn-stat-icon tint-green flex-shrink-0"><i class="bi bi-heart-fill"></i></span>
+                    <div class="flex-grow-1">
+                        <h2 class="h5 mb-1">Sponsor {{ first }}'s preparation</h2>
+                        <p class="small text-muted mb-3">Unlock every mock exam and all subjects for {{ first }} — JAMB UTME, WAEC / SSCE and Post-UTME, including the weekly live mock. Secure payment by Paystack; the plan is added to {{ first }}'s account immediately.</p>
+                        {% if paystack_ready %}
+                        <div class="row g-2">
+                            {% for p in plans %}
+                            <div class="col-12 col-md-4">
+                                <form method="POST" action="{{ url_for('sponsor_payment', code=code, plan_id=p['id']) }}" data-once class="h-100">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-2" data-loading="Opening Paystack…">
+                                        <b class="fs-5">{{ fmt_naira(p['price']) }}</b>
+                                        <small>{{ p['plan_name'] }}{% if p['duration_days'] == 30 %} · 1 month{% elif p['duration_days'] == 90 %} · 3 months{% elif p['duration_days'] == 365 %} · 1 year{% endif %}</small>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-light border mb-0 small">
+                            Online payment is being set up. To activate {{ first }}'s plan right now, contact the PrepNova team on WhatsApp
+                            {% if support_whatsapp_link %} — <a href="{{ support_whatsapp_link }}" target="_blank" rel="noopener"><b>tap here to chat</b></a>{% endif %}.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card mb-3 anim-rise">
             <div class="card-header"><i class="bi bi-calendar-week me-2 text-primary"></i>Study activity, last 4 weeks</div>
             <div class="card-body p-0">
@@ -43,8 +75,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="card h-100 anim-rise d1">
-                    <div class="card-header"><i class="bi bi-bullseye me-2 text-danger"></i>Subjects</div>
-                    <div class="card-body">
+                    <div class="card-header"><i class="bi bi-bullseye me-2 text-danger"></i>Subjects</div>                    <div class="card-body">
                         {% if d.subjects %}
                         {% for s in d.subjects %}
                         <div class="mb-3">

@@ -2195,11 +2195,19 @@ def parent_link():
     else:
         code = study.ensure_parent_code(cur, session["user"])
         conn.commit()
+    email = session["user"]
+    streak = study_streak(cur, email)
+    mocks = cur.execute("SELECT COUNT(*) FROM results WHERE username = ?", (email,)).fetchone()[0]
+    projection = jamb_projection(cur, email)
     conn.close()
     link = f"{app_url()}/parent/{code}"
     first = (session.get("name") or "your child").split(" ")[0]
-    wa = ("https://wa.me/?text=" + quote(f"Hello! You can follow {first}'s JAMB preparation on PrepNova CBT here: {link} "
-                                        f"(no login needed — it shows mocks written, scores and study days)."))
+    stats = f"So far: {mocks} mock exam{'s' if mocks != 1 else ''} written and a {streak}-day study streak"
+    if projection:
+        stats += f", projected UTME score {projection}/400"
+    wa = ("https://wa.me/?text=" + quote(f"Hello! This is {first}'s PrepNova CBT progress report.\n"
+                                         f"{stats}.\n"
+                                         f"You can follow my preparation live here (no login needed):\n{link}"))
     return render_template("parent_link.html", code=code, link=link, wa=wa)
 
 
@@ -2210,10 +2218,99 @@ def parent_view(code):
     conn = connect()
     cur = conn.cursor()
     data = study.parent_summary(cur, code)
+    plans = conn.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days").fetchall()
     conn.close()
     if not data:
         abort(404)
-    return render_template("parent_view.html", d=data, code=code)
+    return render_template("parent_view.html", d=data, code=code, plans=plans, paystack_ready=bool(PAYSTACK_SECRET_KEY))
+
+
+@app.route("/sponsor_payment/<code>/<int:plan_id>", methods=["POST"])
+@rate_limit(limit=10, window_seconds=600, scope="sponsor_pay", methods=("POST",))
+def sponsor_payment(code, plan_id):
+    """A parent/guardian pays for a child's plan from the public progress report (no login).
+
+    The payment row is created against the CHILD's account, so the existing callback logic
+    (_process_paystack_payment → activate_subscription) extends the child's subscription
+    automatically. References carry the PN-S- prefix to mark sponsor payments.
+    """
+    code = code.strip().upper()[:12]
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("parent_view", code=code))
+    conn = connect()
+    cur = conn.cursor()
+    child = cur.execute("SELECT email, name FROM users WHERE parent_code = ?", (code,)).fetchone()
+    plan = cur.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE id = ? AND is_active = 1", (plan_id,)).fetchone()
+    if not child or not plan:
+        conn.close()
+        abort(404)
+    reference = f"PN-S-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
+        (child["email"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference),
+    )
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": child["email"],
+                "amount": int(round(float(plan["price"]) * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/sponsor_callback",
+                "metadata": {"plan_id": plan["id"], "plan_name": plan["plan_name"], "username": child["email"],
+                             "sponsor": 1,
+                             "custom_fields": [{"display_name": "Plan", "variable_name": "plan", "value": plan["plan_name"]}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (sponsor)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("parent_view", code=code))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (sponsor): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("parent_view", code=code))
+    return redirect(payload["data"]["authorization_url"])
+
+
+@app.route("/sponsor_callback")
+def sponsor_callback():
+    """Paystack returns a sponsoring parent here after payment — public thank-you page."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("home"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (sponsor)")
+        flash("We could not verify the payment right now. If you were debited, the plan will be activated automatically shortly.", "warning")
+        return redirect(url_for("home"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with the reference.", "danger")
+        return redirect(url_for("home"))
+    ok, msg = _process_paystack_payment(reference, payload.get("data") or {})
+    conn = connect()
+    row = conn.execute(
+        "SELECT p.payment_status, p.plan_name, u.name, u.parent_code FROM payments p JOIN users u ON u.email = p.username WHERE p.transaction_reference = ?",
+        (reference,),
+    ).fetchone()
+    conn.close()
+    if ok and row:
+        first = (row["name"] or "your child").split(" ")[0]
+        return render_template("sponsor_thanks.html", first=first, plan=row["plan_name"], code=row["parent_code"])
+    flash(msg or "The payment did not go through.", "danger")
+    if row and row["parent_code"]:
+        return redirect(url_for("parent_view", code=row["parent_code"]))
+    return redirect(url_for("home"))
 
 
 # ---------------------------------------------------------------------------
