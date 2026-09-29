@@ -566,6 +566,11 @@ The hero headline said "Pass JAMB & Post-UTME with ..." even though the WAEC ban
 - Ops reminder: run test suites on a FRESH COPY of the repo, never inside it —
   the Flask test client writes real rows into database.db (this round's first
   commit attempt accidentally included a test-polluted db and was amended clean).
+- Device messaging: the rotating hero word "your phone" is intentional (most visitors
+  are ON a phone; "with" = the tool, not phone-only) and is kept. But the supporting
+  copy used to say only "phone/smartphone" — sub-headline, trust bar and FAQ now all
+  say "phone or laptop" so nobody reads the page as phone-only (real JAMB is on a
+  computer; sponsors/parents often browse on desktops).
 
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the

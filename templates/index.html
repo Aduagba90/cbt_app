@@ -37,7 +37,7 @@
                     <span><b data-countdown="{{ exam_date.isoformat() }}">{{ days_to_exam }}</b> days to UTME {{ exam_date.year }} — start now</span>
                 </div>
                 <h1 class="anim-rise d1">Pass <span class="hl">JAMB</span>, <span class="hl">WAEC</span> &amp; Post-UTME with <span class="pn-rotate" data-rotate>{% for w in ["confidence", "a real CBT timer", "past questions", "clear explanations", "your phone"] %}<span class="pn-rotate-word{% if loop.first %} on{% endif %}">{{ w }}</span>{% endfor %}</span></h1>
-                <p class="lead anim-rise d2">Walk into the exam hall without fear. Practise on a real CBT screen with a live timer, thousands of past questions and step-by-step corrections. Works on any phone, even on slow networks.</p>
+                <p class="lead anim-rise d2">Walk into the exam hall without fear. Practise on a real CBT screen with a live timer, thousands of past questions and step-by-step corrections. Works on any phone or laptop, even on slow networks.</p>
                 <div class="d-flex flex-wrap gap-2 mt-4 anim-rise d3">
                     <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg"><i class="bi bi-rocket-takeoff me-1"></i> Start 7-day free trial</a>
                     <a href="#how" class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle me-1"></i> See how it works</a>
@@ -97,7 +97,7 @@
     <div class="container">
         <div class="row g-3 text-center text-md-start align-items-center">
             <div class="col-md-3 col-6 reveal"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-shield-check fs-4 text-primary"></i><span class="small fw-bold">Secure, cheat-proof exam room</span></div></div>
-            <div class="col-md-3 col-6 reveal" data-delay="1"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-phone fs-4 text-primary"></i><span class="small fw-bold">Works on any smartphone</span></div></div>
+            <div class="col-md-3 col-6 reveal" data-delay="1"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-phone fs-4 text-primary"></i><span class="small fw-bold">Works on any phone or laptop</span></div></div>
             <div class="col-md-3 col-6 reveal" data-delay="2"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-wifi-1 fs-4 text-primary"></i><span class="small fw-bold">Light on data</span></div></div>
             <div class="col-md-3 col-6 reveal" data-delay="3"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-credit-card-2-front fs-4 text-primary"></i><span class="small fw-bold">Pay with card, transfer or USSD</span></div></div>
         </div>
@@ -329,7 +329,7 @@
             {% set faqs = [
                 ("Is the free trial really free?", "Yes. Every new account gets 7 days of full access with no card required. After that, choose any plan to continue — you can also keep using 10 free practice questions per day."),
                 ("Are the questions real past questions?", "Our bank is built from past JAMB/WAEC objective questions and expertly written practice items following the current syllabus, each with an explanation. New questions are added regularly."),
-                ("Does it work on my phone?", "Absolutely. PrepNova is designed mobile-first, uses very little data, and works in any modern browser on Android or iPhone — no app installation needed."),
+                ("Does it work on my phone?", "Absolutely. PrepNova is designed mobile-first, uses very little data, and works in any modern browser on Android, iPhone or laptop — no app installation needed."),
                 ("How do I pay?", "Choose a plan and pay securely through Paystack using a debit card, bank transfer or USSD. Your subscription activates immediately after payment."),
                 ("What happens if my network drops during a mock?", "Every answer is saved on our servers the moment you click it. Simply log back in and resume — your timer continues from where the real clock is."),
                 ("Can I use one account on two phones?", "For security, an account can be signed in on one device at a time. Logging in on a new device signs out the previous one."),
