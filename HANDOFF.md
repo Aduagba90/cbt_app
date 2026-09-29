@@ -551,6 +551,22 @@ All logic lives in `study.py` (pure functions on a cursor; tests in `_work/feat2
   CSRF input must be single-line `name="csrf_token" value="…"` or the test regex (and consistency)
   breaks; test regexes should use `\s+` between attributes.
 
+## Landing-page hero includes WAEC (Sept 2026)
+
+The hero headline said "Pass JAMB & Post-UTME with ..." even though the WAEC bank
+(1,260 questions, 7 subjects) shipped in `883f0b8`. Fixed in `templates/index.html`:
+
+- Hero H1 now reads "Pass **JAMB**, **WAEC** & Post-UTME with [rotating word]"
+  (both exam names use the `.hl` accent style; page <title>, meta description,
+  auth side panel, legal pages already mentioned WAEC — only the H1 was stale).
+- "Try a question" section said "Then imagine 3,000+ more." — stale by ~3x.
+  Now dynamic: `{{ '{:,}'.format(stats.questions) }}` (renders e.g. "9,744 more"),
+  so it stays correct as the bank grows.
+- Template-only change; regress suite 75/75 green after the edit.
+- Ops reminder: run test suites on a FRESH COPY of the repo, never inside it —
+  the Flask test client writes real rows into database.db (this round's first
+  commit attempt accidentally included a test-polluted db and was amended clean).
+
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
   existing read-only parent report (`/parent/<code>`, `study.parent_summary`).
