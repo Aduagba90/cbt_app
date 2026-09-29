@@ -920,3 +920,28 @@ a.pn-topic.weak i { font-size: .9rem; }
 /* Landing feature cards that are links (free-tools section) */
 .pn-feature-link { color: inherit; transition: transform .2s ease, box-shadow .2s ease; }
 .pn-feature-link:hover { transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(15, 31, 61, .12); color: inherit; }
+
+/* ==========================================================================
+   Challenge a Friend (1v1 battles)
+   ========================================================================== */
+.pn-battle-head { background: linear-gradient(140deg, #0f1f3d 0%, #3d0f1f 100%); border: none; }
+.pn-battle-row { display: flex; align-items: center; gap: .65rem; padding: .6rem .75rem; border-radius: .75rem; margin-bottom: .35rem; background: #f6f8fc; }
+.pn-battle-row .rk { width: 1.6rem; text-align: center; color: #6c757d; font-weight: 700; flex-shrink: 0; }
+.pn-battle-row .nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.pn-battle-row .sc { flex-shrink: 0; }
+.pn-battle-row .tm { flex-shrink: 0; width: 3.6rem; text-align: right; }
+.pn-battle-winner { background: #fff6d9 !important; border: 1px solid #f2d98c; }
+.pn-battle-winner .rk { color: #b58900; }
+.pn-battle-me { box-shadow: inset 0 0 0 2px var(--pn-accent, #f2b705); }
+/* Desktop navbar fit: brand + 6 links + actions overflow between 992-1399px; drop the
+   username text there (avatar initials remain) so nothing pushes past the bar. */
+@media (min-width: 992px) and (max-width: 1399px) { .pn-navbar .pn-user-name { display: none !important; } }
+@media (min-width: 992px) and (max-width: 1299px) {
+    .pn-navbar .pn-nav .nav-link { padding-left: .45rem; padding-right: .45rem; }
+    .pn-navbar .pn-actions .btn { padding-left: .6rem; padding-right: .6rem; }
+}
+@media (min-width: 992px) and (max-width: 1151px) { .pn-navbar .pn-nav .nav-link i { display: none; } }
+
+.pn-squares { letter-spacing: .12rem; font-size: .95rem; }
+.badge.bg-accent { background: var(--pn-accent, #f2b705); color: #0f1f3d; }
+@media (max-width: 420px) { .pn-battle-row .tm { display: none; } }

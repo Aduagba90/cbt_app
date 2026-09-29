@@ -33,6 +33,7 @@ import post_utme as putme
 import waec as waecf
 from admin_routes import admin_bp
 from admission_tools import tools_bp
+from battle import battle_bp
 from db import connect, init_db
 import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
@@ -145,6 +146,7 @@ EXAM_IDLE_MINUTES = 240  # never time a student out during a live exam
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(tools_bp)
+app.register_blueprint(battle_bp)
 
 init_db()
 

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Challenge a Friend{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise mb-3">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Challenge a friend</span></div>
+        <h1 class="h3"><i class="bi bi-swords text-danger me-1"></i>Challenge a Friend</h1>
+        <p class="lead mb-0">Pick a subject, beat {{ size }} questions as fast as you can, then send the battle link to a friend. Same questions, both sides — fastest correct brain wins.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card anim-rise d1 h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3"><i class="bi bi-rocket-takeoff me-1 text-primary"></i>Start a battle</h2>
+                <form method="post" action="{{ url_for('battle.create') }}">
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <label class="form-label fw-bold" for="battle-subject">Choose your battlefield</label>
+                    <select id="battle-subject" name="subject" class="form-select form-select-lg mb-3" required>
+                        <option value="">— Select a subject —</option>
+                        {% for name, n in subjects %}
+                        <option value="{{ name }}">{{ name }} <span class="text-muted">({{ n }} questions)</span></option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-accent w-100"><i class="bi bi-swords me-1"></i>Create &amp; play my set</button>
+                </form>
+                <hr class="my-3">
+                <div class="small text-muted">
+                    <div class="d-flex gap-2 mb-1"><i class="bi bi-1-circle text-primary"></i><span>You play {{ size }} questions — your score and time are recorded.</span></div>
+                    <div class="d-flex gap-2 mb-1"><i class="bi bi-2-circle text-primary"></i><span>Share the link on WhatsApp — your friend plays the <b>same</b> questions, no account needed.</span></div>
+                    <div class="d-flex gap-2"><i class="bi bi-3-circle text-primary"></i><span>Higher score wins; equal scores → faster time wins.</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card anim-rise d2 h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3"><i class="bi bi-clock-history me-1 text-primary"></i>My battles</h2>
+                {% if mine %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>Subject</th><th>My score</th><th>Challengers</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                            {% for b in mine %}
+                            <tr>
+                                <td class="fw-semibold">{{ b['subject'] }}</td>
+                                <td>{% if b['creator_score'] is not none %}{{ b['creator_score'] }}/{{ size }} <small class="text-muted">{{ b['creator_time'] }}s</small>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                                <td>{{ b['challengers'] }}</td>
+                                <td>
+                                    {% if b['status'] == 'pending' %}<span class="badge bg-warning text-dark">Finish your set</span>
+                                    {% elif expired(b) %}<span class="badge bg-secondary">Expired</span>
+                                    {% else %}<span class="badge bg-success">Open</span>{% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if b['status'] == 'pending' %}
+                                    <a class="btn btn-sm btn-accent" href="{{ url_for('battle.play', code=b['code']) }}">Play</a>
+                                    {% else %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('battle.result', code=b['code']) }}">Results</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-swords fs-1 d-block mb-2 text-secondary"></i>
+                    No battles yet. Start your first one — it takes two minutes.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

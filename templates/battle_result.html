@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ battle['subject'] }} battle — results{% endblock %}
+
+{% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
+
+{% block main %}
+<section class="pn-tool-wrap">
+    <div class="container" style="max-width:820px">
+        <div class="card anim-rise mb-3 pn-battle-head text-white">
+            <div class="card-body p-4">
+                <div class="small text-white-50 mb-1">1v1 BATTLE · {{ battle['subject'] }} · {{ total }} questions</div>
+                {% if my_row %}
+                    {% if my_row.is_creator %}
+                    <h1 class="h4 mb-1">{% if winner and winner.me %}You're leading your own battle 🏆{% else %}Your set is done — now defend it!{% endif %}</h1>
+                    {% elif winner and winner.me and battle['creator_score'] is not none and my_row.score > battle['creator_score'] %}
+                    <h1 class="h4 mb-1">You beat {{ (battle['creator_name'] or 'your friend').split()[0] }}! 🎉</h1>
+                    {% elif winner and winner.me %}
+                    <h1 class="h4 mb-1">Top of the battlefield! 🏆</h1>
+                    {% else %}
+                    <h1 class="h4 mb-1">{{ my_row.score }}/{{ total }} — good battle! 💪</h1>
+                    {% endif %}
+                <p class="mb-0">You scored <b>{{ my_row.score }}/{{ total }}</b> in <b>{{ my_row.time }}</b> <span class="pn-squares">{{ my_row.squares }}</span></p>
+                {% else %}
+                <h1 class="h4 mb-1">Battle results</h1>
+                <p class="mb-0">Play the battle to see the corrections and claim a spot on this board.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if rows %}
+        <div class="card anim-rise d1 mb-3">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-people me-1"></i>Leaderboard</h2>
+                {% for r in rows %}
+                <div class="pn-battle-row {% if loop.first %}pn-battle-winner{% endif %} {% if r.me %}pn-battle-me{% endif %}">
+                    <span class="rk">{% if loop.first %}<i class="bi bi-trophy-fill"></i>{% else %}{{ loop.index }}{% endif %}</span>
+                    <span class="nm fw-semibold">{{ r['name'] }}{% if r['is_creator'] %} <span class="badge bg-primary">challenger</span>{% endif %}{% if r['me'] %} <span class="badge bg-accent">you</span>{% endif %}</span>
+                    <span class="pn-squares">{{ r['squares'] }}</span>
+                    <span class="sc fw-bold">{{ r['score'] }}/{{ total }}</span>
+                    <span class="tm text-muted small">{{ r['time'] }}</span>
+                </div>
+                {% endfor %}
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Higher score wins · equal scores → faster time wins.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card anim-rise d2 mb-3">
+            <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+                <a class="btn btn-success" href="{{ share.url }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share on WhatsApp</a>
+                <button type="button" class="btn btn-outline-primary" data-copy-link="{{ battle_url }}"><i class="bi bi-link-45deg me-1"></i>Copy battle link</button>
+                <span class="small text-muted ms-1">Drop it in your class group — let them try to beat you.</span>
+            </div>
+        </div>
+
+        {% if my_row %}
+        <div class="card anim-rise d3 mb-3">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-journal-check me-1"></i>The corrections — read them once, beat them next time</h2>
+                {% for qid in ordered %}
+                {% set q = questions.get(qid) %}
+                {% if q %}
+                {% set picked = my_answers.get(qid|string) %}
+                <div class="pn-qcard mb-3">
+                    <div class="pn-qhead"><div class="pn-qnum">Question <strong>{{ loop.index }}</strong> <span class="text-muted fw-semibold ms-2">{{ q.subject }}{% if q.topic %} · {{ q.topic }}{% endif %}</span></div></div>
+                    <div class="pn-qtext">{{ q.text }}</div>
+                    {% for k, v in q.options.items() %}
+                    <div class="pn-option locked {% if k == q.correct %}correct{% elif k == picked %}wrong{% endif %}">
+                        <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                        {% if k == q.correct %}<i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>{% elif k == picked %}<i class="bi bi-x-circle-fill text-danger ms-auto fs-5"></i>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="pn-explain {{ '' if picked == q.correct else 'wrong' }}">
+                        <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-lightbulb-fill"></i><b>Why</b></div>
+                        <div class="small">{{ q.explanation }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card anim-rise d4 mb-4 {% if not logged_in %}border-primary{% endif %}">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                {% if logged_in %}
+                <i class="bi bi-swords fs-2 text-primary"></i>
+                <div class="flex-grow-1"><b>Fancy another duel?</b><div class="small text-muted">Start a fresh battle on any subject and share it.</div></div>
+                <a class="btn btn-accent" href="{{ url_for('battle.lobby') }}">New battle</a>
+                {% else %}
+                <i class="bi bi-swords fs-2 text-primary"></i>
+                <div class="flex-grow-1">
+                    <b>Want to challenge YOUR friends?</b>
+                    <div class="small text-muted">Create a free account to start battles — plus bonus free days for you <i>and</i> {{ (battle['creator_name'] or 'your friend').split()[0] }} when you write your first mock.</div>
+                </div>
+                <a class="btn btn-accent" href="{{ url_for('register') }}{% if ref_code %}?ref={{ ref_code }}{% endif %}">Start free</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    var btn = document.querySelector("[data-copy-link]");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+        var link = btn.getAttribute("data-copy-link");
+        function done() { btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Link copied!'; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done).catch(function () { legacy(); });
+        } else { legacy(); }
+        function legacy() {
+            var i = document.createElement("input");
+            i.value = link; document.body.appendChild(i); i.select();
+            document.execCommand("copy"); document.body.removeChild(i); done();
+        }
+    });
+})();
+</script>
+{% endblock %}
+
+{% block footer %}{% include "_landing_footer.html" %}{% endblock %}

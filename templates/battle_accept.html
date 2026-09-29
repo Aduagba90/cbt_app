@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ battle['creator_name'] or 'A friend' }} challenges you — {{ battle['subject'] }} battle{% endblock %}
+{% block description %}Play a free 1v1 PrepNova battle: {{ size }} {{ battle['subject'] }} questions, same set for both players. No account needed — just beat the score.{% endblock %}
+
+{% block head %}
+<meta property="og:title" content="{{ (battle['creator_name'] or 'A friend').split()[0] }} scored {{ battle['creator_score'] or '?' }}/{{ size }} in a PrepNova {{ battle['subject'] }} battle — can you beat it?">
+<meta property="og:description" content="Free 2-minute challenge. Same questions, both players. No sign-up needed.">
+{% endblock %}
+
+{% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
+
+{% block main %}
+<section class="pn-tool-wrap">
+    <div class="container" style="max-width:760px">
+        <div class="card anim-rise mb-3 pn-battle-head text-white">
+            <div class="card-body p-4">
+                {% if state == 'pending' %}
+                <h1 class="h4 mb-1"><i class="bi bi-hourglass-split me-1"></i>The challenger isn't ready yet</h1>
+                <p class="mb-0">{{ (battle['creator_name'] or 'Your friend').split()[0] }} created this {{ battle['subject'] }} battle but hasn't finished their own set. Check back in a few minutes!</p>
+                {% elif state == 'expired' %}
+                <h1 class="h4 mb-1"><i class="bi bi-clock-fill me-1"></i>This battle has expired</h1>
+                <p class="mb-0">Battles stay open for 7 days. Ask your friend to start a fresh one — or start training yourself.</p>
+                <a class="btn btn-accent btn-sm mt-2" href="{{ url_for('register') }}"><i class="bi bi-rocket-takeoff me-1"></i>Start free trial</a>
+                {% else %}
+                <div class="small text-white-50 mb-1">PREPNOVA 1v1 BATTLE · {{ battle['subject'] }}</div>
+                <h1 class="h4 mb-1">{{ (battle['creator_name'] or 'Your friend').split()[0] }} scored {{ battle['creator_score'] }}/{{ size }} in {{ battle['creator_time'] }}s <span class="pn-squares">{{ rows[0]['squares'] if rows and rows[0]['is_creator'] else '' }}</span></h1>
+                <p class="mb-0">{% if is_creator %}This is your battle — share the link and defend your score.{% else %}Same {{ size }} questions. Beat the score, and if it's equal, beat the clock.{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if state == 'open' and not is_creator %}
+        <div class="card anim-rise d1 mb-3">
+            <div class="card-body p-4">
+                {% if session.get('user') %}
+                <p class="mb-3">You're signed in as <b>{{ session.get('name') or session.get('user') }}</b>. Ready?</p>
+                <form method="post" action="{{ url_for('battle.accept_play', code=battle['code']) }}">
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-accent btn-lg w-100"><i class="bi bi-swords me-1"></i>Accept the challenge</button>
+                </form>
+                {% else %}
+                <p class="mb-2">Enter a name your opponent will see — then show them no mercy.</p>
+                <form method="post" action="{{ url_for('battle.accept_play', code=battle['code']) }}">
+                    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <input type="text" name="name" class="form-control form-control-lg" maxlength="30" placeholder="Your name (e.g. Chidi)" autocomplete="off">
+                        <button type="submit" class="btn btn-accent btn-lg flex-shrink-0 px-4"><i class="bi bi-swords me-1"></i>Accept</button>
+                    </div>
+                </form>
+                <p class="small text-muted mt-2 mb-0"><i class="bi bi-shield-check me-1"></i>No account needed to play. Free, about 2 minutes.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% elif state == 'mine_inprogress' %}
+        <a class="card anim-rise d1 mb-3 text-decoration-none" href="{{ url_for('battle.play', code=battle['code']) }}">
+            <div class="card-body p-4 text-center">
+                <span class="btn btn-accent btn-lg"><i class="bi bi-play-fill me-1"></i>Continue my battle</span>
+            </div>
+        </a>
+        {% elif state == 'played' or (state == 'open' and is_creator) %}
+        <a class="card anim-rise d1 mb-3 text-decoration-none" href="{{ url_for('battle.result', code=battle['code']) }}">
+            <div class="card-body p-4 text-center">
+                <span class="btn btn-accent btn-lg"><i class="bi bi-trophy me-1"></i>{% if state == 'played' %}See how everyone did{% else %}Open the battle results &amp; share{% endif %}</span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if rows and state != 'pending' %}
+        <div class="card anim-rise d2 mb-3">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-people me-1"></i>Battlefield so far</h2>
+                {% for r in rows %}
+                <div class="pn-battle-row {% if loop.first %}pn-battle-winner{% endif %}">
+                    <span class="rk">{{ loop.index }}</span>
+                    <span class="nm fw-semibold">{{ r['name'] }}{% if r['is_creator'] %} <span class="badge bg-primary">challenger</span>{% endif %}</span>
+                    <span class="pn-squares">{{ r['squares'] }}</span>
+                    <span class="sc fw-bold">{{ r['score'] }}/{{ size }}</span>
+                    <span class="tm text-muted small">{{ r['time'] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not session.get('user') and state in ('open', 'played') and not is_creator %}
+        <div class="card anim-rise d3 border-primary">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-swords fs-2 text-primary"></i>
+                <div class="flex-grow-1">
+                    <b>Enjoying the battle?</b>
+                    <div class="small text-muted">Create a free account to start your OWN battles — and you &amp; {{ (battle['creator_name'] or 'your friend').split()[0] }} both get bonus free days when you write your first mock.</div>
+                </div>
+                <a class="btn btn-accent" href="{{ url_for('register') }}{% if ref_code %}?ref={{ ref_code }}{% endif %}">Start free</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block footer %}{% include "_landing_footer.html" %}{% endblock %}

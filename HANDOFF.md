@@ -625,6 +625,50 @@ copies the repo db to the scratch path only when the scratch does not exist):
   feat1 50, feat2 50, parent 19, resetpw 13 — all green, real db untouched.
   (putme's true green count is 53; an earlier note saying 63 was a miscount.)
 
+## Challenge a Friend — 1v1 battles with WhatsApp share cards (Sept 2026)
+
+Viral feature #3. A logged-in student creates a 5-question subject battle, plays it,
+shares the link; friends play the SAME questions as guests (name only, no account),
+both scores/times compared on a public leaderboard; guests are funnelled to register
+with the creator's referral code (existing referral rewards flow automatically).
+
+- `battle.py` (new, Blueprint `battle_bp`, registered after tools_bp):
+  - `GET /battle` lobby (login): subject picker (available_subjects("JAMB")) + my battles.
+  - `POST /battle/create` (RL 10/600): picks 5 short standalone explained questions
+    (`_pick_ids`, quality filters like the daily challenge), creates pending battle +
+    creator play row, redirects to play. Reuses an unfinished pending battle for the
+    same subject instead of stacking.
+  - `GET /battle/<code>` PUBLIC accept: states pending / expired / open / mine_inprogress
+    / played; OG meta tags for WhatsApp link previews; leaderboard so far.
+  - `POST /battle/<code>/accept` (RL 30/600): guest name (<=30 chars) or logged-in;
+    session key `bplay_<code>` = play id; guards: battle open, <=50 plays/battle,
+    <=3 guest plays per IP per battle, no replay per session/username.
+  - `GET /battle/<code>/play` (public chrome): 5 questions, no answers leaked, one-shot
+    form (data-once), live elapsed timer (display only; real time = finished-started).
+  - `POST /battle/<code>/submit` (RL 40/600): grades like daily challenge, stores score/
+    answers/elapsed; creator's submit flips battle to open + sets 7-day expires_at;
+    topic progress recorded for signed-in players.
+  - `GET /battle/<code>/result` (public): leaderboard (score DESC, time ASC, trophy on
+    winner), Wordle-style emoji squares per play, personalised WhatsApp share text
+    (creator / beat-the-creator / lost variants), copy-link button with clipboard
+    fallback, corrections shown ONLY to players (spoiler guard), register CTA with
+    creator's referral code for guests.
+- Tables `friend_battles` + `friend_battle_plays` in db.py init_db (auto-created on
+  deploy). Templates: battle_lobby / battle_accept / battle_play / battle_result
+  (accept/play/result use the _landing_nav/_landing_footer chrome; base.html gained a
+  "Challenge a friend" dropdown item; daily challenge page gained a cross-link).
+- CSS: battle styles at the end of prepnova.css; **cache-bust bumped v=13 -> v=14**.
+- ALSO FIXED (pre-existing, spotted during audit): the app navbar overflowed ~61px on
+  desktop widths 992-1399px (brand + 6 nav links + actions exceed the bar). Fixes in
+  prepnova.css: hide .pn-user-name 992-1399, tighter nav-link/btn padding 992-1299,
+  hide nav-link icons 992-1151. Verified 0px overflow 992-1600; mobile unaffected.
+- Tests: `_work/battle_test.py` — 43 checks, self-contained (/tmp/fb.db, wiped at
+  start), covers creator/guest flows, replay blocks, IP cap, expiry, spoiler guard,
+  winner tiebreak, RL, ref CTA. Playwright audit: no console errors, no mobile
+  overflow, timer + copy button verified end-to-end.
+- Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
+  parent 19, resetpw 13, battle 43 — all green, real db untouched.
+
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
   existing read-only parent report (`/parent/<code>`, `study.parent_summary`).

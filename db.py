@@ -547,6 +547,40 @@ def init_db():
         )
     """)
 
+    # ---------------------------------------------------- growth: friend battles (1v1)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS friend_battles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            creator_username TEXT NOT NULL,
+            creator_name TEXT,
+            subject TEXT NOT NULL,
+            question_ids TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            creator_score INTEGER,
+            creator_time INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TEXT
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_friend_battles_creator ON friend_battles(creator_username)")
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS friend_battle_plays (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            battle_id INTEGER NOT NULL,
+            username TEXT,
+            guest_name TEXT,
+            ip TEXT,
+            score INTEGER,
+            time_seconds INTEGER,
+            answers TEXT DEFAULT '{}',
+            started_at TEXT,
+            finished_at TEXT
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_friend_battle_plays_battle ON friend_battle_plays(battle_id)")
+
     # ------------------------------------------------------------ growth: access PINs (vouchers)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS access_codes (

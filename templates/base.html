@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=13">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=14">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -61,6 +61,7 @@
                         <li><a class="dropdown-item" href="{{ url_for('live_mock') }}"><i class="bi bi-broadcast"></i> Saturday Live Mock</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('parent_link') }}"><i class="bi bi-people"></i> Parent link</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('mistakes') }}"><i class="bi bi-bandaid"></i> Fix my mistakes</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('battle.lobby') }}"><i class="bi bi-swords"></i> Challenge a friend</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('invite') }}"><i class="bi bi-gift"></i> Invite friends</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
