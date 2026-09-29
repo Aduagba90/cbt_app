@@ -1,0 +1,24 @@
+{% set on_landing = request.path in ('/', '/index') %}
+<nav class="pn-landing-nav">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a class="pn-brand" href="{{ url_for('index') }}">
+            <span class="pn-logo">PN</span>
+            <span>PrepNova <span style="color:var(--pn-accent)">CBT</span></span>
+        </a>
+        <ul class="nav d-none d-lg-flex align-items-center gap-1">
+            <li class="nav-item"><a class="nav-link" href="{{ '#tools' if on_landing else url_for('tools.combination_checker') }}"><i class="bi bi-tools me-1"></i>Free tools</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ '#features' if on_landing else '/#features' }}">Features</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ '#how' if on_landing else '/#how' }}">How it works</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ '#pricing' if on_landing else '/#pricing' }}">Pricing</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ '#faq' if on_landing else '/#faq' }}">FAQ</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+            {% if session.get('user') %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-accent btn-sm"><i class="bi bi-grid-1x2 me-1"></i> Go to dashboard</a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">Log in</a>
+            <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start free trial</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>

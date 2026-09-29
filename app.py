@@ -32,6 +32,7 @@ import exam_engine as engine
 import post_utme as putme
 import waec as waecf
 from admin_routes import admin_bp
+from admission_tools import tools_bp
 from db import connect, init_db
 import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
@@ -143,6 +144,7 @@ SESSION_IDLE_MINUTES = int(os.getenv("SESSION_IDLE_MINUTES", "60"))
 EXAM_IDLE_MINUTES = 240  # never time a student out during a live exam
 
 app.register_blueprint(admin_bp)
+app.register_blueprint(tools_bp)
 
 init_db()
 
@@ -485,6 +487,7 @@ def home():
     conn.close()
     exam_date = _next_utme_date()
     return render_template("index.html", plans=plans, stats=stats, courses=["Medicine & Surgery", "Law", "Engineering", "Nursing", "Accounting", "Mass Communication", "Computer Science", "Economics"],
+                           n_courses=len(JAMB_COURSES),
                            ticker=ticker, exam_date=exam_date, days_to_exam=(exam_date - datetime.now().date()).days)
 
 

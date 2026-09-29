@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}JAMB Subject Combination Checker — Free, No Sign-up | PrepNova CBT{% endblock %}
+{% block description %}Free JAMB subject combination checker. Pick your course and see the exact four UTME subjects, or pick your subjects and see every course they can carry. Wrong combination means disqualification.{% endblock %}
+{% block body_class %}pn-landing{% endblock %}
+
+{% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
+
+{% block main %}
+<header class="pn-hero pn-hero-sm">
+    <div class="pn-hero-grid"></div>
+    <div class="container position-relative">
+        <div class="small mb-2"><a class="text-white-50 text-decoration-none" href="{{ url_for('index') }}">Home</a> <i class="bi bi-chevron-right small"></i> <span class="text-white-50">Subject combination checker</span></div>
+        <h1 class="anim-rise">The four subjects that decide your admission</h1>
+        <p class="lead anim-rise d1">JAMB disqualifies a wrong subject combination before the exam even starts — even with a 350. Check yours in ten seconds, free. No account needed.</p>
+    </div>
+</header>
+
+<section class="pn-tool-wrap">
+    <div class="container" style="max-width:880px">
+        <div class="pn-tool-card">
+
+            <ul class="nav nav-pills gap-2 mb-4 pn-tool-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link" type="button" data-pn-tab="bycourse"><i class="bi bi-mortarboard me-1"></i>I know my course</button></li>
+                <li class="nav-item"><button class="nav-link" type="button" data-pn-tab="bysubjects"><i class="bi bi-collection me-1"></i>I know my subjects</button></li>
+            </ul>
+
+            <!-- ===================== TAB 1: BY COURSE ===================== -->
+            <div data-pn-pane="bycourse">
+                <form method="get" class="mb-2">
+                    <label class="form-label fw-bold" for="course-select"><i class="bi bi-mortarboard me-1 text-primary"></i>Choose your course</label>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <select id="course-select" name="course" class="form-select form-select-lg">
+                            <option value="">— Select a course —</option>
+                            {% for faculty, group in course_groups %}
+                            <optgroup label="{{ faculty }}">
+                                {% for name, subs in group %}
+                                <option value="{{ name }}" {% if combo and name == combo.course %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-accent px-4 flex-shrink-0"><i class="bi bi-search me-1"></i>Show combination</button>
+                    </div>
+                </form>
+
+                {% if combo_error %}
+                <div class="alert alert-warning mt-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ combo_error }}</div>
+                {% elif combo %}
+                <div class="pn-tool-result anim-rise">
+                    <span class="pn-eyebrow">{{ combo.faculty }}</span>
+                    <h2 class="h3 mb-1">{{ combo.course }}</h2>
+                    <p class="text-muted small mb-3">JAMB UTME subject combination</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="pn-subject-pill pn-pill-compulsory"><i class="bi {{ subject_icon('Use of English') }} me-1"></i>Use of English <small>compulsory for every course</small></span>
+                        {% for s in combo.others %}
+                        <span class="pn-subject-pill"><i class="bi {{ subject_icon(s) }} me-1"></i>{{ s }}</span>
+                        {% endfor %}
+                    </div>
+                    {% if combo.alt %}
+                    <div class="alert alert-info d-flex gap-2 mb-2"><i class="bi bi-info-circle-fill mt-1"></i><div>{{ combo.alt }}</div></div>
+                    {% endif %}
+                    <div class="alert alert-light border d-flex gap-2 mb-0"><i class="bi bi-journal-check text-primary mt-1"></i><div>{{ olevel_note }}</div></div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a class="btn btn-accent" href="{{ url_for('register') }}"><i class="bi bi-rocket-takeoff me-1"></i>Practise these 4 subjects</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('tools.admission_calculator') }}?course={{ combo.course|urlencode }}&uni=federal"><i class="bi bi-calculator me-1"></i>What score do I need?</a>
+                    </div>
+                </div>
+                {% else %}
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-lightbulb me-1"></i>Wrong combination is the most avoidable reason candidates are disqualified — check before you register.</p>
+                {% endif %}
+            </div>
+
+            <!-- ===================== TAB 2: BY SUBJECTS ===================== -->
+            <div data-pn-pane="bysubjects">
+                <form method="get">
+                    <label class="form-label fw-bold"><i class="bi bi-collection me-1 text-primary"></i>Pick the subjects you can write (your best three)</label>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        {% for s in electives %}
+                        <span class="pn-chipbox">
+                            <input type="checkbox" name="subjects" value="{{ s }}" id="subj-{{ loop.index }}" {% if s in chosen %}checked{% endif %}>
+                            <label for="subj-{{ loop.index }}">{{ s }}</label>
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <p class="small text-muted">Use of English is compulsory for every course — you don't need to pick it. Choose two or three subjects.</p>
+                    <button type="submit" class="btn btn-accent"><i class="bi bi-search me-1"></i>Show my courses</button>
+                </form>
+
+                {% if chosen_missing %}
+                <div class="alert alert-warning mt-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Pick at least one subject from the list above.</div>
+                {% elif reverse is not none %}
+                <div class="pn-tool-result anim-rise">
+                    <h3 class="h5"><i class="bi bi-patch-check-fill text-success me-1"></i>With Use of English + {{ chosen|join(', ') }} you can study:</h3>
+                    {% if reverse.eligible %}
+                    {% for faculty, items in reverse.eligible_grouped %}
+                    <div class="mb-2">
+                        <div class="pn-eyebrow">{{ faculty }}</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for name in items %}
+                            <a class="pn-subject-chip pn-chip-link" href="{{ url_for('tools.combination_checker') }}?course={{ name|urlencode }}">{{ name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted mb-2">No course takes exactly this combination — but look at the near-misses below; you are one subject away from plenty.</p>
+                    {% endif %}
+
+                    {% if reverse.near %}
+                    <h3 class="h5 mt-4"><i class="bi bi-plus-circle-fill text-warning me-1"></i>One subject away:</h3>
+                    {% for missing, items in reverse.near %}
+                    <div class="pn-nearmiss">
+                        <div class="pn-nearmiss-add">Add <b>{{ missing }}</b> <i class="bi bi-arrow-right"></i></div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for faculty, name in items[:8] %}
+                            <a class="pn-subject-chip pn-chip-link" href="{{ url_for('tools.combination_checker') }}?course={{ name|urlencode }}" title="{{ faculty }}">{{ name }}</a>
+                            {% endfor %}
+                            {% if items|length > 8 %}<span class="pn-subject-chip">+ {{ items|length - 8 }} more</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    <div class="alert alert-light border d-flex gap-2 mb-0"><i class="bi bi-journal-check text-primary mt-1"></i><div>{{ olevel_note }}</div></div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a class="btn btn-accent" href="{{ url_for('register') }}"><i class="bi bi-rocket-takeoff me-1"></i>Practise my subjects</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Cross-links + CTA strip -->
+        <div class="row g-3 mt-4">
+            <div class="col-md-6">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('tools.admission_calculator') }}">
+                    <span class="pn-tile-icon tint-gold"><i class="bi bi-calculator"></i></span>
+                    <h3 class="h6 mt-2 mb-1">Admission Chance Calculator</h3>
+                    <p class="small mb-0">Got a score (or a target)? See your realistic chance and the gap to close.</p>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('register') }}">
+                    <span class="pn-tile-icon tint-green"><i class="bi bi-rocket-takeoff"></i></span>
+                    <h3 class="h6 mt-2 mb-1">Practise the real CBT screen</h3>
+                    <p class="small mb-0">Full mocks with a live timer and step-by-step corrections — on any phone or laptop. 7-day free trial.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    var tabs = document.querySelectorAll("[data-pn-tab]");
+    var panes = document.querySelectorAll("[data-pn-pane]");
+    if (!tabs.length || !panes.length) return;
+    var initial = {{ ('bysubjects' if reverse is not none else 'bycourse') | tojson }};
+    function activate(key) {
+        tabs.forEach(function (t) { t.classList.toggle("active", t.getAttribute("data-pn-tab") === key); });
+        panes.forEach(function (p) { p.hidden = p.getAttribute("data-pn-pane") !== key; });
+    }
+    tabs.forEach(function (t) { t.addEventListener("click", function () { activate(t.getAttribute("data-pn-tab")); }); });
+    activate(initial);
+})();
+</script>
+{% endblock %}
+
+{% block footer %}{% include "_landing_footer.html" %}{% endblock %}

@@ -1,0 +1,20 @@
+<footer class="pn-landing-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <a class="pn-brand mb-2" href="{{ url_for('index') }}"><span class="pn-logo">PN</span><span>PrepNova <span style="color:var(--pn-accent)">CBT</span></span></a>
+                <p class="mt-2 mb-0" style="max-width:320px">Nigeria's smart exam-preparation platform for JAMB UTME, WAEC SSCE and university Post-UTME screening.</p>
+            </div>
+            <div class="col-6 col-lg-2"><h5>Exams</h5><a href="{{ url_for('register') }}">JAMB UTME</a><a href="{{ url_for('register') }}">WAEC SSCE</a><a href="{{ url_for('register') }}">Post-UTME</a></div>
+            <div class="col-6 col-lg-2"><h5>Free tools</h5><a href="{{ url_for('tools.combination_checker') }}">Subject combinations</a><a href="{{ url_for('tools.admission_calculator') }}">Admission calculator</a></div>
+            <div class="col-6 col-lg-2"><h5>Company</h5><a href="/#features">Features</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div>
+            <div class="col-6 col-lg-2"><h5>Legal</h5><a href="{{ url_for('terms') }}">Terms of use</a><a href="{{ url_for('privacy') }}">Privacy policy</a></div>
+            <div class="col-6 col-lg-2"><h5>Support</h5><a href="mailto:{{ support_email }}">{{ support_email }}</a>{% if support_whatsapp %}<a href="https://wa.me/{{ support_whatsapp }}" rel="noopener">WhatsApp</a>{% endif %}<a href="{{ url_for('admin_login') }}">Admin</a></div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-wrap justify-content-between gap-2 small">
+            <span>&copy; {{ current_year }} PrepNova CBT. All rights reserved.</span>
+            <span>PrepNova is not affiliated with JAMB, WAEC or any university.</span>
+        </div>
+    </div>
+</footer>

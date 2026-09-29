@@ -3,24 +3,7 @@
 {% block body_class %}pn-landing{% endblock %}
 
 {% block navbar %}
-<nav class="pn-landing-nav">
-    <div class="container d-flex align-items-center justify-content-between">
-        <a class="pn-brand" href="/">
-            <span class="pn-logo">PN</span>
-            <span>PrepNova <span style="color:var(--pn-accent)">CBT</span></span>
-        </a>
-        <ul class="nav d-none d-lg-flex align-items-center gap-1">
-            <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-            <li class="nav-item"><a class="nav-link" href="#how">How it works</a></li>
-            <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
-            <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-        </ul>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">Log in</a>
-            <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start free trial</a>
-        </div>
-    </div>
-</nav>
+{% include "_landing_nav.html" %}
 {% endblock %}
 
 {% block main %}
@@ -118,7 +101,7 @@
                     <span class="pn-tile-icon tint-green"><i class="bi bi-mortarboard"></i></span>
                     <h3>JAMB UTME</h3>
                     <p>Full 4-subject mock with 180 questions and a 2-hour countdown — Use of English plus your course combination, automatically selected.</p>
-                    <div class="mt-3 d-flex flex-wrap gap-1">{% for c in courses[:5] %}<span class="pn-subject-chip">{{ c }}</span>{% endfor %}<span class="pn-subject-chip">+ 65 more, or build your own</span></div>
+                    <div class="mt-3 d-flex flex-wrap gap-1">{% for c in courses[:5] %}<span class="pn-subject-chip">{{ c }}</span>{% endfor %}<span class="pn-subject-chip">+ {{ n_courses - 5 }} more, or build your own</span></div>
                 </div>
             </div>
             <div class="col-md-4 reveal" data-delay="1">
@@ -142,6 +125,35 @@
                     <p>Your university's real screening format — UNILAG, UI, OAU, UNN, ABU, UNIBEN, UNILORIN, LASU and more — with the right timing, subject mix and Nigeria current affairs.</p>
                     <div class="mt-3 d-flex flex-wrap gap-1"><span class="pn-subject-chip">UNILAG</span><span class="pn-subject-chip">UI</span><span class="pn-subject-chip">OAU</span><span class="pn-subject-chip">UNN</span><span class="pn-subject-chip">+ more</span></div>
                 </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================ FREE TOOLS ============================ -->
+<section class="pn-section pn-section-alt" id="tools">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <span class="pn-eyebrow">Free — no account needed</span>
+            <h2>Check your admission facts before you register</h2>
+            <p class="lead mx-auto" style="max-width:620px">Two free tools every candidate should use before filling the JAMB form. No sign-up, no cost — ever.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 reveal">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('tools.combination_checker') }}">
+                    <span class="pn-tile-icon tint-blue"><i class="bi bi-list-check"></i></span>
+                    <h3>Subject Combination Checker</h3>
+                    <p>Pick your course and see the exact four subjects JAMB requires — or pick your subjects and see every course they can carry. A wrong combination disqualifies you, even with a 350.</p>
+                    <span class="btn btn-outline-primary btn-sm mt-2">Check my combination <i class="bi bi-arrow-right"></i></span>
+                </a>
+            </div>
+            <div class="col-md-6 reveal" data-delay="1">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('tools.admission_calculator') }}">
+                    <span class="pn-tile-icon tint-gold"><i class="bi bi-calculator"></i></span>
+                    <h3>Admission Chance Calculator</h3>
+                    <p>Enter your JAMB score (or your target) with your course and university type — see your realistic chance, the gap to close, and how the admission aggregate really works.</p>
+                    <span class="btn btn-outline-primary btn-sm mt-2">Calculate my chance <i class="bi bi-arrow-right"></i></span>
+                </a>
             </div>
         </div>
     </div>
@@ -362,23 +374,5 @@
 {% endblock %}
 
 {% block footer %}
-<footer class="pn-landing-footer">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <a class="pn-brand mb-2" href="/"><span class="pn-logo">PN</span><span>PrepNova <span style="color:var(--pn-accent)">CBT</span></span></a>
-                <p class="mt-2 mb-0" style="max-width:320px">Nigeria's smart exam-preparation platform for JAMB UTME, WAEC SSCE and university Post-UTME screening.</p>
-            </div>
-            <div class="col-6 col-lg-2"><h5>Exams</h5><a href="{{ url_for('register') }}">JAMB UTME</a><a href="{{ url_for('register') }}">WAEC SSCE</a><a href="{{ url_for('register') }}">Post-UTME</a></div>
-            <div class="col-6 col-lg-2"><h5>Company</h5><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
-            <div class="col-6 col-lg-2"><h5>Legal</h5><a href="{{ url_for('terms') }}">Terms of use</a><a href="{{ url_for('privacy') }}">Privacy policy</a></div>
-            <div class="col-6 col-lg-2"><h5>Support</h5><a href="mailto:{{ support_email }}">{{ support_email }}</a>{% if support_whatsapp %}<a href="https://wa.me/{{ support_whatsapp }}" rel="noopener">WhatsApp</a>{% endif %}<a href="{{ url_for('admin_login') }}">Admin</a></div>
-        </div>
-        <hr class="my-4">
-        <div class="d-flex flex-wrap justify-content-between gap-2 small">
-            <span>&copy; {{ current_year }} PrepNova CBT. All rights reserved.</span>
-            <span>PrepNova is not affiliated with JAMB, WAEC or any university.</span>
-        </div>
-    </div>
-</footer>
+{% include "_landing_footer.html" %}
 {% endblock %}

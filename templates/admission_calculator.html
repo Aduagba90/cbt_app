@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}JAMB Admission Chance Calculator — Will Your Score Get You In? | PrepNova CBT{% endblock %}
+{% block description %}Free JAMB admission chance calculator. Enter your UTME score, course and university type to see your realistic admission chance, the gap to close, and how the aggregate really works.{% endblock %}
+{% block body_class %}pn-landing{% endblock %}
+
+{% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
+
+{% block main %}
+<header class="pn-hero pn-hero-sm">
+    <div class="pn-hero-grid"></div>
+    <div class="container position-relative">
+        <div class="small mb-2"><a class="text-white-50 text-decoration-none" href="{{ url_for('index') }}">Home</a> <i class="bi bi-chevron-right tiny"></i> <span class="text-white-50">Admission chance calculator</span></div>
+        <h1 class="anim-rise">Will your JAMB score carry your course?</h1>
+        <p class="lead anim-rise d1">Enter your score — real or target — with your course and the type of university. Get an honest verdict, the gap to close, and what actually earns the admission. Free, no account needed.</p>
+    </div>
+</header>
+
+<section class="pn-tool-wrap">
+    <div class="container" style="max-width:880px">
+        <div class="pn-tool-card">
+            <form method="get">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold" for="calc-course"><i class="bi bi-mortarboard me-1 text-primary"></i>Your course</label>
+                        <select id="calc-course" name="course" class="form-select">
+                            <option value="">— Select a course —</option>
+                            {% for faculty, group in course_groups %}
+                            <optgroup label="{{ faculty }}">
+                                {% for name, subs in group %}
+                                <option value="{{ name }}" {% if result and name == result.course %}selected{% elif not result and course == name %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-bold" for="calc-score"><i class="bi bi-123 me-1 text-primary"></i>JAMB score</label>
+                        <input id="calc-score" type="number" class="form-control" name="score" min="100" max="400" inputmode="numeric" placeholder="e.g. 250" value="{{ score_raw if score_raw else '' }}">
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <label class="form-label fw-bold" for="calc-uni"><i class="bi bi-bank me-1 text-primary"></i>University</label>
+                        <select id="calc-uni" name="uni" class="form-select">
+                            {% for key, label, short, adj in uni_tiers %}
+                            <option value="{{ key }}" {% if tier_key == key %}selected{% endif %}>{{ label.split(' (')[0] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                    <button type="submit" class="btn btn-accent"><i class="bi bi-calculator me-1"></i>Calculate my chance</button>
+                    <span class="small text-muted d-none d-sm-inline">Try an example:</span>
+                    {% for qc, qs, qt in quick %}
+                    <a class="pn-subject-chip pn-chip-link" href="?course={{ qc|urlencode }}&score={{ qs }}&uni={{ qt }}">{{ qc }} · {{ qs }}</a>
+                    {% endfor %}
+                </div>
+            </form>
+
+            {% if error %}
+            <div class="alert alert-warning mt-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</div>
+            {% elif result %}
+            <div class="pn-tool-result anim-rise">
+                <div class="pn-verdict pn-verdict-{{ result.tone }}">
+                    <div class="pn-verdict-band"><i class="bi {{ result.icon }} me-1"></i>{{ result.label }}</div>
+                    <div class="pn-verdict-nums">
+                        Your score <b>{{ result.score }}/400</b>
+                        &nbsp;·&nbsp; realistic target for <b>{{ result.course }}</b> at {{ result.tier_label }} ≈ <b>{{ result.target }}</b>
+                        &nbsp;·&nbsp; gap: <b>{{ '+' if result.gap >= 0 }}{{ result.gap }} marks</b>
+                    </div>
+                </div>
+
+                {% if result.flags %}
+                <div class="alert alert-danger mt-3 mb-2">
+                    {% for f in result.flags %}<div class="d-flex gap-2 mb-1"><i class="bi bi-exclamation-octagon-fill mt-1"></i><div>{{ f }}</div></div>{% endfor %}
+                </div>
+                {% endif %}
+
+                <p class="mb-2">{{ result.advice }}</p>
+                <div class="alert alert-light border d-flex gap-2"><i class="bi bi-pie-chart-fill text-primary mt-1"></i><div>{{ aggregate_note }}</div></div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a class="btn btn-accent" href="{{ url_for('register') }}"><i class="bi bi-rocket-takeoff me-1"></i>Close the gap — practise free for 7 days</a>
+                    <a class="btn btn-outline-success" href="{{ result.share_url }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share my result</a>
+                </div>
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Estimate only — real cut-offs vary by university, by year and by catchment/ELDS. Nothing on this page is an official JAMB or university figure. Practice consistently either way: the students who pass practised.</p>
+            </div>
+            {% else %}
+            <p class="small text-muted mt-3 mb-0"><i class="bi bi-lightbulb me-1"></i>Tip: use your <b>target</b> score if you haven't written yet — then go and earn it.</p>
+            {% endif %}
+        </div>
+
+        <!-- Cross-links + CTA strip -->
+        <div class="row g-3 mt-4">
+            <div class="col-md-6">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('tools.combination_checker') }}">
+                    <span class="pn-tile-icon tint-blue"><i class="bi bi-list-check"></i></span>
+                    <h3 class="h6 mt-2 mb-1">Subject Combination Checker</h3>
+                    <p class="small mb-0">Confirm the four subjects your course requires — before you register.</p>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a class="pn-feature pn-feature-link d-block h-100 text-decoration-none" href="{{ url_for('register') }}">
+                    <span class="pn-tile-icon tint-green"><i class="bi bi-rocket-takeoff"></i></span>
+                    <h3 class="h6 mt-2 mb-1">From score to admission</h3>
+                    <p class="small mb-0">Full JAMB, WAEC &amp; Post-UTME mocks on the real CBT screen — free for 7 days.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block footer %}{% include "_landing_footer.html" %}{% endblock %}

@@ -572,6 +572,59 @@ The hero headline said "Pass JAMB & Post-UTME with ..." even though the WAEC ban
   say "phone or laptop" so nobody reads the page as phone-only (real JAMB is on a
   computer; sponsors/parents often browse on desktops).
 
+## Free admission tools: Combination Checker + Chance Calculator (Sept 2026)
+
+Crowd-puller feature #2. Two PUBLIC, GET-only, no-login pages, server-rendered from
+query params (work without JS, indexable, shareable URLs), wired into the landing page.
+
+- `admission_tools.py` (new, Blueprint `tools_bp`, registered in app.py right after admin_bp):
+  - `/subject-combination-checker` — course -> the 4 UTME subjects, served from the SAME
+    `COURSE_GROUPS` data that drives the JAMB mock (single source of truth). Tab 2 = reverse
+    lookup: `?subjects=Physics&subjects=Chemistry&subjects=Biology` -> eligible courses grouped
+    by faculty + "one subject away" near-misses. `COURSE_ALTS` carries honest
+    "many universities also accept..." notes for ~12 flexible courses.
+  - `/admission-chance-calculator` — `?course=&score=&uni=(top|federal|state|private)` ->
+    banded verdict (very_high/high/possible/low/very_low from gap to target), target =
+    `COURSE_TARGET[course]` (mid-tier federal benchmark) + tier adjustment (+20 top,
+    +5 federal, -10 state, -50 private, clamped 160-350), gap, advice, JAMB-min-140 flag,
+    top-school-200-floor flag, aggregate explainer (JAMB ~50/Post-UTME ~30/O'level ~20),
+    WhatsApp share link, disclaimer. Targets verified against published cut-off behaviour
+    (JAMB min 140; Medicine 250-300+; Law 240-280; Engineering 200-260) — estimates, not official.
+- Templates: `combination_checker.html`, `admission_calculator.html`, plus NEW shared
+  `templates/_landing_nav.html` + `_landing_footer.html` — index.html's navbar/footer blocks
+  now include them (added "Free tools" nav link + footer column; logged-in users see
+  "Go to dashboard" instead of Log in). Landing gained a `#tools` section (2 cards) before
+  "Try a question", and "+ 65 more" is now dynamic `+ {{ n_courses - 5 }}` (80 courses).
+- CSS appended at the end of `static/css/prepnova.css` (pn-hero-sm, pn-tool-card, pn-chipbox,
+  pn-subject-pill, pn-nearmiss, pn-verdict-*, pn-feature-link). Note `?v=13` cache-bust on
+  the css link in base.html — BUMP IT when changing css.
+- Jinja gotcha hit twice: `{{ 'a' if x else 'b' | tojson }}` filters only the else-branch ->
+  unquoted JS string. Always parenthesise: `{{ ('a' if x else 'b') | tojson }}`.
+- Tests: `_work/tools_test.py` — 62 checks (pages, both modes, verdict boundaries, all 80
+  courses render on both tools, landing links, no-JS/deep-link tab behaviour).
+
+### CORRECT test-suite protocol (learned the hard way — follow exactly)
+
+Suites in `_work/` do `sys.path.insert(0, "/home/user/cbt_app")`, so they ALWAYS import the
+real repo's app regardless of cwd — copying the repo elsewhere does NOT isolate them. The
+isolation that works is the `DATABASE_PATH` env var (db.py honours it; `_seed_if_missing()`
+copies the repo db to the scratch path only when the scratch does not exist):
+
+    cd /home/user/cbt_app
+    rm -f /tmp/scratch.db* /tmp/f1.db* /tmp/f2.db* /tmp/pu.db* /tmp/pt.db*
+    cp database.db /tmp/scratch.db
+    DATABASE_PATH=/tmp/scratch.db PYTHONPATH=. FLASK_ENV=development python3 _work/<suite>.py
+
+- Delete EVERY suite's scratch db before EACH run: stale scratch = duplicate-email crashes
+  and audit-count mismatches (feat2 AttributeError, feat1 'audit logged' flakes).
+- putme_test/regress/resetpw/tools_test need the env var (no internal override);
+  waec/feat1/feat2/parent set their own (/tmp/pu.db, f1, f2, pt) and override the env var.
+- Never run suites without DATABASE_PATH: they write real rows into database.db
+  (a polluted db once got committed and had to be amended out).
+- Battery result with this protocol (Sept 2026): tools 62, regress 75, waec 68, putme 53,
+  feat1 50, feat2 50, parent 19, resetpw 13 — all green, real db untouched.
+  (putme's true green count is 53; an earlier note saying 63 was a miscount.)
+
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
   existing read-only parent report (`/parent/<code>`, `study.parent_summary`).

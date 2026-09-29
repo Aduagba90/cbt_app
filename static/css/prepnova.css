@@ -875,3 +875,48 @@ a.pn-topic.weak i { font-size: .9rem; }
 .pn-parent-weeks td, .pn-parent-weeks th { padding: .55rem .5rem; font-size: .85rem; }
 .pn-parent-weeks td:first-child { white-space: nowrap; }
 @media (max-width: 575.98px) { .pn-parent-weeks .badge { font-size: .62rem; } .pn-parent-weeks td, .pn-parent-weeks th { padding: .5rem .35rem; font-size: .8rem; } }
+
+/* ==========================================================================
+   Free tools: Subject Combination Checker + Admission Chance Calculator
+   ========================================================================== */
+.pn-hero-sm { padding: 5.5rem 0 4.5rem; }
+@media (min-width: 992px) { .pn-hero-sm { padding: 6.5rem 0 5rem; } }
+
+.pn-tool-wrap { position: relative; z-index: 2; margin-top: -2.75rem; padding-bottom: 4rem; }
+.pn-tool-card { background: #fff; border-radius: 1.25rem; box-shadow: 0 1.25rem 3rem rgba(15, 31, 61, .14); padding: 1.5rem; }
+@media (min-width: 768px) { .pn-tool-card { padding: 2.25rem; } }
+.pn-tool-tabs .nav-link { border-radius: 999px; color: #0d6efd; background: #f0f5ff; font-weight: 600; }
+.pn-tool-tabs .nav-link.active { background: #0d6efd; color: #fff; }
+.pn-tool-result { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px dashed #dfe6f0; }
+
+/* Subject pills on the combination result */
+.pn-subject-pill { display: inline-flex; align-items: center; gap: .15rem; background: #f0f5ff; border: 1.5px solid #cddaff; color: #0b3b2c; font-weight: 600; padding: .5rem .95rem; border-radius: 999px; font-size: .95rem; }
+.pn-subject-pill small { font-weight: 500; color: #6c757d; margin-left: .35rem; font-size: .72rem; }
+.pn-subject-pill.pn-pill-compulsory { background: #12a8661a; border-color: #12a86666; }
+
+/* Selectable subject chips (reverse lookup) */
+.pn-chipbox input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pn-chipbox label { display: inline-block; padding: .45rem .9rem; border: 1.5px solid #c3cfe3; border-radius: 999px; cursor: pointer; user-select: none; font-weight: 600; color: #0f1f3d; background: #fff; transition: all .15s ease; }
+.pn-chipbox label:hover { border-color: #0d6efd; color: #0d6efd; }
+.pn-chipbox input:checked + label { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+.pn-chipbox input:focus-visible + label { outline: 2px solid #0a58ca; outline-offset: 2px; }
+.pn-chip-link { text-decoration: none; cursor: pointer; }
+.pn-chip-link:hover { background: #0d6efd; color: #fff; }
+
+/* Near-miss rows ("one subject away") */
+.pn-nearmiss { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .75rem 1rem; background: #fff8e6; border: 1px solid #f2e3b3; border-radius: .9rem; margin-bottom: .5rem; }
+.pn-nearmiss-add { font-weight: 700; color: #7a5c00; white-space: nowrap; }
+
+/* Calculator verdict banner */
+.pn-verdict { border-radius: 1rem; padding: 1.25rem 1.5rem; color: #fff; }
+.pn-verdict-band { font-size: 1.35rem; font-weight: 800; }
+.pn-verdict-nums { opacity: .95; margin-top: .25rem; }
+.pn-verdict-nums b { font-size: 1.05rem; }
+.pn-verdict-green { background: linear-gradient(135deg, #0e8a56, #12a866); }
+.pn-verdict-amber { background: linear-gradient(135deg, #b07800, #e0a106); }
+.pn-verdict-orange { background: linear-gradient(135deg, #c25e00, #e67e22); }
+.pn-verdict-red { background: linear-gradient(135deg, #b02a37, #dc3545); }
+
+/* Landing feature cards that are links (free-tools section) */
+.pn-feature-link { color: inherit; transition: transform .2s ease, box-shadow .2s ease; }
+.pn-feature-link:hover { transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(15, 31, 61, .12); color: inherit; }
