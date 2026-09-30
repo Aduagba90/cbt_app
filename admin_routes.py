@@ -24,7 +24,9 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 
 from db import connect, DB_PATH
 from helpers import activate_subscription as grant_plan
-from helpers import generate_access_codes, pretty_code
+from helpers import generate_access_codes, pretty_code, fmt_naira
+from centre import (DURATIONS, DURATION_LABEL, activate_centre_order, extend_centre,
+                    order_total, _centre_stats)
 from security import password_problems
 from werkzeug.security import generate_password_hash
 from security import admin_required
@@ -5694,3 +5696,121 @@ def get_post_utme_subjects():
     return {"subjects": [putme.ENGLISH] + list(putme.JAMB_ELECTIVES) + [putme.CA_SUBJECT]}
 
 
+# ---------------------------------------------------------------------------
+# Schools & lesson centres
+# ---------------------------------------------------------------------------
+
+@admin_bp.route("/centres")
+def manage_centres():
+    conn = connect()
+    cur = conn.cursor()
+    centres = cur.execute(
+        """SELECT c.*,
+                  (SELECT COUNT(*) FROM centre_members m WHERE m.centre_id = c.id) AS members,
+                  (SELECT SUM(amount) FROM centre_orders o WHERE o.centre_id = c.id AND o.status = 'PAID') AS revenue
+             FROM centres c ORDER BY c.id DESC LIMIT 300""").fetchall()
+    stats = {
+        "centres": len(centres),
+        "seats": sum(c["seats"] or 0 for c in centres),
+        "members": sum(c["members"] or 0 for c in centres),
+        "revenue": sum(c["revenue"] or 0 for c in centres),
+    }
+    conn.close()
+    return render_template("manage_centres.html", centres=centres, stats=stats,
+                           durations=DURATIONS, fmt_naira=fmt_naira,
+                           today=datetime.now().strftime("%Y-%m-%d"))
+
+
+@admin_bp.route("/centres/create", methods=["POST"])
+def create_centre():
+    """Manual creation for bank-transfer / cash sales. Activates immediately."""
+    centre_name = (request.form.get("centre_name") or "").strip()[:60]
+    owner_email = (request.form.get("owner_email") or "").strip().lower()[:120]
+    owner_name = (request.form.get("owner_name") or "").strip()[:60]
+    owner_phone = (request.form.get("owner_phone") or "").strip()[:20]
+    try:
+        seats = int(request.form.get("seats") or 0)
+        days = int(request.form.get("days") or 0)
+    except ValueError:
+        seats = days = 0
+    amount_raw = (request.form.get("amount") or "").strip()
+    if len(centre_name) < 3 or "@" not in owner_email or seats < 1 or seats > 500 or days not in DURATION_LABEL:
+        flash("Check the form — name, a valid owner email, seats (1-500) and a plan length are required.", "warning")
+        return redirect(url_for("admin_bp.manage_centres"))
+    try:
+        amount = round(float(amount_raw), 2) if amount_raw else order_total(seats, days)
+    except ValueError:
+        amount = order_total(seats, days)
+    conn = connect()
+    cur = conn.cursor()
+    reference = f"MANUAL-C-{secrets.token_hex(4).upper()}"
+    cur.execute(
+        "INSERT INTO centre_orders (reference, centre_name, owner_username, owner_name, owner_phone, seats, days, amount, status, created_at, paid_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PAID', ?, ?)",
+        (reference, centre_name, owner_email, owner_name, owner_phone, seats, days, amount,
+         datetime.now().strftime("%Y-%m-%d %H:%M:%S"), datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    order = cur.execute("SELECT * FROM centre_orders WHERE reference = ?", (reference,)).fetchone()
+    centre, join_code = activate_centre_order(cur, order)
+    conn.commit()
+    conn.close()
+    _audit("centre_create_manual", f"{centre_name} ({seats} seats x {days}d, join code {join_code})")
+    flash(f"Centre '{centre_name}' is active. Join code: {join_code} — the owner sees the dashboard at /centre when they log in with {owner_email}.", "success")
+    return redirect(url_for("admin_bp.manage_centres"))
+
+
+@admin_bp.route("/centres/<int:centre_id>")
+def centre_detail(centre_id):
+    conn = connect()
+    cur = conn.cursor()
+    centre = cur.execute("SELECT * FROM centres WHERE id = ?", (centre_id,)).fetchone()
+    if not centre:
+        conn.close()
+        abort(404)
+    members, subject_rows, weakest = _centre_stats(cur, centre)
+    orders = cur.execute("SELECT * FROM centre_orders WHERE centre_id = ? ORDER BY id DESC", (centre_id,)).fetchall()
+    conn.close()
+    return render_template("admin_centre_detail.html", centre=centre, members=members,
+                           orders=orders, fmt_naira=fmt_naira)
+
+
+@admin_bp.route("/centres/<int:centre_id>/extend", methods=["POST"])
+def extend_centre_route(centre_id):
+    try:
+        seats = max(0, min(500, int(request.form.get("seats") or 0)))
+        days = max(1, min(365, int(request.form.get("days") or 0)))
+    except ValueError:
+        seats, days = 0, 0
+    if days < 1:
+        flash("Enter extra days (1-365) and seats (0-500).", "warning")
+        return redirect(url_for("admin_bp.centre_detail", centre_id=centre_id))
+    conn = connect()
+    cur = conn.cursor()
+    centre = extend_centre(cur, centre_id, seats, days)
+    if not centre:
+        conn.close()
+        abort(404)
+    cur.execute("UPDATE centres SET is_active = 1 WHERE id = ?", (centre_id,))
+    cur.execute("UPDATE access_codes SET is_active = 1 WHERE centre_id = ?", (centre_id,))
+    conn.commit()
+    conn.close()
+    _audit("centre_extend", f"{centre['name']} +{seats} seats +{days}d")
+    flash(f"Extended {centre['name']} — term now ends {centre['expires_at'][:10]}.", "success")
+    return redirect(url_for("admin_bp.centre_detail", centre_id=centre_id))
+
+
+@admin_bp.route("/centres/<int:centre_id>/toggle", methods=["POST"])
+def toggle_centre(centre_id):
+    conn = connect()
+    cur = conn.cursor()
+    centre = cur.execute("SELECT * FROM centres WHERE id = ?", (centre_id,)).fetchone()
+    if not centre:
+        conn.close()
+        abort(404)
+    new_state = 0 if centre["is_active"] else 1
+    cur.execute("UPDATE centres SET is_active = ? WHERE id = ?", (new_state, centre_id))
+    cur.execute("UPDATE access_codes SET is_active = ? WHERE centre_id = ?", (new_state, centre_id))
+    conn.commit()
+    conn.close()
+    _audit("centre_toggle", f"{centre['name']} -> {'active' if new_state else 'disabled'}")
+    flash(f"Centre '{centre['name']}' is now {'active' if new_state else 'disabled (join code blocked)'}.", "success")
+    return redirect(url_for("admin_bp.centre_detail", centre_id=centre_id))

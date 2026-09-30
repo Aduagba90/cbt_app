@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Schools & Lesson Centres — Bulk CBT Prep for Your Students{% endblock %}
+{% block description %}Bulk PrepNova CBT seats for lesson centres and schools in Nigeria: one join code unlocks daily WAEC/JAMB mocks for your whole class, and you get a class report showing every student's practice, scores and weakest subjects. From ₦120 per student.{% endblock %}
+{% block body_class %}pn-landing{% endblock %}
+
+{% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
+
+{% block main %}
+<header class="pn-hero pn-hero-sm">
+    <div class="pn-hero-grid"></div>
+    <div class="container position-relative">
+        <div class="small mb-2"><a class="text-white-50 text-decoration-none" href="{{ url_for('index') }}">Home</a> <i class="bi bi-chevron-right small"></i> <span class="text-white-50">Schools &amp; lesson centres</span></div>
+        <h1 class="anim-rise">Give your whole class a CBT lab — on their own phones</h1>
+        <p class="lead anim-rise d1">Your students write WAEC and JAMB on a computer. PrepNova gives them daily timed mocks with instant corrections — and gives <b>you</b> the progress report to show parents. One payment, one join code, no cards needed for students.</p>
+        <div class="d-flex flex-wrap gap-2 mt-3 anim-rise d2">
+            {% if session.get('user') %}
+            <a href="{{ url_for('centre.centre_new') }}" class="btn btn-accent btn-lg"><i class="bi bi-mortarboard me-1"></i>Set up my centre</a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg"><i class="bi bi-mortarboard me-1"></i>Start — free account</a>
+            {% endif %}
+            <a href="#pricing" class="btn btn-outline-light btn-lg">See bulk pricing</a>
+        </div>
+    </div>
+</header>
+
+<section class="pn-section" >
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4 reveal">
+                <div class="pn-feature h-100">
+                    <span class="pn-tile-icon tint-blue"><i class="bi bi-people"></i></span>
+                    <h3>Seats in bulk</h3>
+                    <p>Buy 10 to 500 seats at once. Each student registers free and enters your centre's join code once — full access unlocked till the term ends. No cards, no per-student payments.</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal" data-delay="1">
+                <div class="pn-feature h-100">
+                    <span class="pn-tile-icon tint-gold"><i class="bi bi-clipboard-data"></i></span>
+                    <h3>The class report</h3>
+                    <p>See who is practising and who is dodging: mocks written, average scores, weakest subject for every student, class averages per subject, and your top performers. Export to CSV and print for parents.</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal" data-delay="2">
+                <div class="pn-feature h-100">
+                    <span class="pn-tile-icon tint-green"><i class="bi bi-upc-scan"></i></span>
+                    <h3>One code for everything</h3>
+                    <p>Your centre keeps one join code for its whole life. Share it on your class WhatsApp group — students activate themselves in under a minute. Renewals extend the same code.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pn-section pn-section-alt" id="how">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <span class="pn-eyebrow">How it works</span>
+            <h2>Running in one afternoon</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-sm-6 col-lg-3 reveal"><div class="pn-step h-100"><span class="n">1</span><h3>Create your centre</h3><p>Register a free account, enter your centre's name and choose seats + term length.</p></div></div>
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="1"><div class="pn-step h-100"><span class="n">2</span><h3>Pay once</h3><p>Securely through Paystack (card, transfer or USSD) — or by bank transfer if you prefer.</p></div></div>
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="2"><div class="pn-step h-100"><span class="n">3</span><h3>Share your code</h3><p>Students register free and enter the join code. Their full access starts immediately.</p></div></div>
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="3"><div class="pn-step h-100"><span class="n">4</span><h3>Track the class</h3><p>Your dashboard shows practice activity, scores and weak spots — renew next term in one click.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="pn-section" id="pricing">
+    <div class="container">
+        <div class="text-center mb-5 reveal">
+            <span class="pn-eyebrow">Bulk pricing</span>
+            <h2>Per-student pricing that drops with volume</h2>
+            <p class="lead mx-auto" style="max-width:640px">An individual student pays ₦1,000 per month. Centres pay a fraction of that — and the more seats, the less each seat costs.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% for days, label, blurb in durations %}
+            <div class="col-md-4 reveal" data-delay="{{ loop.index0 }}">
+                <div class="pn-price h-100 {% if days == 90 %}featured{% endif %}">
+                    {% if days == 90 %}<span class="ribbon">Most popular</span>{% endif %}
+                    <div class="fw-bold text-uppercase small ls-1 text-muted">{{ label }}</div>
+                    <div class="per mt-2">{{ blurb }}</div>
+                    <table class="table table-sm mt-3 mb-0">
+                        <thead><tr><th class="text-muted">Seats</th><th class="text-muted">Price per student</th></tr></thead>
+                        <tbody>
+                        {% for min_seats, price in pricing[days] %}
+                        <tr><td>{{ min_seats }}{% if loop.first %}+{% else %}–{{ pricing[days][loop.index0 - 1][0] - 1 }}{% endif %}</td><td class="fw-bold">{{ fmt_naira(price) }}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="small text-muted mt-3">
+                        {% for example in [20, 50, 120] %}{{ example }} seats ≈ <b>{{ fmt_naira(order_total(example, days)) }}</b>{{ " · " if not loop.last }}{% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-center small text-muted mt-4 reveal">Minimum {{ min_seats }} seats · a term runs 90 days · prefer bank transfer? <a href="{{ support_whatsapp_link }}" target="_blank" rel="noopener">Message us on WhatsApp</a> and we'll set your centre up manually.</p>
+    </div>
+</section>
+
+<section class="pn-section pn-section-alt">
+    <div class="container" style="max-width:860px">
+        <div class="text-center mb-5 reveal">
+            <span class="pn-eyebrow">What you'll see</span>
+            <h2>Your centre dashboard, in plain numbers</h2>
+        </div>
+        <div class="row g-3 reveal">
+            {% set demo = [
+                ("Seats used", "68 / 80"),
+                ("Term ends in", "46 days"),
+                ("Class average", "64%"),
+                ("Top student", "Halima Y. — 87%"),
+                ("Weakest subject (class)", "Physics — 51%"),
+                ("Mocks written this term", "412"),
+            ] %}
+            {% for label, val in demo %}
+            <div class="col-6 col-md-4"><div class="pn-only-card h-100"><h3 class="small text-muted mb-1">{{ label }}</h3><p class="fs-5 fw-bold mb-0">{{ val }}</p></div></div>
+            {% endfor %}
+        </div>
+        <p class="text-center small text-muted mt-3 reveal">Plus a per-student table (mocks, average, weakest subject, last active) you can export to CSV and print for parents' meetings.</p>
+    </div>
+</section>
+
+<section class="pn-section" id="faq">
+    <div class="container" style="max-width:820px">
+        <div class="text-center mb-5 reveal"><span class="pn-eyebrow">FAQ</span><h2>Questions centre owners ask</h2></div>
+        <div class="accordion pn-faq reveal" id="centreFaq">
+            {% set faqs = [
+                ("Do my students need to pay anything?", "No. Students register free and enter your join code — full access till your term ends. Nothing to buy, no cards."),
+                ("What if a student joins late in the term?", "Their access runs to the end of the term you paid for, not a full period from the day they join. Your seats stay valid for new students all term."),
+                ("We don't have computers at the centre.", "That's the point — students practise on their own phones, anywhere. CBT is about the format, not the lab. The report shows you who is actually practising at home."),
+                ("Can we pay by bank transfer?", "Yes. Message us on WhatsApp with your centre name and number of students and we'll set it up manually the same day."),
+                ("What happens when the term ends?", "Seats stop activating for new students. Renew for the next term and your join code stays the same — your students simply keep going."),
+                ("Is this only for WAEC?", "No — every seat includes JAMB UTME mocks, WAEC SSCE, Post-UTME and practice mode. Many centres use it for JAMB classes too."),
+            ] %}
+            {% for q, a in faqs %}
+            <div class="accordion-item">
+                <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cf{{ loop.index }}">{{ q }}</button></h3>
+                <div id="cf{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#centreFaq"><div class="accordion-body">{{ a }}</div></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="pn-section pt-0">
+    <div class="container">
+        <div class="pn-cta reveal">
+            <h2>Your competitors' students are guessing.<br>yours will be practising.</h2>
+            <p class="mx-auto" style="max-width:520px">Set up your centre today — it takes two minutes, and your students can be writing their first mock tonight.</p>
+            {% if session.get('user') %}
+            <a href="{{ url_for('centre.centre_new') }}" class="btn btn-accent btn-lg mt-2"><i class="bi bi-mortarboard me-1"></i>Set up my centre</a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg mt-2"><i class="bi bi-rocket-takeoff me-1"></i>Create a free account</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block footer %}{% include "_landing_footer.html" %}{% endblock %}

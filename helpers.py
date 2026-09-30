@@ -848,8 +848,27 @@ def redeem_access_code(cur, email, raw):
     cur.execute("UPDATE access_codes SET uses = uses + 1 WHERE id = ?", (row["id"],))
     reference = f"PIN-{row['id']}-{secrets.token_hex(3).upper()}"
     plan_name = (row["label"] or "Access PIN")[:40]
-    new_end = grant_days(cur, email, row["days"], plan_name, "ACCESS_CODE", reference)
-    return True, f"PIN accepted — {row['days']} days of full access added. Your access now runs until {new_end:%d %B %Y}.", new_end
+    # Centre join codes: grant only the days remaining in the term (late joiners don't
+    # get access running past what the centre paid for) and record the membership.
+    grant = row["days"]
+    centre_name = None
+    if row["centre_id"]:
+        centre = cur.execute("SELECT name FROM centres WHERE id = ?", (row["centre_id"],)).fetchone()
+        centre_name = centre["name"] if centre else None
+        if row["expires_at"]:
+            try:
+                remaining = (datetime.strptime(row["expires_at"], "%Y-%m-%d %H:%M:%S") - datetime.now()).days + 1
+                grant = max(1, min(grant, remaining))
+            except ValueError:
+                pass
+    new_end = grant_days(cur, email, grant, plan_name, "ACCESS_CODE", reference)
+    if row["centre_id"]:
+        cur.execute("INSERT OR IGNORE INTO centre_members (centre_id, username, joined_at) VALUES (?, ?, ?)",
+                    (row["centre_id"], email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    if centre_name:
+        return True, (f"PIN accepted — you have joined {centre_name}! {grant} "
+                      f"day{'s' if grant != 1 else ''} of full access added, until {new_end:%d %B %Y}."), new_end
+    return True, f"PIN accepted — {grant} days of full access added. Your access now runs until {new_end:%d %B %Y}.", new_end
 
 
 def record_mistake(cur, email, source, qid, subject=None, exam_type=None):

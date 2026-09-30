@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Centres</title>
+    <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h2><i class="bi bi-mortarboard"></i> Schools &amp; Lesson Centres</h2>
+    <a href="/admin" class="btn btn-secondary mb-3">← Back</a>
+
+    <div class="row mb-4">
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-4">{{ stats.centres }}</b><small class="d-block text-muted">centres</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-4">{{ stats.seats }}</b><small class="d-block text-muted">seats sold</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-4">{{ stats.members }}</b><small class="d-block text-muted">students joined</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-4">{{ fmt_naira(stats.revenue) }}</b><small class="d-block text-muted">centre revenue</small></div></div></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><b>Create a centre manually</b> <span class="text-muted small">(bank transfer / cash sale — activates immediately)</span></div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('admin_bp.create_centre') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-2">
+                    <div class="col-md-4"><input class="form-control" name="centre_name" placeholder="Centre / school name" maxlength="60" required></div>
+                    <div class="col-md-4"><input class="form-control" type="email" name="owner_email" placeholder="Owner's account email (must be their PrepNova login)" required></div>
+                    <div class="col-md-4"><input class="form-control" name="owner_name" placeholder="Owner name (optional)" maxlength="60"></div>
+                    <div class="col-md-3"><input class="form-control" name="owner_phone" placeholder="Owner phone (optional)" maxlength="20"></div>
+                    <div class="col-md-2"><input class="form-control" type="number" name="seats" placeholder="Seats" min="1" max="500" value="30" required></div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="days" required>
+                            {% for d, label, blurb in durations %}<option value="{{ d }}" {% if d == 90 %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3"><input class="form-control" type="number" name="amount" step="0.01" min="0" placeholder="Amount paid (blank = list price)"></div>
+                    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Create</button></div>
+                </div>
+                <div class="form-text">If the owner's email already runs an active centre, this RENEWS it (seats added, term extended, same join code).</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><b>Centres</b></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr><th>Centre</th><th>Owner</th><th>Join code</th><th>Seats</th><th>Term ends</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in centres %}
+                        <tr>
+                            <td><b>{{ c['name'] }}</b><div class="small text-muted">created {{ c['created_at'][:10] if c['created_at'] }}</div></td>
+                            <td class="small">{{ c['owner_username'] }}{% if c['owner_name'] %}<div class="text-muted">{{ c['owner_name'] }}</div>{% endif %}</td>
+                            <td><code>{{ c['join_code'] }}</code></td>
+                            <td>{{ c['members'] }} / {{ c['seats'] }}</td>
+                            <td class="small">{{ c['expires_at'][:10] if c['expires_at'] else '—' }}</td>
+                            <td>
+                                {% if not c['is_active'] %}<span class="badge bg-secondary">disabled</span>
+                                {% elif c['expires_at'] and c['expires_at'][:10] < today %}<span class="badge bg-danger">expired</span>
+                                {% else %}<span class="badge bg-success">active</span>{% endif %}
+                            </td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_bp.centre_detail', centre_id=c['id']) }}">View</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">No centres yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

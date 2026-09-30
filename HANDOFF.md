@@ -669,6 +669,53 @@ with the creator's referral code (existing referral rewards flow automatically).
 - Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
   parent 19, resetpw 13, battle 43 — all green, real db untouched.
 
+## School & Lesson-Centre plan — bulk seats + class report (Sept 2026)
+
+The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensive season.
+
+- Pricing (constants in centre.py, per seat in naira): 30d=200/150/120, 90d=400/300/250,
+  180d=700/550/450 by volume tier (10-29 / 30-99 / 100+ seats). Min 10, max 500 seats.
+  e.g. 80 seats x 90 days = 80 x 300 = N24,000. Change prices here (code), not in the DB.
+- `centre.py` (new, Blueprint `centre_bp` registered after battle_bp):
+  - `GET /schools` — public pitch page (landing chrome; "For centres" nav link added,
+    footer column, subscribe-page hint under the PIN card).
+  - `GET/POST /centre/new` (login, RL 6/600) — order form with live JS total (no-JS:
+    price table shown), renewal notice when the owner already has a centre. Creates
+    centre_orders + payments rows (PENDING, ref prefix `PN-C-`) then Paystack initialize.
+  - `GET /centre_callback` — verify -> `_process_centre_payment` (amount check,
+    idempotent) -> `activate_centre_order`: creates the centre + an access_codes row
+    (the JOIN CODE, max_uses = seats, days, expires_at = term end, centre_id set) or, if
+    the owner already has an active centre, RENEWS it (+seats, term extended, SAME code).
+  - `GET /centre` (login) — the Centre Dashboard: KPIs (seats used, term end, active
+    students, mocks), join code card (copy + WhatsApp share), members table (mocks, avg,
+    weakest subject, last active), class averages per subject with bars + weakest callout,
+    top 5 students, renewal CTA.
+  - `GET /centre/members.csv` (owner) — printable member stats (no emails exported).
+- Students join via the EXISTING PIN flow: helpers.redeem_access_code is now centre-aware
+  (access_codes.centre_id) — grants min(term days, days remaining in term) and inserts
+  centre_members. Message: "you have joined {centre}!".
+- Admin (admin_routes.py + manage_centres.html / admin_centre_detail.html, linked from
+  the admin dashboard as "Schools & Centres"): list + revenue stats, MANUAL CREATE for
+  bank-transfer sales (activates instantly, audited centre_create_manual), extend
+  (+seats/+days, reactivates), toggle disable (also blocks the join code), detail page
+  with members + order history. NOTE: admin blueprint has NO url prefix — the pages live
+  at /centres, /centres/create, /centres/<id>/... (like /access_codes).
+- payments.plan_id is a REAL FK -> subscription_plans: centre orders use a hidden row
+  'Centre bulk seats' (is_active=0) created lazily by `_centre_plan_id` — do not delete
+  it, and do not use plan_id 0/NULL.
+- Gotchas hit this round: (1) admin templates must CALL the token — `{{ csrf_token() }}`,
+  NOT `{{ csrf_token }}` (Jinja does not auto-call; the form then posts the function
+  repr and every POST fails CSRF with a silent redirect to /). (2) Admin pages load
+  prepnova.css at their own hardcoded ?v= (legacy standalone templates) — app pages are
+  on v=15 now; harmless.
+- Tests: `_work/centre_test.py` — self-contained (/tmp/ct.db), faked Paystack
+  (monkeypatch centre_mod.requests + env PAYSTACK_SECRET_KEY): 53+ checks covering
+  pricing tiers, order/callback/mismatch/idempotency, renewal semantics, student
+  redemption + seat cap + term-end cap, duplicate block, dashboard stats, CSV, admin
+  manual create/extend/toggle, access control.
+- Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
+  parent 19, resetpw 13, battle 43, centre 53+ — all green, real db untouched.
+
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
   existing read-only parent report (`/parent/<code>`, `study.parent_summary`).

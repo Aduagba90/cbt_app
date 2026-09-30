@@ -28,6 +28,7 @@
             <div class="d-flex align-items-center gap-3">
                 <span class="pn-stat-icon tint-gold"><i class="bi bi-ticket-perforated-fill"></i></span>
                 <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship or the PrepNova team. Enter it to unlock full access instantly — no card needed.</div></div>
+<p class="small text-muted mt-2 mb-0"><i class="bi bi-mortarboard me-1"></i>Running a lesson centre or school? <a href="{{ url_for('centre.schools') }}">See bulk pricing for your whole class →</a></p>
             </div>
             <form method="POST" action="{{ url_for('redeem_pin') }}" class="d-flex gap-2 flex-grow-1 flex-sm-grow-0" data-once>
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">

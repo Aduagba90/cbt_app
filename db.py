@@ -547,6 +547,51 @@ def init_db():
         )
     """)
 
+    # ------------------------------------------------ growth: school / lesson centres
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS centres (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            owner_username TEXT NOT NULL,
+            owner_name TEXT,
+            owner_phone TEXT,
+            join_code TEXT NOT NULL UNIQUE,
+            seats INTEGER NOT NULL DEFAULT 0,
+            days INTEGER NOT NULL DEFAULT 90,
+            created_at TEXT,
+            expires_at TEXT,
+            is_active INTEGER DEFAULT 1
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_centres_owner ON centres(owner_username)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS centre_members (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            centre_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            joined_at TEXT,
+            UNIQUE(centre_id, username)
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS centre_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT NOT NULL UNIQUE,
+            centre_name TEXT NOT NULL,
+            owner_username TEXT NOT NULL,
+            owner_name TEXT,
+            owner_phone TEXT,
+            seats INTEGER NOT NULL,
+            days INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'PENDING',
+            created_at TEXT,
+            paid_at TEXT,
+            centre_id INTEGER
+        )
+    """)
+    _add_column(cur, "access_codes", "centre_id", "INTEGER")
+
     # ---------------------------------------------------- growth: friend battles (1v1)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS friend_battles (

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Centre — {{ centre['name'] }}</title>
+    <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h2><i class="bi bi-mortarboard"></i> {{ centre['name'] }}</h2>
+    <a href="/admin/centres" class="btn btn-secondary mb-3">← All centres</a>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-5">{{ members|length }} / {{ centre['seats'] }}</b><small class="d-block text-muted">seats used</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-5"><code>{{ centre['join_code'] }}</code></b><small class="d-block text-muted">join code</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-5">{{ centre['expires_at'][:10] if centre['expires_at'] else '—' }}</b><small class="d-block text-muted">term ends</small></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><b class="fs-5">{{ 'active' if centre['is_active'] else 'disabled' }}</b><small class="d-block text-muted">status</small></div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header"><b>Students ({{ members|length }})</b></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Student</th><th>Account</th><th>Joined</th><th>Mocks</th><th>Avg</th><th>Last active</th></tr></thead>
+                            <tbody>
+                                {% for m in members %}
+                                <tr>
+                                    <td>{{ m['name'] }}</td>
+                                    <td class="small text-muted">{{ m['username'] }}</td>
+                                    <td class="small">{{ m['joined_at'][:10] if m['joined_at'] }}</td>
+                                    <td>{{ m['mocks'] or 0 }}</td>
+                                    <td>{{ m['avg_pct'] ~ '%' if m['avg_pct'] is not none else '—' }}</td>
+                                    <td class="small">{{ m['last_active'][:10] if m['last_active'] else '—' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">No students have joined yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><b>Orders</b></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Reference</th><th>Seats</th><th>Days</th><th>Amount</th><th>Status</th><th>Paid</th></tr></thead>
+                            <tbody>
+                                {% for o in orders %}
+                                <tr>
+                                    <td class="small">{{ o['reference'] }}</td>
+                                    <td>{{ o['seats'] }}</td>
+                                    <td>{{ o['days'] }}</td>
+                                    <td>{{ fmt_naira(o['amount']) }}</td>
+                                    <td>{{ o['status'] }}</td>
+                                    <td class="small">{{ o['paid_at'][:10] if o['paid_at'] else '—' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">No orders.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header"><b>Extend / renew</b></div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_bp.extend_centre_route', centre_id=centre['id']) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Extra seats</label>
+                            <input class="form-control" type="number" name="seats" min="0" max="500" value="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Extra days</label>
+                            <input class="form-control" type="number" name="days" min="1" max="365" value="90" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Apply extension</button>
+                        <div class="form-text">Extends from the current term end (or today if past). Same join code.</div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><b>Danger zone</b></div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_bp.toggle_centre', centre_id=centre['id']) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn {{ 'btn-outline-danger' if centre['is_active'] else 'btn-outline-success' }} w-100" type="submit">
+                            {{ 'Disable centre (blocks new joins)' if centre['is_active'] else 'Re-enable centre' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

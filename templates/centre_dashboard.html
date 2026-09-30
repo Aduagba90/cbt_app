@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ centre['name'] }} — Centre dashboard{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise mb-3">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>My centre</span></div>
+        <h1 class="h3"><i class="bi bi-mortarboard me-1 text-primary"></i>{{ centre['name'] }}</h1>
+        <p class="lead mb-0">Your class at a glance — seats, activity and scores.{% if centre['owner_name'] %} Managed by {{ centre['owner_name'] }}.{% endif %}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('centre.members_csv') }}"><i class="bi bi-filetype-csv me-1"></i>Export CSV</a>
+        <a class="btn btn-accent" href="{{ url_for('centre.centre_new') }}"><i class="bi bi-arrow-repeat me-1"></i>Add seats / renew</a>
+    </div>
+</div>
+
+{% if expired %}
+<div class="alert alert-warning d-flex gap-2 align-items-start anim-rise">
+    <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+    <div><b>This term has ended.</b> New students can't join until you renew — existing students keep whatever access they already redeemed. <a href="{{ url_for('centre.centre_new') }}">Renew now</a> and your join code stays the same.</div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3 anim-rise d1"><div class="pn-kpi-card"><small>Seats used</small><b>{{ seats_used }} <span class="text-muted fs-6">/ {{ centre['seats'] }}</span></b></div></div>
+    <div class="col-6 col-lg-3 anim-rise d1"><div class="pn-kpi-card"><small>Term {% if expired %}ended{% else %}ends{% endif %}</small><b>{{ centre['expires_at'][:10] if centre['expires_at'] else '—' }}</b><small class="text-muted">{% if days_left is not none and days_left >= 0 %}{{ days_left }} days left{% elif days_left is not none %}{{ -days_left }} days ago{% endif %}</small></div></div>
+    <div class="col-6 col-lg-3 anim-rise d2"><div class="pn-kpi-card"><small>Students active</small><b>{{ members|selectattr('avg_pct', 'ne', None)|list|length }}</b><small class="text-muted">of {{ seats_used }} joined</small></div></div>
+    <div class="col-6 col-lg-3 anim-rise d2"><div class="pn-kpi-card"><small>Mocks written</small><b>{{ members|sum(attribute='mocks') }}</b><small class="text-muted">all time</small></div></div>
+</div>
+
+<div class="card anim-rise d2 mb-4 border-primary">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+        <div class="text-center px-2">
+            <div class="small text-muted mb-1">Centre join code</div>
+            <div class="pn-centre-code">{{ centre['join_code'] }}</div>
+        </div>
+        <div class="flex-grow-1 small text-muted" style="min-width:220px">
+            Students register free at <b>{{ request.host }}</b> and enter this code under
+            <b>Subscribe → I have an Access PIN</b>. Their access runs to the end of the term — nothing to pay, no cards.
+        </div>
+        <div class="d-flex flex-column flex-sm-row gap-2">
+            <a class="btn btn-success" href="https://wa.me/?text={{ share_txt|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share on WhatsApp</a>
+            <button type="button" class="btn btn-outline-primary" data-copy-code="{{ centre['join_code'] }}"><i class="bi bi-clipboard me-1"></i>Copy code</button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card anim-rise d3 h-100">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-people me-1"></i>Students ({{ seats_used }})</h2>
+                {% if members %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>Student</th><th>Mocks</th><th>Avg</th><th>Weakest</th><th class="text-muted">Last active</th></tr></thead>
+                        <tbody>
+                            {% for m in members %}
+                            <tr>
+                                <td class="fw-semibold">{{ m['name'] }}<div class="xsmall text-muted">joined {{ m['joined_at'][:10] if m['joined_at'] }}</div></td>
+                                <td>{{ m['mocks'] or 0 }}</td>
+                                <td>{% if m['avg_pct'] is not none %}<span class="badge {{ 'bg-success' if m['avg_pct'] >= 70 else ('bg-warning text-dark' if m['avg_pct'] >= 50 else 'bg-danger') }}">{{ m['avg_pct'] }}%</span>{% else %}<span class="text-muted small">not yet</span>{% endif %}</td>
+                                <td class="small">{{ weakest[m['username']][0] if m['username'] in weakest else '—' }}</td>
+                                <td class="text-muted small">{{ m['last_active'][:10] if m['last_active'] else '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-person-plus fs-1 d-block mb-2"></i>
+                    No students yet. Share your join code — seats fill as students redeem it.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card anim-rise d3 mb-4">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-graph-up-arrow me-1"></i>Class average by subject</h2>
+                {% if subject_rows %}
+                    {% for s in subject_rows %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small"><span class="fw-semibold">{{ s['subject'] }}</span><span class="text-muted">{{ s['avg_pct'] }}% · {{ s['students'] }} stud.</span></div>
+                        <div class="progress" style="height:8px"><div class="progress-bar {{ 'bg-success' if s['avg_pct'] >= 70 else ('bg-warning' if s['avg_pct'] >= 50 else 'bg-danger') }}" style="width: {{ s['avg_pct'] }}%"></div></div>
+                    </div>
+                    {% endfor %}
+                    {% set worst = subject_rows[0] %}
+                    <div class="alert alert-light border small mt-3 mb-0"><i class="bi bi-lightbulb me-1"></i>Weakest subject: <b>{{ worst['subject'] }}</b> ({{ worst['avg_pct'] }}%). Assign that subject's mock as homework this week.</div>
+                {% else %}
+                <p class="text-muted small mb-0">Subject averages appear once your students start writing mocks.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card anim-rise d4">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-3"><i class="bi bi-trophy me-1"></i>Top students</h2>
+                {% if top %}
+                {% for m in top %}
+                <div class="pn-battle-row {% if loop.first %}pn-battle-winner{% endif %}">
+                    <span class="rk">{% if loop.first %}<i class="bi bi-trophy-fill"></i>{% else %}{{ loop.index }}{% endif %}</span>
+                    <span class="nm fw-semibold">{{ m['name'] }}</span>
+                    <span class="sc fw-bold">{{ m['avg_pct'] }}%</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted small mb-0">Rankings appear after your students write a few mocks.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<script>
+(function () {
+    var btn = document.querySelector("[data-copy-code]");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+        var code = btn.getAttribute("data-copy-code");
+        function done() { btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!'; }
+        function legacy() {
+            var i = document.createElement("input");
+            i.value = code; document.body.appendChild(i); i.select();
+            document.execCommand("copy"); document.body.removeChild(i); done();
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(done).catch(legacy);
+        } else { legacy(); }
+    });
+})();
+</script>
+{% endblock %}
