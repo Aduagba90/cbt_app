@@ -673,9 +673,14 @@ with the creator's referral code (existing referral rewards flow automatically).
 
 The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensive season.
 
-- Pricing (constants in centre.py, per seat in naira): 30d=200/150/120, 90d=400/300/250,
-  180d=700/550/450 by volume tier (10-29 / 30-99 / 100+ seats). Min 10, max 500 seats.
-  e.g. 80 seats x 90 days = 80 x 300 = N24,000. Change prices here (code), not in the DB.
+- Pricing (constants in centre.py, per seat in naira) — REVISED Sept 2026 after review
+  (original launch table was ~85-93% off retail, too cheap): 30d=500/400/300,
+  90d=900/700/550, 180d=1500/1200/950 by volume tier (10-29 / 30-99 / 100+ seats).
+  Min 10, max 500 seats. e.g. 80 seats x 90 days = 80 x 700 = N56,000/term.
+  Pitch tactic: tell owners to add a ~N2,000 "CBT practice & progress report" line to
+  their fees (parents pay it; owner keeps the margin). Plan: raise for NEW centres after
+  the first testimonials (existing centres keep their rate). Change prices in centre.py,
+  never in the DB; schools page + JS calculator + tests all derive from SEAT_PRICING.
 - `centre.py` (new, Blueprint `centre_bp` registered after battle_bp):
   - `GET /schools` — public pitch page (landing chrome; "For centres" nav link added,
     footer column, subscribe-page hint under the PIN card).
