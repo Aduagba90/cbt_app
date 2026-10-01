@@ -295,3 +295,41 @@
     }
   });
 })();
+
+
+/* ---------- Spoken Test of Orals: device text-to-speech (no audio files, no server) ---------- */
+(function () {
+  if (!("speechSynthesis" in window)) { document.documentElement.classList.add("no-tts"); return; }
+  var synth = window.speechSynthesis, voice = null, current = null;
+  function pickVoice() {
+    var vs = synth.getVoices() || [];
+    var prefs = [/^en[-_]GB/i, /^en[-_]NG/i, /^en/i];   /* WAEC orals is RP-leaning: British first, then Nigerian, then any English */
+    for (var p = 0; p < prefs.length; p++) {
+      for (var i = 0; i < vs.length; i++) { if (prefs[p].test(vs[i].lang || "")) { voice = vs[i]; return; } }
+    }
+    voice = vs[0] || null;
+  }
+  pickVoice();
+  if (typeof synth.onvoiceschanged !== "undefined") { synth.onvoiceschanged = pickVoice; }
+  function clean(t) {
+    t = String(t || "").replace(/<[^>]+>/g, " ").replace(/\/[^/]{1,14}\//g, " ");  /* strip HTML + IPA between slashes */
+    return t.replace(/\s+/g, " ").trim();
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest(".pn-say[data-say]") : null;
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (current === btn) { synth.cancel(); btn.classList.remove("speaking"); current = null; return; }  /* tap again = stop */
+    if (current) { current.classList.remove("speaking"); }
+    synth.cancel();
+    var text = clean(btn.getAttribute("data-say"));
+    if (!text) return;
+    current = btn; btn.classList.add("speaking");
+    var u = new SpeechSynthesisUtterance(text);
+    if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = "en-GB"; }
+    u.rate = 0.85;
+    u.onend = u.onerror = function () { btn.classList.remove("speaking"); if (current === btn) current = null; };
+    synth.speak(u);
+  }, false);
+})();

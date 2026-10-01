@@ -721,6 +721,41 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
 - Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
   parent 19, resetpw 13, battle 43, centre 53+ — all green, real db untouched.
 
+## Spoken Test of Orals — device TTS on orals questions (Oct 2026)
+
+WAEC English "Test of Orals" questions (topics starting with "Test of Orals —", 97 in the
+bank) now get read-aloud buttons powered by the phone's own text-to-speech voice.
+No audio files, no server cost, works offline-of-our-servers on any device with a browser voice.
+
+- Detection is TOPIC-based: helpers._pack sets `"orals": True` on every packed question whose
+  topic starts with "Test of Orals" — one source of truth, flows everywhere _pack is used.
+  exam_engine.load_attempt_for_student and load_review copy the flag into their own dicts
+  (both patched); my_bookmarks gets it via fetch_questions.
+- UI: `pn-say` speaker buttons (delegated-click TTS module appended to static/js/prepnova.js):
+  - "Hear this question" stem button (data-say = q.text|say — the `say` Jinja filter in app.py
+    strips HTML and IPA-between-slashes so the voice reads clean text) + a small speaker on
+    each option (data-say = raw option text).
+  - Rendered in: practice_question, fix_mistakes, review_answers, my_bookmarks (server-side
+    Jinja) and the exam room (JS: buttons live in the template hidden with d-none; render()
+    shows them and sets data-say when q.orals).
+  - Voice preference en-GB -> en-NG -> any en; rate 0.85; tap same button again = stop;
+    speaking state pulses. Browsers without speechSynthesis get html.no-tts and the CSS
+    hides every .pn-say (progressive enhancement, zero errors).
+  - IMPORTANT UX guard: clicking a speaker inside an option label must NOT select the answer
+    — the option click handlers in exam_room / practice_question / fix_mistakes all start
+    with `if (e.target.closest('.pn-say')) return;` (keep that when editing those scripts).
+- CSS at the end of prepnova.css; base.html cache-bust bumped v=15 -> v=16.
+- Landing page WAEC card now says "...and every orals question can be read aloud on your phone."
+- Tests: `_work/orals_test.py` — 23 checks (unit flag, practice shows/hides buttons correctly,
+  Paper 3 exam room JSON flags all 60, review shows 60 stem + 240 option speakers, bookmarks,
+  CSS/JS fallbacks, say filter). Playwright audit (with a speechSynthesis spy via
+  Object.defineProperty — plain `window.speechSynthesis = x` silently fails, it's a
+  getter-only prototype property): speak fires with rate 0.85 en-GB, IPA stripped, toggle-off
+  works, guard prevents selection in practice AND the exam room, 0 overflow, 0 console errors.
+  Note: exam-start buttons use data-confirm dialogs — Playwright needs `page.on("dialog", accept)`.
+- Battery (Oct 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50, parent 19,
+  resetpw 13, battle 43, centre 58, orals 23 — all green, real db untouched.
+
 ## Parent Dashboard + "Sponsor this child" (Sept 2026)
 - **Goal:** convert parents (who hold the money) into subscribers while the owner sleeps. Built on the
   existing read-only parent report (`/parent/<code>`, `study.parent_summary`).

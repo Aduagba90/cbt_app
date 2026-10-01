@@ -25,7 +25,7 @@
                 </div>
             </div>
             {% if q.passage %}{{ q.passage|passage_html }}{% endif %}
-            <div class="pn-qtext">{{ q.text }}</div>
+            <div class="pn-qtext{% if q.orals %} pn-qtext-orals{% endif %}">{% if q.orals %}<button class="pn-say pn-say-stem" type="button" data-say="{{ q.text|say }}"><i class="bi bi-volume-up-fill"></i> Hear this question</button>{% endif %}{{ q.text }}</div>
 
             {% if not answered %}
             <form method="POST" action="{{ url_for('fix_mistakes', subject=subject) }}" id="practiceForm" data-once>
@@ -35,7 +35,7 @@
                 {% for k, v in q.options.items() %}
                 <label class="pn-option" data-key="{{ k }}">
                     <input type="radio" name="answer" value="{{ k }}" required>
-                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>{% if q.orals %}<button class="pn-say pn-say-opt" type="button" data-say="{{ v }}" aria-label="Listen to option {{ k }}"><i class="bi bi-volume-up-fill"></i></button>{% endif %}
                 </label>
                 {% endfor %}
                 <div class="pn-qactions">
@@ -46,7 +46,7 @@
             {% else %}
                 {% for k, v in q.options.items() %}
                 <div class="pn-option locked {% if k == feedback.q.correct %}correct{% elif k == feedback.chosen %}wrong{% endif %}">
-                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                    <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>{% if q.orals %}<button class="pn-say pn-say-opt" type="button" data-say="{{ v }}" aria-label="Listen to option {{ k }}"><i class="bi bi-volume-up-fill"></i></button>{% endif %}
                     {% if k == feedback.q.correct %}<i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>{% elif k == feedback.chosen %}<i class="bi bi-x-circle-fill text-danger ms-auto fs-5"></i>{% endif %}
                 </div>
                 {% endfor %}
@@ -83,7 +83,7 @@
     var form = document.getElementById('practiceForm'); if (!form) { var n = document.getElementById('nextQ'); document.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === 'ArrowRight') { n.click(); } }); return; }
     var opts = form.querySelectorAll('.pn-option'), btn = document.getElementById('checkBtn');
     function pick(o){ opts.forEach(function(x){ x.classList.remove('selected'); }); o.classList.add('selected'); o.querySelector('input').checked = true; btn.disabled = false; }
-    opts.forEach(function(o){ o.addEventListener('click', function(){ pick(o); }); });
+    opts.forEach(function(o){ o.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('.pn-say')) return; pick(o); }); });
     document.addEventListener('keydown', function(e){
         var k = e.key.toUpperCase();
         if (['A','B','C','D'].indexOf(k) > -1) { var o = form.querySelector('.pn-option[data-key="'+k+'"]'); if (o) pick(o); }

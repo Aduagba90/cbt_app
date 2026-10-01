@@ -21,10 +21,10 @@
                 <form method="POST" action="{{ url_for('delete_bookmark', bookmark_id=it.id) }}"><input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger" data-confirm="Remove this bookmark?" title="Remove"><i class="bi bi-trash"></i></button></form>
             </div>
             {% if it.q.passage %}{{ it.q.passage|passage_html }}{% endif %}
-            <div class="pn-qtext">{{ it.q.text }}</div>
+            <div class="pn-qtext{% if it.q.orals %} pn-qtext-orals{% endif %}">{% if it.q.orals %}<button class="pn-say pn-say-stem" type="button" data-say="{{ it.q.text|say }}"><i class="bi bi-volume-up-fill"></i> Hear this question</button>{% endif %}{{ it.q.text }}</div>
             <div class="bm-options" data-correct="{{ it.q.correct }}">
                 {% for k, v in it.q.options.items() %}
-                <div class="pn-option locked" data-key="{{ k }}"><span class="key">{{ k }}</span><span class="txt">{{ v }}</span><i class="bi bi-check-circle-fill text-success ms-auto d-none"></i></div>
+                <div class="pn-option locked" data-key="{{ k }}"><span class="key">{{ k }}</span><span class="txt">{{ v }}</span>{% if it.q.orals %}<button class="pn-say pn-say-opt" type="button" data-say="{{ v }}" aria-label="Listen to option {{ k }}"><i class="bi bi-volume-up-fill"></i></button>{% endif %}<i class="bi bi-check-circle-fill text-success ms-auto d-none"></i></div>
                 {% endfor %}
             </div>
             <div class="d-flex align-items-center gap-2 mt-2">

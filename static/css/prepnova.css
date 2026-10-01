@@ -955,3 +955,18 @@ a.pn-topic.weak i { font-size: .9rem; }
 .pn-kpi-card small { color: #6c757d; display: block; }
 .pn-kpi-card b { font-size: 1.45rem; line-height: 1.2; }
 .pn-kpi-card .xsmall, .xsmall { font-size: .72rem; }
+
+
+/* ==========================================================================
+   Spoken Test of Orals (device text-to-speech)
+   ========================================================================== */
+.pn-say { display: inline-flex; align-items: center; gap: .3rem; border: 1.5px solid #cddaff; background: #f0f5ff; color: #0b3b8f; border-radius: 999px; padding: .32rem .78rem; font-weight: 700; font-size: .8rem; cursor: pointer; flex-shrink: 0; line-height: 1.25; }
+.pn-say:hover { border-color: #0d6efd; color: #0d6efd; }
+.pn-say i { font-size: .95em; }
+.pn-say-opt { padding: .26rem .52rem; font-size: .76rem; margin-left: auto; align-self: center; }
+.pn-option.locked .pn-say-opt { margin-left: auto; }
+.pn-option .pn-say-opt + i[class^="bi-"] { margin-left: .35rem !important; }
+.pn-say.speaking { background: #0d6efd; border-color: #0d6efd; color: #fff; animation: pn-say-pulse 1s ease infinite; }
+@keyframes pn-say-pulse { 50% { opacity: .6; } }
+.pn-qtext-orals { display: flex; align-items: flex-start; gap: .6rem; flex-wrap: wrap; }
+.no-tts .pn-say { display: none !important; }

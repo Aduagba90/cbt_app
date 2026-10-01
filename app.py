@@ -297,6 +297,14 @@ def passage_html(text):
     return Markup('<div class="pn-passage pn-table">{}</div>').format(Markup("").join(parts))
 
 
+@app.template_filter("say")
+def say_text(text):
+    """Clean text for text-to-speech: strip HTML, drop IPA between slashes, squeeze spaces."""
+    t = re.sub(r"<[^>]+>", " ", str(text or ""))
+    t = re.sub(r"/[^/]{1,14}/", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
 @app.template_filter("naira")
 def _naira(v):
     return fmt_naira(v)

@@ -37,11 +37,11 @@
             {% if it.is_correct %}<span class="badge bg-success"><i class="bi bi-check-lg"></i> Correct</span>{% elif it.selected %}<span class="badge bg-danger"><i class="bi bi-x-lg"></i> Wrong</span>{% else %}<span class="badge bg-secondary">Not answered</span>{% endif %}
         </div>
         {% if it.passage %}{{ it.passage|passage_html }}{% endif %}
-        <div class="pn-qtext">{{ it.text }}</div>
+        <div class="pn-qtext{% if it.orals %} pn-qtext-orals{% endif %}">{% if it.orals %}<button class="pn-say pn-say-stem" type="button" data-say="{{ it.text|say }}"><i class="bi bi-volume-up-fill"></i> Hear this question</button>{% endif %}{{ it.text }}</div>
         {% if it.options %}
             {% for k, v in it.options.items() %}
             <div class="pn-option locked {% if k == it.correct %}correct{% elif k == it.selected %}wrong{% endif %}">
-                <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>
+                <span class="key">{{ k }}</span><span class="txt">{{ v }}</span>{% if it.orals %}<button class="pn-say pn-say-opt" type="button" data-say="{{ v }}" aria-label="Listen to option {{ k }}"><i class="bi bi-volume-up-fill"></i></button>{% endif %}
                 {% if k == it.correct %}<i class="bi bi-check-circle-fill text-success ms-auto"></i>{% elif k == it.selected %}<i class="bi bi-x-circle-fill text-danger ms-auto"></i>{% endif %}
             </div>
             {% endfor %}

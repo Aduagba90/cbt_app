@@ -418,6 +418,8 @@ def _pack(qid, text, a, b, c, d, correct, explanation, with_answers=False, diffi
         "difficulty": difficulty,
         "topic": topic,
         "passage": passage,
+        # Test of Orals questions get device text-to-speech buttons in the UI
+        "orals": bool(topic and str(topic).startswith("Test of Orals")),
     }
     if with_answers:
         q["correct"] = (correct or "").strip().upper()[:1]
