@@ -300,20 +300,24 @@
 /* ---------- Spoken Test of Orals: device text-to-speech (no audio files, no server) ---------- */
 (function () {
   if (!("speechSynthesis" in window)) { document.documentElement.classList.add("no-tts"); return; }
-  var synth = window.speechSynthesis, voice = null, current = null;
+  var synth = window.speechSynthesis, voice = null, current = null, warned = false;
   function pickVoice() {
     var vs = synth.getVoices() || [];
     var prefs = [/^en[-_]GB/i, /^en[-_]NG/i, /^en/i];   /* WAEC orals is RP-leaning: British first, then Nigerian, then any English */
     for (var p = 0; p < prefs.length; p++) {
-      for (var i = 0; i < vs.length; i++) { if (prefs[p].test(vs[i].lang || "")) { voice = vs[i]; return; } }
+      for (var i = 0; i < vs.length; i++) { if (prefs[p].test(vs[i].lang || "")) { voice = vs[i]; return voice; } }
     }
     voice = vs[0] || null;
+    return voice;
   }
   pickVoice();
   if (typeof synth.onvoiceschanged !== "undefined") { synth.onvoiceschanged = pickVoice; }
   function clean(t) {
-    t = String(t || "").replace(/<[^>]+>/g, " ").replace(/\/[^/]{1,14}\//g, " ");  /* strip HTML + IPA between slashes */
-    return t.replace(/\s+/g, " ").trim();
+    t = String(t || "");
+    t = t.replace(/<[^>]+>/g, " ");   /* strip HTML tags */
+    var parts = t.split("/");         /* drop /IPA/ spans: odd segments sit between slashes */
+    for (var i = 1; i < parts.length; i += 2) { parts[i] = " "; }
+    return parts.join(" ").trim();
   }
   document.addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest(".pn-say[data-say]") : null;
@@ -322,7 +326,17 @@
     e.stopPropagation();
     if (current === btn) { synth.cancel(); btn.classList.remove("speaking"); current = null; return; }  /* tap again = stop */
     if (current) { current.classList.remove("speaking"); }
-    synth.cancel();
+    /* Chrome desktop bug: the synth queue can stay paused after cancel() - resume() un-sticks it */
+    try { synth.cancel(); synth.resume(); } catch (err) {}
+    pickVoice();  /* voices load late on many laptops - re-pick at click time */
+    if (!(synth.getVoices() || []).length) {
+      btn.classList.remove("speaking");
+      if (!warned) {
+        warned = true;
+        alert("This browser has no speech voices installed, so the read-aloud buttons cannot speak. Please try Chrome or Edge, or check the text-to-speech settings on your device.");
+      }
+      return;
+    }
     var text = clean(btn.getAttribute("data-say"));
     if (!text) return;
     current = btn; btn.classList.add("speaking");
@@ -331,5 +345,7 @@
     u.rate = 0.85;
     u.onend = u.onerror = function () { btn.classList.remove("speaking"); if (current === btn) current = null; };
     synth.speak(u);
+    /* some Chrome versions stall the queue right after speak() - nudge it once */
+    setTimeout(function () { try { if (!synth.speaking && current === btn) { synth.resume(); } } catch (err) {} }, 250);
   }, false);
 })();

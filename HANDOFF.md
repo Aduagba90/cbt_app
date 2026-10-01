@@ -744,7 +744,20 @@ No audio files, no server cost, works offline-of-our-servers on any device with 
   - IMPORTANT UX guard: clicking a speaker inside an option label must NOT select the answer
     — the option click handlers in exam_room / practice_question / fix_mistakes all start
     with `if (e.target.closest('.pn-say')) return;` (keep that when editing those scripts).
-- CSS at the end of prepnova.css; base.html cache-bust bumped v=15 -> v=16.
+- CSS at the end of prepnova.css; base.html cache-bust bumped v=15 -> v=16, and after a
+  REAL LAPTOP BUG (speaker buttons rendered but clicks did nothing — the browser kept the
+  cached old prepnova.js because its version string was NOT bumped) js is now v=4 -> v=5.
+  LESSON: bump the ?v= of ANY static file you change (css AND js), or returning visitors
+  keep the old file silently.
+- TTS hardening after the laptop report: Chrome desktop can leave the synth queue paused
+  after cancel() -> module calls synth.resume() after every cancel plus a 250ms nudge;
+  voices often load late -> re-picked at click time; if the device truly has NO voices the
+  button now shows a clear one-time alert instead of failing silently.
+- JS-writing gotcha: heredoc/JSON layering mangled backslashes (the IPA regex ended up
+  with double backslashes = matched nothing). clean() is now written escape-free (split on
+  "/" + drop odd segments = same behaviour as the Python |say filter); when writing JS via
+  python heredocs, AVOID backslash escapes entirely or verify with `node --check` + a
+  behaviour test.
 - Landing page WAEC card now says "...and every orals question can be read aloud on your phone."
 - Tests: `_work/orals_test.py` — 23 checks (unit flag, practice shows/hides buttons correctly,
   Paper 3 exam room JSON flags all 60, review shows 60 stem + 240 option speakers, bookmarks,
