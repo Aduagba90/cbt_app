@@ -300,7 +300,16 @@
             {% endfor %}
         </div>
         <p class="text-center small text-muted mt-4 reveal"><i class="bi bi-lock-fill me-1"></i> Payments are processed by Paystack. We never see or store your card details.</p>
-            <p class="text-center small mt-2 reveal"><i class="bi bi-gift me-1"></i> Buying for someone else? <a href="{{ url_for('gift_page') }}">Gift a subscription</a> — the perfect present for an exam student.</p>
+            
+            <div class="mt-4 mx-auto reveal" style="max-width:640px">
+                <div class="pn-gift-banner">
+                    <div class="text-start">
+                        <div class="fw-semibold"><i class="bi bi-balloon-heart me-1"></i> Buying for someone else?</div>
+                        <div class="small" style="opacity:.82">Gift full access to a friend, sibling or your child — they receive a PIN. The perfect present for an exam student.</div>
+                    </div>
+                    <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-sm flex-shrink-0">Gift a subscription</a>
+                </div>
+            </div>
     </div>
 </section>
 

@@ -979,3 +979,6 @@ a.pn-topic.weak i { font-size: .9rem; }
   font-size: 1.7rem; font-weight: 700; letter-spacing: .08em; padding: .8rem 1rem;
   border: 2px dashed var(--bs-primary); border-radius: .8rem; background: rgba(13, 110, 253, .06);
   user-select: all; }
+
+.pn-gift-banner { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  padding:1.1rem 1.4rem; border:1px solid rgba(255,255,255,.16); border-radius:1rem; background:rgba(255,255,255,.07); }
