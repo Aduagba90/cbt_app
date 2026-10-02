@@ -51,6 +51,19 @@
     </div>
   </div>
 </div>
+{% if not config.get("PAYSTACK_READY") %}
+<div class="pn-admin-flash">
+  <div style="background:#fff5f5;border:1px solid #dc3545;border-left:5px solid #dc3545;border-radius:10px;padding:.85rem 1rem;color:#842029;font-size:.9rem;line-height:1.55;">
+    <b>⚠ Online payments are OFF.</b> Nobody can pay online anywhere on the site — the Subscribe and Gift pages
+    only show &ldquo;contact support on WhatsApp&rdquo;, and Pay buttons are hidden.<br>
+    <b>To switch payments on:</b> open your PythonAnywhere Bash console and run
+    <b style="background:#f8f9fa;padding:.1rem .4rem;border-radius:6px;">python3 setup.py paystack</b>
+    — it asks for your Paystack Public key and Secret key (Paystack dashboard &rarr; Settings &rarr; API Keys &amp; Webhooks),
+    then saves and reloads the site automatically. This warning disappears once the keys are set.
+  </div>
+</div>
+{% endif %}
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
   <div class="pn-admin-flash">

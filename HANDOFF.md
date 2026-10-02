@@ -721,6 +721,17 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
 - Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
   parent 19, resetpw 13, battle 43, centre 53+ — all green, real db untouched.
 
+## LIVE INCIDENT + safety net: payments silently OFF (Oct 2026)
+
+Owner reported "gift page has no button" on the LIVE site — root cause: the live
+~/.prepnova.env has no Paystack keys, so paystack_ready=False hides ALL pay buttons
+site-wide (subscribe + gifts + sponsor), not just on /gift. Owner fix (their side):
+`python3 setup.py paystack` in the PA console (asks for pk_/sk_ keys, saves, reloads).
+Safety net shipped: _admin_bar.html now shows a red "Online payments are OFF" banner with
+the exact fix command on EVERY admin page when config["PAYSTACK_READY"] is false
+(uses the Jinja `config` global — no route changes). gift_test covers both states via
+ADMIN_EMAIL/ADMIN_PASSWORD env + login + config flag flip.
+
 ## Gift a Subscription — guest checkout, gift PINs (Oct 2026)
 
 Anyone (no account needed) buys a plan as a gift at /gift -> Paystack -> a single-use
