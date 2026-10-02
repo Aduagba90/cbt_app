@@ -1,12 +1,12 @@
 {% set on_landing = request.path in ('/', '/index') %}
 <nav class="pn-landing-nav">
     {% if not session.get('user') and request.endpoint != 'gift_page' and not request.path.startswith('/battle') %}
-    <div class="pn-promo-strip">
-        <div class="container d-flex flex-wrap align-items-center justify-content-center gap-2 py-2">
-            <span class="text-center"><i class="bi bi-balloon-heart-fill me-1"></i><b>Giving season is here:</b> gift a student full JAMB, WAEC &amp; Post-UTME access — instant PIN, no account needed.</span>
-            <a href="{{ url_for('gift_page') }}" class="btn btn-dark btn-sm flex-shrink-0">🎁 Gift a subscription</a>
+    <a class="pn-promo-strip" href="{{ url_for('gift_page') }}">
+        <div class="container d-flex align-items-center justify-content-center gap-2 py-2">
+            <span class="text-truncate"><i class="bi bi-balloon-heart-fill me-1"></i><b>Gift an exam student full access</b><span class="d-none d-md-inline"> — JAMB, WAEC &amp; Post-UTME, instant PIN, no account needed</span></span>
+            <span class="btn btn-dark btn-sm flex-shrink-0"><span class="d-md-none">Gift</span><span class="d-none d-md-inline">Gift a subscription</span></span>
         </div>
-    </div>
+    </a>
     {% endif %}
     <div class="container d-flex align-items-center justify-content-between">
         <a class="pn-brand" href="{{ url_for('index') }}">
@@ -16,7 +16,6 @@
         <ul class="nav d-none d-lg-flex align-items-center gap-1">
             <li class="nav-item"><a class="nav-link" href="{{ '#tools' if on_landing else url_for('tools.combination_checker') }}"><i class="bi bi-tools me-1"></i>Free tools</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ '#features' if on_landing else '/#features' }}">Features</a></li>
-            <li class="nav-item d-none d-xl-block"><a class="nav-link" href="{{ '#how' if on_landing else '/#how' }}">How it works</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ '#pricing' if on_landing else '/#pricing' }}">Pricing</a></li>
             <li class="nav-item d-none d-xl-block"><a class="nav-link" href="{{ '#faq' if on_landing else '/#faq' }}">FAQ</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('centre.schools') }}"><i class="bi bi-mortarboard me-1"></i>For centres</a></li>
@@ -25,7 +24,6 @@
             {% if session.get('user') %}
             <a href="{{ url_for('dashboard') }}" class="btn btn-accent btn-sm"><i class="bi bi-grid-1x2 me-1"></i> Go to dashboard</a>
             {% else %}
-            <a href="{{ url_for('gift_page') }}" class="pn-nav-gift d-none d-md-inline-flex" title="Buy full access for a student — no account needed"><i class="bi bi-balloon-heart-fill"></i>&nbsp;Gift</a>
             <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">Log in</a>
             <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start free trial</a>
             {% endif %}

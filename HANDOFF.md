@@ -749,7 +749,12 @@ so it stacks on running plans and works for new or existing accounts.
   verified vs pending row; mints PIN via generate_access_codes with max_uses=1,
   180-day redemption validity, created_by "GIFT:buyer@email").
 - Discovery (v2, after "make it catch attention" review — visitors are the buyers):
-  gold PROMO STRIP at the very top of every public page for logged-out visitors.
+  slim gold PROMO STRIP (one line, the whole strip is a single <a> tap target; short text
+  on phones, full text >=768px; v4 declutter: mobile strip was 114px/2 lines and the nav
+  had THREE buttons - now the strip pill IS the gift CTA, the white Gift pill was REMOVED
+  from the action row and "How it works" was dropped from the nav links, so actions are
+  just [Log in] [Start free trial] with the gold register CTA dominant) at the very top of
+  every public page for logged-out visitors.
   CRITICAL LAYOUT FACT: .pn-landing-nav is position:fixed (transparent overlay) — a strip
   placed in normal flow BEFORE it renders BEHIND the nav (owner reported the mess). The
   strip now lives INSIDE the fixed nav (first row, _landing_nav.html) on pn-landing pages
