@@ -738,8 +738,15 @@ so it stacks on running plans and works for new or existing accounts.
   verified vs pending row; mints PIN via generate_access_codes with max_uses=1,
   180-day redemption validity, created_by "GIFT:buyer@email").
 - Discovery (v2, after "make it catch attention" review — visitors are the buyers):
-  gold PROMO STRIP at the very top of every public page for logged-out visitors
-  (base.html, hidden on /gift itself and for logged-in users), Gift button in the HERO
+  gold PROMO STRIP at the very top of every public page for logged-out visitors.
+  CRITICAL LAYOUT FACT: .pn-landing-nav is position:fixed (transparent overlay) — a strip
+  placed in normal flow BEFORE it renders BEHIND the nav (owner reported the mess). The
+  strip now lives INSIDE the fixed nav (first row, _landing_nav.html) on pn-landing pages
+  (index/schools/tools; battle screens excluded — logged-out visitors there just log in),
+  while base.html renders the static flow strip ONLY on nav-less pages (login/register/
+  terms/privacy), discriminated via 'pn-landing' in self.body_class() + /battle path.
+  body.pn-has-promo (base body tag) adds hero top padding (68px mobile / 48px desktop) so
+  hero text never hides behind the taller fixed nav. Gift button in the HERO
   next to "Start free trial", a DEDICATED full-width gift section on the landing page
   right after pricing (id="gift", animated balloon badge, "From <cheapest> naira" anchor),
   a Gift button in the mobile sticky CTA bar, gift nudge under the sponsor card on the

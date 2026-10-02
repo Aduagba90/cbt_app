@@ -1010,3 +1010,12 @@ a.pn-topic.weak i { font-size: .9rem; }
 /* Landing nav: never wrap (fixes two-row nav), tighter links to fit the CTA cluster */
 .pn-landing-nav .nav { flex-wrap: nowrap; }
 .pn-landing-nav .nav-link { padding: .5rem .65rem; white-space: nowrap; }
+
+/* Promo strip lives INSIDE the fixed landing nav — push the hero down by the strip height
+   (mobile: text wraps to two lines ~68px; >=768px single line ~48px). */
+body.pn-has-promo .pn-hero { padding-top: calc(7.5rem + 68px); }
+@media (min-width: 768px) { body.pn-has-promo .pn-hero { padding-top: calc(7.5rem + 48px); } }
+@media (min-width: 992px) { body.pn-has-promo .pn-hero { padding-top: calc(9rem + 48px); } }
+body.pn-has-promo .pn-hero-sm { padding-top: calc(5.5rem + 68px); }
+@media (min-width: 768px) { body.pn-has-promo .pn-hero-sm { padding-top: calc(5.5rem + 48px); } }
+@media (min-width: 992px) { body.pn-has-promo .pn-hero-sm { padding-top: calc(6.5rem + 48px); } }

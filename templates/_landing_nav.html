@@ -1,5 +1,13 @@
 {% set on_landing = request.path in ('/', '/index') %}
 <nav class="pn-landing-nav">
+    {% if not session.get('user') and request.endpoint != 'gift_page' and not request.path.startswith('/battle') %}
+    <div class="pn-promo-strip">
+        <div class="container d-flex flex-wrap align-items-center justify-content-center gap-2 py-2">
+            <span class="text-center"><i class="bi bi-balloon-heart-fill me-1"></i><b>Giving season is here:</b> gift a student full JAMB, WAEC &amp; Post-UTME access — instant PIN, no account needed.</span>
+            <a href="{{ url_for('gift_page') }}" class="btn btn-dark btn-sm flex-shrink-0">🎁 Gift a subscription</a>
+        </div>
+    </div>
+    {% endif %}
     <div class="container d-flex align-items-center justify-content-between">
         <a class="pn-brand" href="{{ url_for('index') }}">
             <span class="pn-logo">PN</span>

@@ -10,10 +10,10 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=20">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=21">
     {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">
 
 {% block flashes %}
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -23,10 +23,10 @@
 {% endwith %}
 {% endblock %}
 
-{% if not session.get('user') and request.endpoint != 'gift_page' %}
+{% if request.endpoint and not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' not in (self.body_class() or '') and not request.path.startswith('/battle') %}
 <div class="pn-promo-strip">
     <div class="container d-flex flex-wrap align-items-center justify-content-center gap-2 py-2">
-        <span><i class="bi bi-balloon-heart-fill me-1"></i><b>Giving season is here:</b> gift a student full JAMB, WAEC &amp; Post-UTME access — instant PIN, no account needed.</span>
+        <span class="text-center"><i class="bi bi-balloon-heart-fill me-1"></i><b>Giving season is here:</b> gift a student full JAMB, WAEC &amp; Post-UTME access — instant PIN, no account needed.</span>
         <a href="{{ url_for('gift_page') }}" class="btn btn-dark btn-sm flex-shrink-0">🎁 Gift a subscription</a>
     </div>
 </div>
