@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Gift a subscription{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Gift a subscription</span></div>
+        <h1>🎁 Gift a subscription</h1>
+        <p class="lead">Pay for a friend, sibling, cousin or your child. They receive an Access PIN and unlock every full mock exam instantly — you don't need an account to buy.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="POST" action="{{ url_for('gift_start') }}" data-once class="card border-0 shadow-sm p-4 anim-rise">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <h2 class="h5 mb-3"><i class="bi bi-1-circle-fill text-primary me-1"></i> Choose a plan</h2>
+            <div class="row g-3 mb-2">
+                {% for p in plans %}
+                <div class="col-md-4">
+                    <label class="pn-gift-plan border rounded-3 p-3 h-100 d-block">
+                        <div class="d-flex align-items-start gap-2">
+                            <input type="radio" name="plan_id" value="{{ p['id'] }}" class="mt-1" {% if loop.index == 2 %}checked{% endif %}>
+                            <div>
+                                <div class="fw-semibold">{{ p['plan_name'] }}</div>
+                                <div class="text-primary fw-bold">{{ p['price']|naira }}</div>
+                                <div class="small text-muted">{{ p['duration_days'] }} days of full access</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="small text-muted mb-4">Every plan includes unlimited JAMB, WAEC &amp; Post-UTME mock exams, unlimited practice and detailed corrections.</p>
+
+            <h2 class="h5 mb-3"><i class="bi bi-2-circle-fill text-primary me-1"></i> Who is it from?</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Your name</label>
+                    <input class="form-control" name="buyer_name" maxlength="60" required placeholder="e.g. Aunty Ngozi">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Your email</label>
+                    <input type="email" class="form-control" name="buyer_email" maxlength="80" required placeholder="you@example.com">
+                    <div class="form-text">A copy of the gift PIN is sent here after payment.</div>
+                </div>
+            </div>
+
+            <h2 class="h5 mb-3"><i class="bi bi-3-circle-fill text-primary me-1"></i> Who is it for? <span class="small text-muted fw-normal">(optional)</span></h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Their name</label>
+                    <input class="form-control" name="recipient_name" maxlength="40" placeholder="e.g. Chidi">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">A short message</label>
+                    <input class="form-control" name="message" maxlength="140" placeholder="e.g. Go and pass your JAMB!">
+                </div>
+            </div>
+
+            {% if paystack_ready %}
+            <button type="submit" class="btn btn-accent btn-lg w-100 mt-4" data-loading="Preparing…"><i class="bi bi-lock-fill me-1"></i>Continue to secure payment</button>
+            <p class="text-center small text-muted mt-2 mb-0">Card, bank transfer or USSD via Paystack. The PIN appears immediately after payment.</p>
+            {% else %}
+            <div class="alert alert-warning small mt-4 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up. Please contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a> to arrange a gift manually.</div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 h-100 anim-rise d1">
+            <h2 class="h5 mb-3">How it works</h2>
+            <ol class="ps-3 mb-4" style="line-height:1.9">
+                <li>You pay for the plan here — no PrepNova account needed.</li>
+                <li>We give you a <b>gift PIN</b> (and email you a copy).</li>
+                <li>The student enters it under <b>Subscribe → Have an Access PIN</b> — new or existing account, both work.</li>
+            </ol>
+            <div class="pn-feature"><span class="pn-feature-icon tint-gold"><i class="bi bi-calendar-check"></i></span>
+                <h4>Valid for 180 days</h4><p>The PIN doesn't expire quickly — perfect for a birthday or Christmas gift before exam season.</p></div>
+            <div class="pn-feature"><span class="pn-feature-icon tint-green"><i class="bi bi-layers"></i></span>
+                <h4>Stacks with any plan</h4><p>If the student already has access, the gifted days are added on top — nothing is wasted.</p></div>
+            <div class="pn-feature"><span class="pn-feature-icon tint-blue"><i class="bi bi-whatsapp"></i></span>
+                <h4>Easy to send</h4><p>After payment we give you a ready-made WhatsApp message with the PIN — one tap to deliver.</p></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

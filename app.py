@@ -44,7 +44,7 @@ from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon, CHALLENGE_SIZE, REFERRAL_REWARD_DAYS, ensure_referral_code, referral_stats,
                      share_text, study_streak, clear_mistake, jamb_projection, mistakes_summary, pace_info, record_mistake,
-                     redeem_access_code)
+                     generate_access_codes, pretty_code, redeem_access_code)
 from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, json_login_required,
                       login_required, normalise_phone, password_problems, rate_limit, valid_email, validate_csrf,
                       wants_json_response)
@@ -2564,8 +2564,185 @@ def paystack_webhook():
         data = event.get("data") or {}
         reference = (data.get("reference") or "")[:64]
         if reference:
-            _process_paystack_payment(reference, data)
+            if reference.startswith("PN-G-"):
+                _fulfil_gift(reference, data)
+            else:
+                _process_paystack_payment(reference, data)
     return jsonify({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Gift a subscription (public — buy full access for someone, no login needed)
+# ---------------------------------------------------------------------------
+
+GIFT_CODE_VALID_DAYS = 180  # how long an unredeemed gift PIN stays valid
+
+
+@app.route("/gift")
+def gift_page():
+    conn = connect()
+    plans = conn.execute(
+        "SELECT id, plan_name, price, duration_days, description FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days"
+    ).fetchall()
+    conn.close()
+    return render_template("gift.html", plans=plans, paystack_ready=bool(PAYSTACK_SECRET_KEY))
+
+
+@app.route("/gift_start", methods=["POST"])
+@rate_limit(limit=10, window_seconds=600, scope="gift_start")
+def gift_start():
+    """Create a pending gift purchase and hand the buyer to Paystack (no account needed)."""
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("gift_page"))
+    form = request.form
+    buyer_name = re.sub(r"\s+", " ", form.get("buyer_name") or "").strip()[:60]
+    buyer_email = (form.get("buyer_email") or "").strip().lower()[:80]
+    recipient_name = re.sub(r"\s+", " ", form.get("recipient_name") or "").strip()[:40]
+    message = re.sub(r"\s+", " ", form.get("message") or "").strip()[:140]
+    if len(buyer_name) < 2:
+        flash("Please enter your name.", "danger")
+        return redirect(url_for("gift_page"))
+    if not valid_email(buyer_email):
+        flash("Please enter a valid email address — a copy of the gift PIN is sent there.", "danger")
+        return redirect(url_for("gift_page"))
+    try:
+        plan_id = int(form.get("plan_id") or 0)
+    except (TypeError, ValueError):
+        plan_id = 0
+    conn = connect()
+    cur = conn.cursor()
+    plan = cur.execute(
+        "SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE id = ? AND is_active = 1", (plan_id,)
+    ).fetchone()
+    if not plan:
+        conn.close()
+        flash("Please choose a plan.", "danger")
+        return redirect(url_for("gift_page"))
+    reference = f"PN-G-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    cur.execute(
+        """INSERT INTO gift_purchases (buyer_name, buyer_email, recipient_name, message, plan_id, plan_name,
+                                       amount, duration_days, transaction_reference, payment_status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')""",
+        (buyer_name, buyer_email, recipient_name, message, plan["id"], plan["plan_name"],
+         plan["price"], plan["duration_days"], reference),
+    )
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": buyer_email,
+                "amount": int(round(float(plan["price"]) * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/gift_callback",
+                "metadata": {"gift": 1, "plan_id": plan["id"], "plan_name": plan["plan_name"],
+                             "custom_fields": [{"display_name": "Gift", "variable_name": "gift", "value": plan["plan_name"]}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (gift)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("gift_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (gift): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("gift_page"))
+    return redirect(payload["data"]["authorization_url"])
+
+
+def _fulfil_gift(reference, payment_data):
+    """Verify a gift payment, mark it paid and mint the gift Access PIN. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        row = cur.execute("SELECT * FROM gift_purchases WHERE transaction_reference = ?", (reference,)).fetchone()
+        if not row:
+            return False, "Gift record not found.", None
+        if row["payment_status"] == "PAID":
+            return True, "already", row["code_text"]
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE gift_purchases SET payment_status = 'FAILED' WHERE id = ?", (row["id"],))
+            conn.commit()
+            return False, "Payment was not successful.", None
+        paid_kobo = int(payment_data.get("amount") or 0)
+        expected_kobo = int(round(float(row["amount"]) * 100))
+        if paid_kobo < expected_kobo or (payment_data.get("currency") or "NGN") != "NGN":
+            log.warning("Paystack amount mismatch (gift) for %s: paid=%s expected=%s", reference, paid_kobo, expected_kobo)
+            cur.execute("UPDATE gift_purchases SET payment_status = 'AMOUNT_MISMATCH' WHERE id = ?", (row["id"],))
+            conn.commit()
+            return False, "Payment amount did not match the selected plan. Please contact support.", None
+        expires = (datetime.now() + timedelta(days=GIFT_CODE_VALID_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
+        code = generate_access_codes(cur, 1, row["duration_days"], f"Gift — {row['plan_name']}", 1, expires,
+                                     f"GIFT:{row['buyer_email']}")[0]
+        cur.execute("UPDATE gift_purchases SET payment_status = 'PAID', code_text = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (code, row["id"]))
+        conn.commit()
+        if mail_configured():
+            try:
+                pretty = pretty_code(code)
+                send_email("PrepNova CBT — your gift PIN",
+                           row["buyer_email"],
+                           (f"Hello {row['buyer_name']},\n\nThank you for gifting the {row['plan_name']} plan.\n\n"
+                            f"Gift PIN: {pretty}\nValid until: {expires}\nReference: {reference}\n\n"
+                            f"Send the PIN to {row['recipient_name'] or 'the student'} — they enter it under Subscribe -> 'Have an Access PIN'."),
+                           email_wrap("Your gift is ready",
+                                      (f"Hello <b>{row['buyer_name']}</b>,<br><br>Thank you for gifting the <b>{row['plan_name']}</b> plan."
+                                       f"<br><br>Gift PIN: <b style='font-size:1.3rem'>{pretty}</b><br>Valid until: <b>{expires}</b><br>"
+                                       f"Reference: <b>{reference}</b>"),
+                                      "Open PrepNova", f"{app_url()}"))
+            except Exception:
+                log.exception("Gift receipt email failed")
+        return True, "ok", code
+    finally:
+        conn.close()
+
+
+@app.route("/gift_callback")
+def gift_callback():
+    """Paystack returns the buyer here — show the gift PIN and how to share it."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("gift_page"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}",
+                            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (gift)")
+        flash("We could not verify your payment right now. If you were debited, your gift PIN will be emailed to you shortly.", "warning")
+        return redirect(url_for("gift_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with your reference.", "danger")
+        return redirect(url_for("gift_page"))
+    ok, msg, code = _fulfil_gift(reference, payload.get("data") or {})
+    if not ok:
+        flash(msg, "danger")
+        return redirect(url_for("gift_page"))
+    conn = connect()
+    row = conn.execute("SELECT * FROM gift_purchases WHERE transaction_reference = ?", (reference,)).fetchone()
+    expires_row = conn.execute("SELECT expires_at FROM access_codes WHERE code = ?", (code,)).fetchone()
+    conn.close()
+    expires = ""
+    if expires_row and expires_row["expires_at"]:
+        try:
+            expires = datetime.strptime(expires_row["expires_at"], "%Y-%m-%d %H:%M:%S").strftime("%d %B %Y")
+        except ValueError:
+            expires = expires_row["expires_at"]
+    pretty = pretty_code(code)
+    who = f", {row['recipient_name']}" if row["recipient_name"] else ""
+    tail = f" — {row['message']}" if row["message"] else ""
+    share = (f"Your PrepNova CBT gift is ready{who}! Access PIN: {pretty}. "
+             f"Log in at {app_url()} -> Subscribe -> 'Have an Access PIN' "
+             f"to unlock {row['duration_days']} days of full mock exams.{tail}")
+    return render_template("gift_success.html", row=row, code=pretty, expires=expires,
+                           emailed=mail_configured(), share=share, site_url=app_url())
 
 
 # ---------------------------------------------------------------------------

@@ -27,7 +27,7 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
                 <span class="pn-stat-icon tint-gold"><i class="bi bi-ticket-perforated-fill"></i></span>
-                <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship or the PrepNova team. Enter it to unlock full access instantly — no card needed.</div></div>
+                <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship, a gift from family or the PrepNova team. Enter it to unlock full access instantly — no card needed.</div></div>
 <p class="small text-muted mt-2 mb-0"><i class="bi bi-mortarboard me-1"></i>Running a lesson centre or school? <a href="{{ url_for('centre.schools') }}">See bulk pricing for your whole class →</a></p>
             </div>
             <form method="POST" action="{{ url_for('redeem_pin') }}" class="d-flex gap-2 flex-grow-1 flex-sm-grow-0" data-once>
@@ -42,6 +42,11 @@
 {% if not paystack_ready %}
 <div class="alert alert-warning small anim-rise"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up. Please contact support on WhatsApp to activate a plan manually.</div>
 {% endif %}
+
+<div class="alert alert-info d-flex align-items-center gap-3 anim-rise">
+    <span class="pn-stat-icon tint-gold"><i class="bi bi-gift"></i></span>
+    <div class="flex-grow-1">Buying for a friend, sibling or your child? <a href="{{ url_for('gift_page') }}" class="fw-semibold">Gift a subscription</a> — pay once and they receive a PIN. You don't need an account.</div>
+</div>
 
 <div class="row g-4 justify-content-center">
     {% for p in plans %}

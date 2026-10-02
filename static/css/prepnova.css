@@ -970,3 +970,12 @@ a.pn-topic.weak i { font-size: .9rem; }
 @keyframes pn-say-pulse { 50% { opacity: .6; } }
 .pn-qtext-orals { display: flex; align-items: flex-start; gap: .6rem; flex-wrap: wrap; }
 .no-tts .pn-say { display: none !important; }
+
+/* ---------- Gift a subscription ---------- */
+.pn-gift-plan { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+.pn-gift-plan:hover { border-color: var(--bs-primary) !important; }
+.pn-gift-plan:has(input:checked) { border-color: var(--bs-primary) !important; box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .15); }
+.pn-gift-code { font-family: SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 1.7rem; font-weight: 700; letter-spacing: .08em; padding: .8rem 1rem;
+  border: 2px dashed var(--bs-primary); border-radius: .8rem; background: rgba(13, 110, 253, .06);
+  user-select: all; }

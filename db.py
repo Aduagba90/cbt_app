@@ -482,6 +482,25 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(username)")
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS gift_purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_name TEXT NOT NULL,
+            buyer_email TEXT NOT NULL,
+            recipient_name TEXT,
+            message TEXT,
+            plan_id INTEGER,
+            plan_name TEXT,
+            amount REAL,
+            duration_days INTEGER,
+            transaction_reference TEXT NOT NULL UNIQUE,
+            payment_status TEXT DEFAULT 'PENDING',
+            code_text TEXT,
+            paid_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,

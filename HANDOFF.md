@@ -721,6 +721,34 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
 - Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
   parent 19, resetpw 13, battle 43, centre 53+ — all green, real db untouched.
 
+## Gift a Subscription — guest checkout, gift PINs (Oct 2026)
+
+Anyone (no account needed) buys a plan as a gift at /gift -> Paystack -> a single-use
+Access PIN is minted and shown (+ emailed to the buyer when mail is configured).
+The student redeems it under Subscribe -> "Have an Access PIN" — existing machinery,
+so it stacks on running plans and works for new or existing accounts.
+
+- New table `gift_purchases` (db.py): buyer, recipient, message, plan, reference, status,
+  code_text. Gift references use the **PN-G-** prefix; /paystack/webhook branches on it
+  (`_fulfil_gift`) so the buyer is NEVER auto-granted a subscription (payments-table
+  lookups ignore PN-G- refs by design — keep that separation).
+- Routes in app.py (before "# Entry point"): /gift (public page), /gift_start (POST,
+  rate-limited 10/10min, CSRF), /gift_callback (verify + fulfil + show PIN with
+  WhatsApp-share link), `_fulfil_gift` (idempotent: PAID check first; amount/currency
+  verified vs pending row; mints PIN via generate_access_codes with max_uses=1,
+  180-day redemption validity, created_by "GIFT:buyer@email").
+- Discovery: landing line under the Paystack note, banner on /subscribe, PIN-card copy
+  now says "a gift from family". CSS v=17 (gift styles appended; JS untouched).
+- Gift PINs appear in Admin -> Access PINs automatically (created_by shows the buyer).
+- Tests: `_work/gift_test.py` — 33 checks: public page, CSRF guard, validation,
+  fake-Paystack init/callback, PIN minting (days/max_uses/expiry/creator), idempotent
+  callback, redemption + active subscription, single-use + per-user dedup, webhook
+  fulfilment with HMAC signature (+ bad-signature 401), amount mismatch, failed payment,
+  unknown references. Battery now 12 suites / 547 checks.
+- GOTCHA learned while testing: /register redirects logged-in users — to create a second
+  account in tests use a FRESH test_client per user (register_login on an authenticated
+  client silently no-ops).
+
 ## Spoken Test of Orals — device TTS on orals questions (Oct 2026)
 
 WAEC English "Test of Orals" questions (topics starting with "Test of Orals —", 97 in the
