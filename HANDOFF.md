@@ -743,8 +743,13 @@ so it stacks on running plans and works for new or existing accounts.
   next to "Start free trial", a DEDICATED full-width gift section on the landing page
   right after pricing (id="gift", animated balloon badge, "From <cheapest> naira" anchor),
   a Gift button in the mobile sticky CTA bar, gift nudge under the sponsor card on the
-  parent progress page, PLUS the v1 spots: landing nav item, account menu, both footers,
-  pricing banner card, /subscribe banner. CSS v=19 (JS untouched).
+  parent progress page, PLUS the v1 spots: WHITE PILL "Gift" button in the landing-nav CTA
+  cluster (v3 — the plain mid-nav "Gift" link made the nav wrap onto two lines at 1366px
+  and looked like a utility link; removed), account menu, both footers, pricing banner
+  card, /subscribe banner. Landing teaser clarified after owner misread it as
+  "1000 naira = 180 days": it now says "From <cheapest> for <days> days" (180 was the PIN
+  redemption window, NOT access length — keep that distinction in copy!). "Most gifted"
+  gold tag on the middle plan card at /gift. CSS v=20 (JS untouched).
 - Gift PINs appear in Admin -> Access PINs automatically (created_by shows the buyer).
 - Tests: `_work/gift_test.py` — 33 checks: public page, CSRF guard, validation,
   fake-Paystack init/callback, PIN minting (days/max_uses/expiry/creator), idempotent

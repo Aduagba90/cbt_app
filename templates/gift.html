@@ -23,7 +23,7 @@
                         <div class="d-flex align-items-start gap-2">
                             <input type="radio" name="plan_id" value="{{ p['id'] }}" class="mt-1" {% if loop.index == 2 %}checked{% endif %}>
                             <div>
-                                <div class="fw-semibold">{{ p['plan_name'] }}</div>
+                                <div class="fw-semibold">{{ p['plan_name'] }}{% if loop.index == 2 %} <span class="pn-gift-tag">Most gifted</span>{% endif %}</div>
                                 <div class="text-primary fw-bold">{{ p['price']|naira }}</div>
                                 <div class="small text-muted">{{ p['duration_days'] }} days of full access</div>
                             </div>
