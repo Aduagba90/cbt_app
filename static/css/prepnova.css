@@ -982,3 +982,17 @@ a.pn-topic.weak i { font-size: .9rem; }
 
 .pn-gift-banner { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
   padding:1.1rem 1.4rem; border:1px solid rgba(255,255,255,.16); border-radius:1rem; background:rgba(255,255,255,.07); }
+
+/* ---------- Gift: attention placements (promo strip, hero, dedicated CTA) ---------- */
+.pn-promo-strip { background: linear-gradient(90deg, #f2b705, #ff9f1c); color: #241703; font-size: .85rem; }
+.pn-promo-strip .btn { border-radius: 999px; }
+.pn-gift-cta { position: relative; overflow: hidden; text-align: center; color: #fff; border-radius: 24px; padding: 3rem 1.5rem;
+  background: radial-gradient(600px 280px at 8% 0%, rgba(242, 183, 5, .35), transparent 60%), linear-gradient(135deg, #4c1d95, var(--pn-navy, #0f1f3d)); }
+@media (min-width: 768px) { .pn-gift-cta { padding: 4rem 3rem; } }
+.pn-gift-cta h2 { color: #fff; }
+.pn-gift-cta p { color: rgba(255, 255, 255, .82); max-width: 580px; margin: .75rem auto 1.5rem; }
+.pn-gift-cta-badge { width: 64px; height: 64px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem; color: #241703; background: linear-gradient(135deg, #ffd166, #f2b705); border-radius: 50%;
+  box-shadow: 0 10px 26px rgba(242, 183, 5, .45); animation: pn-gift-float 2.6s ease-in-out infinite; }
+@keyframes pn-gift-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@media (prefers-reduced-motion: reduce) { .pn-gift-cta-badge { animation: none; } }

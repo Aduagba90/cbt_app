@@ -737,10 +737,14 @@ so it stacks on running plans and works for new or existing accounts.
   WhatsApp-share link), `_fulfil_gift` (idempotent: PAID check first; amount/currency
   verified vs pending row; mints PIN via generate_access_codes with max_uses=1,
   180-day redemption validity, created_by "GIFT:buyer@email").
-- Discovery (upgraded after "users can't find it" review): Gift item in the public landing
-  nav (after Pricing, balloon-heart icon), account-menu item for logged-in users (above
-  Invite friends), link in BOTH footers, banner CARD in the landing pricing section, banner
-  on /subscribe, PIN-card copy says "a gift from family". CSS v=18 (JS untouched).
+- Discovery (v2, after "make it catch attention" review — visitors are the buyers):
+  gold PROMO STRIP at the very top of every public page for logged-out visitors
+  (base.html, hidden on /gift itself and for logged-in users), Gift button in the HERO
+  next to "Start free trial", a DEDICATED full-width gift section on the landing page
+  right after pricing (id="gift", animated balloon badge, "From <cheapest> naira" anchor),
+  a Gift button in the mobile sticky CTA bar, gift nudge under the sponsor card on the
+  parent progress page, PLUS the v1 spots: landing nav item, account menu, both footers,
+  pricing banner card, /subscribe banner. CSS v=19 (JS untouched).
 - Gift PINs appear in Admin -> Access PINs automatically (created_by shows the buyer).
 - Tests: `_work/gift_test.py` — 33 checks: public page, CSRF guard, validation,
   fake-Paystack init/callback, PIN minting (days/max_uses/expiry/creator), idempotent

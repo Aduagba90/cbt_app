@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=18">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=19">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -22,6 +22,15 @@
     {% endfor %}
 {% endwith %}
 {% endblock %}
+
+{% if not session.get('user') and request.endpoint != 'gift_page' %}
+<div class="pn-promo-strip">
+    <div class="container d-flex flex-wrap align-items-center justify-content-center gap-2 py-2">
+        <span><i class="bi bi-balloon-heart-fill me-1"></i><b>Giving season is here:</b> gift a student full JAMB, WAEC &amp; Post-UTME access — instant PIN, no account needed.</span>
+        <a href="{{ url_for('gift_page') }}" class="btn btn-dark btn-sm flex-shrink-0">🎁 Gift a subscription</a>
+    </div>
+</div>
+{% endif %}
 
 {% block navbar %}
 {% if session.get('user') %}

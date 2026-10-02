@@ -24,6 +24,7 @@
                 <div class="d-flex flex-wrap gap-2 mt-4 anim-rise d3">
                     <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg"><i class="bi bi-rocket-takeoff me-1"></i> Start 7-day free trial</a>
                     <a href="#how" class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle me-1"></i> See how it works</a>
+                    <a href="{{ url_for('gift_page') }}" class="btn btn-outline-light btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift someone</a>
                 </div>
                 <div class="pn-hero-stats anim-rise d4">
                     <div><b data-count="{{ stats.questions }}" data-suffix="+">0</b><small>Past questions</small></div>
@@ -313,6 +314,21 @@
     </div>
 </section>
 
+<!-- ============================ GIFT A SUBSCRIPTION ============================ -->
+<section class="pn-section pt-0" id="gift">
+    <div class="container">
+        <div class="pn-gift-cta reveal">
+            <div class="pn-gift-cta-badge"><i class="bi bi-balloon-heart-fill"></i></div>
+            <h2>Give the gift of admission.</h2>
+            <p>Know a JAMB, WAEC or Post-UTME candidate? Pay for their full PrepNova access in under a minute — they receive a PIN on WhatsApp and unlock every mock exam instantly. You don't need an account to buy.</p>
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+                <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
+                {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} · instant delivery · PIN valid 180 days</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ============================ TESTIMONIALS ============================ -->
 <section class="pn-section">
     <div class="container">
@@ -379,7 +395,8 @@
 
 <div class="pn-sticky-cta d-lg-none" data-sticky-cta>
     <span><b>7-day free trial</b><small>No card needed</small></span>
-    <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start now <i class="bi bi-arrow-right"></i></a>
+    <a href="{{ url_for('gift_page') }}" class="btn btn-sm btn-outline-light flex-shrink-0">🎁 Gift</a>
+    <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm flex-shrink-0">Start now <i class="bi bi-arrow-right"></i></a>
 </div>
 {% endblock %}
 
