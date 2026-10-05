@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Impact report{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise pn-no-print">
+    <div>
+        <div class="pn-breadcrumb"><span>Private impact report</span></div>
+        <h1>🕊️ Impact report</h1>
+        <p class="lead">What your sponsorship has achieved so far.</p>
+    </div>
+</div>
+
+<div class="pn-report-head anim-rise mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <div class="small" style="opacity:.75">Sponsored group</div>
+            <h2 class="h3 mb-1 text-white">{{ centre['name'] }}</h2>
+            <div class="small" style="opacity:.85">
+                {% if sp['sponsor_org'] %}Sponsored by {{ sp['sponsor_org'] }} · {% endif %}
+                {{ seats }} student seats
+                {% if days_left is not none and days_left >= 0 %} · {{ days_left }} day{{ '' if days_left == 1 else 's' }} remaining{% endif %}
+            </div>
+            {% if sp['message'] %}<div class="small mt-2" style="opacity:.9">“{{ sp['message'] }}”</div>{% endif %}
+        </div>
+        <div class="text-end small" style="opacity:.75">Prepared {{ now }}</div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="pn-sponsor-tile"><b>{{ members|length }} / {{ seats }}</b><span class="small text-muted">students joined</span></div></div>
+    <div class="col-6 col-md-3"><div class="pn-sponsor-tile"><b>{{ total_mocks }}</b><span class="small text-muted">mock exams written</span></div></div>
+    <div class="col-6 col-md-3"><div class="pn-sponsor-tile"><b>{{ avg_overall if avg_overall is not none else '—' }}{{ '%' if avg_overall is not none }}</b><span class="small text-muted">average score</span></div></div>
+    <div class="col-6 col-md-3"><div class="pn-sponsor-tile"><b>{{ '+' if improvement and improvement > 0 }}{{ improvement if improvement is not none else '—' }}{{ 'pts' if improvement is not none }}</b><span class="small text-muted">avg improvement</span></div></div>
+</div>
+
+{% if members %}
+<div class="card border-0 shadow-sm p-4 mb-4 anim-rise">
+    <h2 class="h5 mb-3">Students</h2>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Student</th><th>Joined</th><th>Mocks written</th><th>Average score</th><th>Last active</th></tr></thead>
+            <tbody>
+            {% for m in members %}
+            <tr>
+                <td class="fw-semibold">{{ m.name }}</td>
+                <td>{{ m.joined or '—' }}</td>
+                <td>{{ m.mocks }}</td>
+                <td>{% if m.avg is not none %}{{ m.avg }}%{% else %}—{% endif %}</td>
+                <td>{{ m.last or '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted mt-3 mb-0"><i class="bi bi-shield-lock me-1"></i>Names are shortened for privacy. No contact details are shared.</p>
+</div>
+{% else %}
+<div class="pn-empty card anim-rise"><span class="ico"><i class="bi bi-hourglass-split"></i></span>
+    <h3>No students have joined yet</h3><p>Once the school shares the join code, students appear here with their practice activity.</p></div>
+{% endif %}
+
+{% if subject_rows %}
+<div class="card border-0 shadow-sm p-4 mb-4 anim-rise d1">
+    <h2 class="h5 mb-3">Subject performance <span class="small text-muted fw-normal">(lowest first — where they need help)</span></h2>
+    <div class="d-flex flex-wrap gap-2">
+        {% for r in subject_rows %}
+        <span class="badge {% if loop.index <= 3 %}text-bg-danger{% else %}text-bg-light border{% endif %} fs-6 fw-normal px-3 py-2">
+            {{ r['subject'] }} — {{ r['avg_pct'] }}% <span class="opacity-75">({{ r['students'] }} student{{ '' if r['students'] == 1 else 's' }})</span>
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="pn-no-print text-center py-4">
+    <a href="{{ url_for('sponsor_page') }}" class="btn btn-outline-primary"><i class="bi bi-people me-1"></i> Add more students to this cause</a>
+</div>
+{% endblock %}

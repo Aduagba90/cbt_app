@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=21">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=22">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">
@@ -23,7 +23,7 @@
 {% endwith %}
 {% endblock %}
 
-{% if request.endpoint and not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' not in (self.body_class() or '') and not request.path.startswith('/battle') %}
+{% if request.endpoint and not session.get('user') and request.endpoint not in ('gift_page', 'sponsor_page', 'sponsor_callback', 'sponsor_report') and 'pn-landing' not in (self.body_class() or '') and not request.path.startswith('/battle') %}
 <a class="pn-promo-strip" href="{{ url_for('gift_page') }}">
     <div class="container d-flex align-items-center justify-content-center gap-2 py-2">
         <span class="text-truncate"><i class="bi bi-balloon-heart-fill me-1"></i><b>Gift an exam student full access</b><span class="d-none d-md-inline"> — JAMB, WAEC &amp; Post-UTME, instant PIN, no account needed</span></span>

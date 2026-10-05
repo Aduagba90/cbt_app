@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Sponsor a class{% endblock %}
+{% block description %}Sponsor a whole SS3 class, school or youth group for their JAMB, WAEC and Post-UTME preparation. One payment, one join code for every student, and a private impact report showing what your money achieved.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Sponsor a class</span></div>
+        <h1>🕊️ Sponsor a class</h1>
+        <p class="lead">Pay for a whole SS3 class, school or youth group — diaspora Nigerians, alumni associations, churches, mosques and NGOs. Students get full CBT access with one join code; <b>you get a private report showing exactly what your money achieved.</b> No account needed.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="POST" action="{{ url_for('sponsor_start') }}" data-once class="card border-0 shadow-sm p-4 anim-rise">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <h2 class="h5 mb-3"><i class="bi bi-1-circle-fill text-primary me-1"></i> Who are you sponsoring?</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">School / group name</label>
+                    <input class="form-control" name="group_name" maxlength="60" required placeholder="e.g. Government College, Keffi — SS3">
+                    <div class="form-text">This becomes the group name students join.</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Students</label>
+                    <input type="number" class="form-control" name="seats" id="sp-seats" min="{{ min_seats }}" max="{{ max_seats }}" value="50" required>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label">For how long</label>
+                    <select class="form-select" name="days" id="sp-days">
+                        {% for d, label, hint in durations %}
+                        <option value="{{ d }}" {% if d == 90 %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="pn-spcalc mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div><span class="small text-muted">Price per student</span><br><span class="big text-primary" id="sp-per">—</span></div>
+                <div class="text-end"><span class="small text-muted">Total (one payment)</span><br><span class="big" id="sp-total">—</span></div>
+                <div class="small text-muted w-100" id="sp-note"></div>
+            </div>
+
+            <h2 class="h5 mb-3"><i class="bi bi-2-circle-fill text-primary me-1"></i> Sponsor details</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Your name</label>
+                    <input class="form-control" name="sponsor_name" maxlength="60" required placeholder="e.g. Dr. Ada Obi">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Your email</label>
+                    <input type="email" class="form-control" name="sponsor_email" maxlength="80" required placeholder="you@example.com">
+                    <div class="form-text">Your join code and private report link are sent here.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
+                    <input class="form-control" name="sponsor_phone" maxlength="20" placeholder="0803...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Organisation <span class="text-muted">(optional)</span></label>
+                    <input class="form-control" name="organisation" maxlength="80" placeholder="e.g. Class of '99 Alumni Assoc.">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">A message to the students <span class="text-muted">(optional)</span></label>
+                    <input class="form-control" name="message" maxlength="160" placeholder="e.g. We believe in you — go and pass!">
+                </div>
+            </div>
+
+            {% if paystack_ready %}
+            <button type="submit" class="btn btn-accent btn-lg w-100" data-loading="Preparing…"><i class="bi bi-lock-fill me-1"></i>Continue to secure payment</button>
+            <p class="text-center small text-muted mt-2 mb-0">Card, bank transfer or USSD via Paystack. The join code appears immediately after payment.</p>
+            {% else %}
+            <div class="alert alert-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up. Please contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a> to arrange a sponsorship manually.</div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 h-100 anim-rise d1">
+            <h2 class="h5 mb-3">How it works</h2>
+            <ol class="ps-3 mb-4" style="line-height:1.9">
+                <li>You pay for the group here — no PrepNova account needed.</li>
+                <li>We give you a <b>join code</b> (and email you a copy).</li>
+                <li>The school shares it with the students — each one enters it under <b>Subscribe → I have an Access PIN</b> and gets full access.</li>
+                <li>Anytime, open your <b>private impact report</b>: students joined, mocks written, average scores and improvement.</li>
+            </ol>
+            <div class="pn-feature"><span class="pn-feature-icon tint-gold"><i class="bi bi-graph-up-arrow"></i></span>
+                <h4>Proof your money worked</h4><p>No donation to a school ever came with evidence. Your report shows real practice activity and score improvement — perfect for your association's next giving budget.</p></div>
+            <div class="pn-feature"><span class="pn-feature-icon tint-green"><i class="bi bi-people"></i></span>
+                <h4>Bulk rates</h4><p>The more students you sponsor, the lower the price per student — from ₦300.</p></div>
+            <div class="pn-feature"><span class="pn-feature-icon tint-blue"><i class="bi bi-shield-check"></i></span>
+                <h4>Students' privacy</h4><p>The report shows shortened names only. Student accounts and full details stay private.</p></div>
+            <hr>
+            <table class="table table-sm small mb-0">
+                <thead><tr><th>Group size</th><th>1 month</th><th>A term</th><th>2 terms</th></tr></thead>
+                <tbody>
+                    {% for tier, label in [(10, '10–29 students'), (30, '30–99 students'), (100, '100+ students')] %}
+                    <tr>
+                        <td>{{ label }}</td>
+                        {% for d in [30, 90, 180] %}
+                        {% set price = pricing[d][-1][1] if tier == 10 else (pricing[d][1][1] if tier == 30 else pricing[d][0][1]) %}
+                        <td>{{ price|naira }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var PRICING = {{ pricing_json|safe }};
+  var seats = document.getElementById("sp-seats"), days = document.getElementById("sp-days");
+  var per = document.getElementById("sp-per"), total = document.getElementById("sp-total"), note = document.getElementById("sp-note");
+  function priceFor(n, d) {
+    var tiers = (PRICING[String(d)] || PRICING["90"]).slice().sort(function (a, b) { return b[0] - a[0]; });
+    for (var i = 0; i < tiers.length; i++) { if (n >= tiers[i][0]) return tiers[i][1]; }
+    return tiers.length ? tiers[tiers.length - 1][1] : 0;
+  }
+  function fmt(n) { return "\u20A6" + n.toLocaleString("en-NG"); }
+  function upd() {
+    var s = parseInt(seats.value, 10) || 0, d = parseInt(days.value, 10) || 90;
+    var p = priceFor(s, d);
+    per.textContent = p ? fmt(p) : "—";
+    total.textContent = (s >= {{ min_seats }} && s <= {{ max_seats }} && p) ? fmt(s * p) : "Enter {{ min_seats }}–{{ max_seats }} students";
+    note.textContent = s >= 100 ? "Best rate applied (100+ students)" : (s >= 30 ? "Group rate applied (30–99 students)" : (s >= {{ min_seats }} ? "Standard rate ({{ min_seats }}–29 students)" : ""));
+  }
+  seats.addEventListener("input", upd); days.addEventListener("change", upd); upd();
+})();
+</script>
+{% endblock %}

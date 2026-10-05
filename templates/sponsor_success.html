@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Your cohort is live{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Sponsor a class</span></div>
+        <h1>🕊️ Your cohort is live!</h1>
+        <p class="lead">Payment confirmed — thank you{{ ', ' + order['owner_name'] if order['owner_name'] else '' }}. {{ order['seats'] }} students at {{ order['centre_name'] }} can now unlock full access with the join code below.</p>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 text-center anim-rise">
+            <p class="small text-muted mb-2">{{ order['centre_name'] }} · {{ order['seats'] }} students · {{ days_label }}</p>
+            <div class="pn-gift-code mb-3">{{ join_code }}</div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ join_code }}').then(function(b){ b.textContent='Copied ✓'; })">Copy join code</button>
+            <a class="btn btn-success btn-lg w-100 mt-4" href="https://wa.me/?text={{ share|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Send to the school on WhatsApp</a>
+            <p class="small text-muted mt-3 mb-0">Reference: <span class="mono">{{ order['reference'] }}</span> · Amount: <b>{{ order['amount']|naira }}</b></p>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3"><i class="bi bi-graph-up-arrow text-primary me-1"></i> Your private impact report</h2>
+            <p class="small mb-2">Watch what your sponsorship achieves — students joined, mocks written, average scores and improvement:</p>
+            <div class="pn-gift-code" style="font-size:.85rem; word-break:break-all; user-select:all;">{{ report_url }}</div>
+            <div class="d-flex gap-2 mt-3">
+                <a class="btn btn-primary flex-grow-1" href="{{ report_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Open report</a>
+                <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ report_url }}').then(function(b){ b.textContent='Copied ✓'; })">Copy link</button>
+            </div>
+            <p class="small text-muted mt-3 mb-0"><i class="bi bi-lock-fill me-1"></i>Keep this link private — anyone with it can see the (shortened-name) report. <b>Copy it now:</b> this page is shown once.</p>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d2">
+            <h2 class="h5 mb-3">What the school should do</h2>
+            <ol class="ps-3 mb-0" style="line-height:1.9">
+                <li>Share the join code with the students (WhatsApp message above is ready-made).</li>
+                <li>Each student registers free at <b>{{ site_url }}</b> and enters the code under <b>Subscribe → I have an Access PIN</b>.</li>
+                <li>Full access activates instantly — unlimited JAMB, WAEC &amp; Post-UTME mocks for {{ days_label|lower }}.</li>
+                <li>Check your report link anytime to see the impact.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}

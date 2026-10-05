@@ -17,6 +17,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ '#tools' if on_landing else url_for('tools.combination_checker') }}"><i class="bi bi-tools me-1"></i>Free tools</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ '#features' if on_landing else '/#features' }}">Features</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ '#pricing' if on_landing else '/#pricing' }}">Pricing</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('sponsor_page') }}">Sponsor</a></li>
             <li class="nav-item d-none d-xl-block"><a class="nav-link" href="{{ '#faq' if on_landing else '/#faq' }}">FAQ</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('centre.schools') }}"><i class="bi bi-mortarboard me-1"></i>For centres</a></li>
         </ul>

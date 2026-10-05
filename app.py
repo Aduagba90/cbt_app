@@ -35,6 +35,7 @@ from admin_routes import admin_bp
 from admission_tools import tools_bp
 from battle import battle_bp
 from centre import centre_bp
+import centre as centre_mod
 from db import connect, init_db
 import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
@@ -2566,6 +2567,8 @@ def paystack_webhook():
         if reference:
             if reference.startswith("PN-G-"):
                 _fulfil_gift(reference, data)
+            elif reference.startswith("PN-SC-"):
+                _fulfil_sponsor(reference, data)
             else:
                 _process_paystack_payment(reference, data)
     return jsonify({"ok": True})
@@ -2743,6 +2746,261 @@ def gift_callback():
              f"to unlock {row['duration_days']} days of full mock exams.{tail}")
     return render_template("gift_success.html", row=row, code=pretty, expires=expires,
                            emailed=mail_configured(), share=share, site_url=app_url())
+
+
+# ---------------------------------------------------------------------------
+# Sponsor-a-Cohort (public — pay for a whole class, get a join code + report link)
+# ---------------------------------------------------------------------------
+
+
+def _short_name(name):
+    """Privacy for sponsors' reports: 'Chidi Okafor' -> 'Chidi O.'"""
+    parts = (name or "").strip().split()
+    if not parts:
+        return "Student"
+    return parts[0] + (" " + parts[-1][:1] + "." if len(parts) > 1 else "")
+
+
+def _unique_sponsor_owner(cur, email):
+    """One cohort per sponsorship: if this email already owns a centre, number it."""
+    base, candidate, n = email, email, 2
+    while cur.execute("SELECT 1 FROM centres WHERE owner_username = ?", (candidate,)).fetchone():
+        candidate = f"{base} #{n}"
+        n += 1
+    return candidate
+
+
+@app.route("/sponsor")
+def sponsor_page():
+    return render_template("sponsor.html", durations=centre_mod.DURATIONS, pricing=centre_mod.SEAT_PRICING,
+                           min_seats=centre_mod.MIN_SEATS, max_seats=centre_mod.MAX_SEATS,
+                           pricing_json=json.dumps(centre_mod.SEAT_PRICING),
+                           paystack_ready=bool(PAYSTACK_SECRET_KEY))
+
+
+@app.route("/sponsor_start", methods=["POST"])
+@rate_limit(limit=6, window_seconds=600, scope="sponsor_start")
+def sponsor_start():
+    """Guest checkout: create a PENDING centre order for the cohort, then hand to Paystack."""
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("sponsor_page"))
+    form = request.form
+    sponsor_name = re.sub(r"\s+", " ", form.get("sponsor_name") or "").strip()[:60]
+    sponsor_email = (form.get("sponsor_email") or "").strip().lower()[:80]
+    sponsor_phone = re.sub(r"\s+", "", form.get("sponsor_phone") or "")[:20]
+    org = re.sub(r"\s+", " ", form.get("organisation") or "").strip()[:80]
+    group_name = re.sub(r"\s+", " ", form.get("group_name") or "").strip()[:60]
+    message = re.sub(r"\s+", " ", form.get("message") or "").strip()[:160]
+    problems = []
+    if len(sponsor_name) < 2:
+        problems.append("Please enter your name.")
+    if not valid_email(sponsor_email):
+        problems.append("Please enter a valid email address.")
+    if len(group_name) < 3:
+        problems.append("Please enter the name of the school or group you are sponsoring.")
+    try:
+        seats = int(form.get("seats") or 0)
+        days = int(form.get("days") or 0)
+    except (TypeError, ValueError):
+        seats = days = 0
+    if not (centre_mod.MIN_SEATS <= seats <= centre_mod.MAX_SEATS):
+        problems.append(f"Students must be between {centre_mod.MIN_SEATS} and {centre_mod.MAX_SEATS}.")
+    if days not in centre_mod.DURATION_LABEL:
+        problems.append("Choose a valid plan length.")
+    if problems:
+        for p_ in problems:
+            flash(p_, "warning")
+        return redirect(url_for("sponsor_page"))
+    amount = centre_mod.order_total(seats, days)
+    label = centre_mod.DURATION_LABEL[days]
+    owner_name = (f"{sponsor_name} ({org})" if org else sponsor_name)[:60]
+    reference = f"PN-SC-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    report_code = secrets.token_hex(10).upper()
+    conn = connect()
+    cur = conn.cursor()
+    owner_key = _unique_sponsor_owner(cur, sponsor_email)
+    cur.execute(
+        "INSERT INTO centre_orders (reference, centre_name, owner_username, owner_name, owner_phone, seats, days, amount, status, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)",
+        (reference, group_name, owner_key, owner_name, sponsor_phone, seats, days, amount,
+         datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    order_id = cur.lastrowid
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
+        "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
+        (owner_key, centre_mod._centre_plan_id(cur), f"Sponsor — {group_name} ({seats} students, {label})"[:120], amount, days, reference))
+    cur.execute(
+        "INSERT INTO sponsorships (reference, centre_order_id, sponsor_org, message, report_code, payment_status) "
+        "VALUES (?, ?, ?, ?, ?, 'PENDING')",
+        (reference, order_id, org or None, message or None, report_code))
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": sponsor_email,
+                "amount": int(round(amount * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/sponsorship_callback",
+                "metadata": {"sponsor_cohort": 1, "seats": seats, "days": days, "group_name": group_name,
+                             "custom_fields": [{"display_name": "Sponsorship", "variable_name": "sponsorship",
+                                                "value": f"{seats} students × {label}"}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (sponsor)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("sponsor_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (sponsor): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("sponsor_page"))
+    return redirect(payload["data"]["authorization_url"])
+
+
+def _fulfil_sponsor(reference, payment_data):
+    """Verify a sponsor payment, mark it paid and activate the cohort. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        sp = cur.execute("SELECT * FROM sponsorships WHERE reference = ?", (reference,)).fetchone()
+        if not sp:
+            return False, "Sponsorship record not found.", None
+        if sp["payment_status"] == "PAID":
+            return True, "already", sp
+        order = cur.execute("SELECT * FROM centre_orders WHERE reference = ?", (reference,)).fetchone()
+        if not order:
+            return False, "Order not found.", None
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE sponsorships SET payment_status = 'FAILED' WHERE id = ?", (sp["id"],))
+            cur.execute("UPDATE centre_orders SET status = 'FAILED' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'FAILED' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment was not successful.", None
+        paid_kobo = int(payment_data.get("amount") or 0)
+        expected_kobo = int(round(float(order["amount"]) * 100))
+        if paid_kobo < expected_kobo or (payment_data.get("currency") or "NGN") != "NGN":
+            log.warning("Paystack amount mismatch (sponsor) %s: paid=%s expected=%s", reference, paid_kobo, expected_kobo)
+            cur.execute("UPDATE sponsorships SET payment_status = 'AMOUNT_MISMATCH' WHERE id = ?", (sp["id"],))
+            cur.execute("UPDATE centre_orders SET status = 'AMOUNT_MISMATCH' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'AMOUNT_MISMATCH' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment amount did not match your order. Please contact support.", None
+        cur.execute(
+            """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = ?,
+                                  channel = ?, currency = ?, amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
+               WHERE transaction_reference = ?""",
+            (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200], payment_data.get("channel"),
+             payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
+        centre, join_code = centre_mod.activate_centre_order(cur, order)
+        cur.execute("UPDATE sponsorships SET payment_status = 'PAID', centre_id = ?, centre_order_id = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (centre["id"], order["id"], sp["id"]))
+        conn.commit()
+        if mail_configured():
+            try:
+                send_email("PrepNova CBT — your cohort is live",
+                           order["owner_username"],
+                           (f"Hello {order['owner_name']},\n\nYour sponsorship of {order['seats']} students at "
+                            f"{order['centre_name']} is active.\n\nJoin code for the students: {join_code}\n"
+                            f"Private impact report: {app_url()}/sponsor_report/{sp['report_code']}\n"
+                            f"Reference: {reference}\n\nShare the join code with the school — students enter it under "
+                            f"Subscribe -> 'I have an Access PIN'."),
+                           email_wrap("Your cohort is live",
+                                      (f"Hello <b>{order['owner_name']}</b>,<br><br>Your sponsorship of "
+                                       f"<b>{order['seats']} students</b> at <b>{order['centre_name']}</b> is active."
+                                       f"<br><br>Join code: <b style='font-size:1.3rem'>{join_code}</b><br>"
+                                       f"Private impact report: <a href='{app_url()}/sponsor_report/{sp['report_code']}'>open it here</a>"),
+                                      "Open PrepNova", f"{app_url()}"))
+            except Exception:
+                log.exception("Sponsor receipt email failed")
+        sp = cur.execute("SELECT * FROM sponsorships WHERE id = ?", (sp["id"],)).fetchone()
+        return True, "ok", sp
+    finally:
+        conn.close()
+
+
+@app.route("/sponsorship_callback")
+def sponsorship_callback():
+    """Paystack returns the sponsor here — show the join code + private report link."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("sponsor_page"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}",
+                            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (sponsor)")
+        flash("We could not verify your payment right now. If you were debited, your cohort will be activated automatically shortly.", "warning")
+        return redirect(url_for("sponsor_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with your reference.", "danger")
+        return redirect(url_for("sponsor_page"))
+    ok, msg, sp = _fulfil_sponsor(reference, payload.get("data") or {})
+    if not ok:
+        flash(msg, "danger")
+        return redirect(url_for("sponsor_page"))
+    conn = connect()
+    order = conn.execute("SELECT * FROM centre_orders WHERE reference = ?", (reference,)).fetchone()
+    centre = conn.execute("SELECT * FROM centres WHERE id = ?", (sp["centre_id"],)).fetchone()
+    conn.close()
+    join_code = centre["join_code"] if centre else ""
+    share = (f"PrepNova CBT — students of {order['centre_name']}: register free at {app_url()} and enter our code "
+             f"{join_code} under Subscribe -> 'I have an Access PIN' to unlock full mock exams. "
+             f"Sponsored by {order['owner_name']}!")
+    return render_template("sponsor_success.html", order=order, centre=centre, join_code=join_code,
+                           report_url=f"{app_url()}/sponsor_report/{sp['report_code']}",
+                           share=share, days_label=centre_mod.DURATION_LABEL.get(order["days"], ""),
+                           site_url=app_url())
+
+
+@app.route("/sponsor_report/<code>")
+def sponsor_report(code):
+    """Private impact report for the sponsor (unguessable link, no login)."""
+    code = (code or "").strip()[:40]
+    conn = connect()
+    cur = conn.cursor()
+    sp = cur.execute("SELECT * FROM sponsorships WHERE report_code = ? AND payment_status = 'PAID'", (code,)).fetchone()
+    if not sp:
+        conn.close()
+        abort(404)
+    centre = cur.execute("SELECT * FROM centres WHERE id = ?", (sp["centre_id"],)).fetchone()
+    if not centre:
+        conn.close()
+        abort(404)
+    members, subject_rows, weakest = centre_mod._centre_stats(cur, centre)
+    total_mocks = sum(int(m["mocks"] or 0) for m in members)
+    scores = [float(m["avg_pct"]) for m in members if m["avg_pct"] is not None]
+    avg_overall = round(sum(scores) / len(scores), 1) if scores else None
+    improvement = None
+    usernames = [m["username"] for m in members]
+    if usernames:
+        qmarks = ",".join("?" * len(usernames))
+        rows = cur.execute(f"SELECT username, percentage, date_taken FROM results WHERE username IN ({qmarks}) "
+                           f"ORDER BY date_taken ASC, id ASC", usernames).fetchall()
+        per = {}
+        for r in rows:
+            per.setdefault(r["username"], []).append(r["percentage"])
+        pairs = [(v[0], v[-1]) for v in per.values() if len(v) >= 2 and v[0] is not None and v[-1] is not None]
+        if pairs:
+            improvement = round(sum(b for a, b in pairs) / len(pairs) - sum(a for a, b in pairs) / len(pairs), 1)
+    expiry = centre_mod._parse_dt(centre["expires_at"])
+    days_left = (expiry - datetime.now()).days if expiry else None
+    view = [{"name": _short_name(m["name"]), "joined": (m["joined_at"] or "")[:10], "mocks": int(m["mocks"] or 0),
+             "avg": m["avg_pct"], "last": (m["last_active"] or "")[:10]} for m in members]
+    conn.close()
+    now_str = datetime.now().strftime("%d %b %Y")
+    return render_template("sponsor_report.html", sp=sp, centre=centre, members=view, now=now_str,
+                           subject_rows=subject_rows, total_mocks=total_mocks, avg_overall=avg_overall,
+                           improvement=improvement, days_left=days_left,
+                           seats=int(centre["seats"] or 0))
 
 
 # ---------------------------------------------------------------------------

@@ -721,6 +721,45 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
 - Battery (Sept 2026): tools 62, regress 75, waec 68, putme 53, feat1 50, feat2 50,
   parent 19, resetpw 13, battle 43, centre 53+ — all green, real db untouched.
 
+## Sponsor-a-Cohort — guest bulk checkout + private impact report (Oct 2026)
+
+Diaspora/alumni/churches/NGOs pay for a WHOLE class at /sponsor (no account): pick school
+name + students (10-500) + duration (30/90/180) -> live JS calculator -> Paystack ->
+join code for the school (exact centre machinery) + a PRIVATE /sponsor_report/<code>
+link (unguessable, no login) showing students joined, mocks written, average score,
+first-vs-latest improvement and per-subject weak spots. Names shortened for privacy
+("Chidi O."), no emails, noindex.
+
+- Reuse architecture: guest order = centre_orders row (owner_username = sponsor email,
+  made unique per cohort via _unique_sponsor_owner -> "email #2" so repeat sponsors get a
+  SEPARATE centre instead of renewing the first) + payments row (plan_id =
+  centre_mod._centre_plan_id(cur) — payments.plan_id is NOT NULL, plain NULL insert
+  crashes) + new `sponsorships` table (reference, centre_order_id, centre_id, sponsor_org,
+  message, report_code UNIQUE, payment_status). Fulfilment reuses
+  centre_mod.activate_centre_order (join code, max_uses=seats, term expiry) and the report
+  reuses centre_mod._centre_stats.
+- REFERENCE PREFIX REGISTRY (webhook routes on startswith — order matters):
+  PN- = student plans (payments-table default path), PN-S- = parent sponsor-a-child,
+  PN-C- = centre orders, PN-G- = gifts, **PN-SC- = cohort sponsor** (checked before the
+  default; no collision since 5th char differs). Callback URL is /sponsorship_callback —
+  /sponsor_callback was TAKEN by the parent flow (endpoint collision crashes the app at
+  import — check existing route names before adding any /sponsor* URL).
+- Pricing = centre SEAT_PRICING via centre_mod.order_total (server recomputes; client
+  calculator is cosmetic). TIERS: 30d 500/400/300, 90d 900/700/550, 180d 1500/1200/950
+  per seat for 10-29/30-99/100+ students (50 x 90d = 35,000 — mind the order: bigger
+  group = cheaper seat).
+- Discovery: "Sponsor" nav link (landing nav, after Pricing), footer "Sponsor a class",
+  line inside the landing #gift section, nudge in the schools hero, cross-link on /gift.
+  Promo strip suppressed on all sponsor endpoints (base.html exclusion tuple). CSS v=22.
+- Tests: `_work/sponsor_test.py` — 55 checks (public page, validation, guest order,
+  callback + idempotency, webhook + bad signature, amount mismatch/failed paths,
+  redemption + membership + ~90d subscription, report stats/privacy/404, unique owner,
+  tier math at 3 sizes). GOTCHA: the suite exceeds the 6/10min IP rate limit — call
+  security.limiter._hits.clear() between order sections.
+- Browser audit: calculator live-updates correct tier math (25->900, 50->700, 150->550,
+  150x30d->300), report renders tiles + "+17" improvement + privacy names, 0 errors,
+  0 overflow. Battery now 13 suites / 624 checks.
+
 ## LIVE INCIDENT + safety net: payments silently OFF (Oct 2026)
 
 Owner reported "gift page has no button" on the LIVE site — root cause: the live
