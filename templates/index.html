@@ -325,7 +325,15 @@
                 <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
                 {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} for {{ plans[0]['duration_days'] }} days · instant WhatsApp delivery</span>{% endif %}
             </div>
-            <p class="small mt-3 mb-0" style="opacity:.78"><i class="bi bi-people me-1"></i> Sponsoring a whole class, school or youth group? <a class="text-white fw-semibold text-decoration-underline" href="{{ url_for('sponsor_page') }}">Sponsor a cohort</a> — from ₦300 per student, with an impact report.</p>
+            <div class="mt-4 pt-3 w-100 reveal" style="border-top:1px solid rgba(255,255,255,.18)">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
+                    <div class="text-start">
+                        <div class="fw-semibold"><i class="bi bi-people-fill me-1"></i> Sponsoring a whole class, school or youth group?</div>
+                        <div class="small" style="opacity:.82">One payment, one join code for every student, and a private impact report — from ₦300 per student.</div>
+                    </div>
+                    <a href="{{ url_for('sponsor_page') }}" class="btn btn-outline-light flex-shrink-0"><i class="bi bi-people me-1"></i> Sponsor a cohort</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
