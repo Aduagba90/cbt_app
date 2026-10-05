@@ -2569,6 +2569,8 @@ def paystack_webhook():
                 _fulfil_gift(reference, data)
             elif reference.startswith("PN-SC-"):
                 _fulfil_sponsor(reference, data)
+            elif reference.startswith("PN-A-"):
+                _fulfil_agent(reference, data)
             else:
                 _process_paystack_payment(reference, data)
     return jsonify({"ok": True})
@@ -3001,6 +3003,205 @@ def sponsor_report(code):
                            subject_rows=subject_rows, total_mocks=total_mocks, avg_overall=avg_overall,
                            improvement=improvement, days_left=days_left,
                            seats=int(centre["seats"] or 0))
+
+
+# ---------------------------------------------------------------------------
+# Agent Program (logged-in users buy PINs at wholesale, sell at retail, keep margin)
+# ---------------------------------------------------------------------------
+
+AGENT_DISCOUNT = 0.40          # agents buy at 40% off retail
+AGENT_MIN_QTY, AGENT_MAX_QTY = 10, 200
+AGENT_CODE_VALID_DAYS = 180    # unsold agent PINs stay valid 180 days
+
+
+def _agent_short(name):
+    parts = (name or "").strip().split()
+    if not parts:
+        return "Student"
+    return parts[0] + (" " + parts[-1][:1] + "." if len(parts) > 1 else "")
+
+
+@app.route("/agent")
+@login_required
+def agent_page():
+    user = session["user"]
+    conn = connect()
+    cur = conn.cursor()
+    plans = cur.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days").fetchall()
+    stock = cur.execute(
+        """SELECT c.id, c.code, c.days, c.expires_at, c.uses, c.created_at,
+                  r.username AS buyer, r.redeemed_at, COALESCE(u.name, r.username) AS buyer_name
+             FROM access_codes c
+             LEFT JOIN access_code_redemptions r ON r.code_id = c.id
+             LEFT JOIN users u ON u.email = r.username
+            WHERE c.created_by = ?
+            ORDER BY c.id DESC""", (f"AGENT:{user}",)).fetchall()
+    orders = cur.execute("SELECT * FROM agent_orders WHERE agent = ? ORDER BY id DESC", (user,)).fetchall()
+    conn.close()
+    by_days = {p["duration_days"]: p for p in plans}
+    spent = sum(float(o["total"] or 0) for o in orders if o["status"] == "PAID")
+    sold, unsold, earned, potential = 0, 0, 0.0, 0.0
+    view = []
+    for row in stock:
+        plan = by_days.get(row["days"])
+        margin = float(plan["price"]) * AGENT_DISCOUNT if plan else 0.0
+        if row["uses"] > 0:
+            sold += 1
+            earned += margin
+        else:
+            unsold += 1
+            potential += margin
+        view.append({"code": pretty_code(row["code"]), "plan": plan["plan_name"] if plan else "Access",
+                     "expires": (row["expires_at"] or "")[:10], "used": row["uses"] > 0,
+                     "buyer": _agent_short(row["buyer_name"]) if row["uses"] > 0 else None,
+                     "when": (row["redeemed_at"] or "")[:10]})
+    sell_msg = (f"PrepNova CBT — full JAMB, WAEC & Post-UTME mock exams on your phone. "
+                f"I have an access PIN for you! Register free at {app_url()} and I'll send it.")
+    return render_template("agent.html", plans=plans, stock=view, orders=orders,
+                           sold=sold, unsold=unsold, spent=spent, earned=round(earned),
+                           potential=round(potential), discount=AGENT_DISCOUNT,
+                           min_qty=AGENT_MIN_QTY, max_qty=AGENT_MAX_QTY,
+                           paystack_ready=bool(PAYSTACK_SECRET_KEY), sell_msg=sell_msg,
+                           site_url=app_url())
+
+
+@app.route("/agent_order", methods=["POST"])
+@login_required
+@rate_limit(limit=6, window_seconds=600, scope="agent_order")
+def agent_order():
+    """Agent buys a batch of PINs at wholesale — payment upfront, PINs minted after."""
+    user = session["user"]
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("agent_page"))
+    try:
+        plan_id = int(request.form.get("plan_id") or 0)
+        qty = int(request.form.get("quantity") or 0)
+    except (TypeError, ValueError):
+        plan_id = qty = 0
+    problems = []
+    if not (AGENT_MIN_QTY <= qty <= AGENT_MAX_QTY):
+        problems.append(f"Quantity must be between {AGENT_MIN_QTY} and {AGENT_MAX_QTY} PINs.")
+    conn = connect()
+    cur = conn.cursor()
+    plan = cur.execute("SELECT id, plan_name, price, duration_days FROM subscription_plans WHERE id = ? AND is_active = 1", (plan_id,)).fetchone()
+    if not plan:
+        problems.append("Choose a valid plan.")
+    if problems:
+        conn.close()
+        for p_ in problems:
+            flash(p_, "warning")
+        return redirect(url_for("agent_page"))
+    unit = round(float(plan["price"]) * (1 - AGENT_DISCOUNT))
+    total = unit * qty
+    reference = f"PN-A-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    cur.execute(
+        "INSERT INTO agent_orders (reference, agent, plan_id, plan_name, quantity, unit_price, total, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')",
+        (reference, user, plan["id"], plan["plan_name"], qty, unit, total))
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
+        "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
+        (user, plan["id"], f"Agent stock — {plan['plan_name']} × {qty}"[:120], total, plan["duration_days"], reference))
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": user,
+                "amount": int(round(total * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/agent_callback",
+                "metadata": {"agent_stock": 1, "plan_id": plan["id"], "quantity": qty,
+                             "custom_fields": [{"display_name": "Agent stock", "variable_name": "agent_stock",
+                                                "value": f"{qty} × {plan['plan_name']}"}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (agent)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("agent_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (agent): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("agent_page"))
+    return redirect(payload["data"]["authorization_url"])
+
+
+def _fulfil_agent(reference, payment_data):
+    """Verify an agent stock payment, mark it paid and mint the PINs. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        order = cur.execute("SELECT * FROM agent_orders WHERE reference = ?", (reference,)).fetchone()
+        if not order:
+            return False, "Order not found.", None
+        if order["status"] == "PAID":
+            return True, "already", order
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE agent_orders SET status = 'FAILED' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'FAILED' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment was not successful.", None
+        paid_kobo = int(payment_data.get("amount") or 0)
+        expected_kobo = int(round(float(order["total"]) * 100))
+        if paid_kobo < expected_kobo or (payment_data.get("currency") or "NGN") != "NGN":
+            log.warning("Paystack amount mismatch (agent) %s: paid=%s expected=%s", reference, paid_kobo, expected_kobo)
+            cur.execute("UPDATE agent_orders SET status = 'AMOUNT_MISMATCH' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'AMOUNT_MISMATCH' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment amount did not match your order. Please contact support.", None
+        cur.execute(
+            """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = ?,
+                                  channel = ?, currency = ?, amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
+               WHERE transaction_reference = ?""",
+            (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200], payment_data.get("channel"),
+             payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
+        expires = (datetime.now() + timedelta(days=AGENT_CODE_VALID_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
+        generate_access_codes(cur, int(order["quantity"]), int(order["plan_id"]) and _agent_plan_days(cur, order["plan_id"]),
+                              f"Agent stock — {order['plan_name']}", 1, expires, f"AGENT:{order['agent']}")
+        cur.execute("UPDATE agent_orders SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE id = ?", (order["id"],))
+        conn.commit()
+        order = cur.execute("SELECT * FROM agent_orders WHERE id = ?", (order["id"],)).fetchone()
+        return True, "ok", order
+    finally:
+        conn.close()
+
+
+def _agent_plan_days(cur, plan_id):
+    row = cur.execute("SELECT duration_days FROM subscription_plans WHERE id = ?", (plan_id,)).fetchone()
+    return int(row["duration_days"]) if row else 30
+
+
+@app.route("/agent_callback")
+def agent_callback():
+    """Paystack returns the agent here — PINs land in their stock on /agent."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("agent_page"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}",
+                            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (agent)")
+        flash("We could not verify your payment right now. If you were debited, your PINs will appear in your stock shortly.", "warning")
+        return redirect(url_for("agent_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with your reference.", "danger")
+        return redirect(url_for("agent_page"))
+    ok, msg, order = _fulfil_agent(reference, payload.get("data") or {})
+    if not ok:
+        flash(msg, "danger")
+        return redirect(url_for("agent_page"))
+    flash(f"Payment successful — {order['quantity']} PINs are now in your stock below. Happy selling!", "success")
+    return redirect(url_for("agent_page"))
 
 
 # ---------------------------------------------------------------------------

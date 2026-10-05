@@ -72,6 +72,7 @@
                         <li><a class="dropdown-item" href="{{ url_for('mistakes') }}"><i class="bi bi-bandaid"></i> Fix my mistakes</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('battle.lobby') }}"><i class="bi bi-swords"></i> Challenge a friend</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('gift_page') }}"><i class="bi bi-balloon-heart"></i> Gift a subscription</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('agent_page') }}"><i class="bi bi-briefcase"></i> Become an agent</a></li>
 <li><a class="dropdown-item" href="{{ url_for('invite') }}"><i class="bi bi-gift"></i> Invite friends</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
@@ -108,6 +109,7 @@
             <a href="{{ url_for('terms') }}">Terms</a>
             <a href="{{ url_for('privacy') }}">Privacy</a>
             <a href="{{ url_for('gift_page') }}">🎁 Gift a subscription</a>
+            <a href="{{ url_for('agent_page') }}">💼 Become an agent</a>
             <a href="mailto:{{ support_email }}">Support</a>
         </span>
     </div>

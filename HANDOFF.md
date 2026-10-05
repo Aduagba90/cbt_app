@@ -764,6 +764,35 @@ first-vs-latest improvement and per-subject weak spots. Names shortened for priv
   150x30d->300), report renders tiles + "+17" improvement + privacy names, 0 errors,
   0 overflow. Battery now 13 suites / 624 checks.
 
+## Agent Program — students buy PINs wholesale, sell, keep margin (Oct 2026)
+
+Logged-in users open /agent ("Become an agent" in the account menu + app footer +
+subscribe page line; landing footer routes to /register since agents need an account):
+pick a plan + quantity (10-200), pay 40% OFF retail upfront (PN-A- references;
+ Monthly ₦1,000 -> ₦600/PIN), PINs minted into "My stock" (persistent, not one-time)
+with per-PIN copy + WhatsApp send buttons. Agents sell at full retail and keep the
+margin. Same battle-tested spine: amount verified vs order, idempotent callback +
+webhook branch, failed/mismatch -> no codes.
+
+- Tables: `agent_orders` (reference, agent, plan_id, plan_name, quantity, unit_price,
+  total, status). PINs are plain access_codes rows with created_by = "AGENT:<email>",
+  max_uses=1, 180-day validity — so /agent stock + stats are pure queries over
+  access_codes + access_code_redemptions (margin per PIN = plan.price x 0.40 via the
+  c.days -> plan mapping; payments row uses the REAL plan id, plan_name
+  "Agent stock — <plan> x <qty>" for admin revenue).
+- Constants in app.py: AGENT_DISCOUNT 0.40, AGENT_MIN_QTY 10, AGENT_MAX_QTY 200,
+  AGENT_CODE_VALID_DAYS 180. Routes: /agent (login), /agent_order (POST, 6/10min),
+  /agent_callback, _fulfil_agent. No new CSS (reuses gift/sponsor classes) — css stayed v=23.
+- Reference prefix registry now: PN- student, PN-S- parent, PN-C- centre, PN-G- gift,
+  PN-SC- sponsor cohort, **PN-A- agent stock**.
+- Tests: `_work/agent_test.py` — 34 checks (guards, validation, wholesale math on two
+  plans, callback + idempotency, webhook + signature, redemption marks stock sold with
+  short buyer name, earnings, failure paths, stock privacy between agents, agent NOT
+  auto-subscribed). Battery now 14 suites / 662 checks. Browser audit: calculator math
+  verified (quarterly x10 = 15,000 pay / 10,000 keep; yearly x25 = 120,000 / 80,000),
+  10 stock rows + per-PIN WhatsApp buttons, 0 errors. NOTE: agents see PINs in a
+  PERSISTENT stock table (unlike gifts' one-time page) — keep that when editing.
+
 ## LIVE INCIDENT + safety net: payments silently OFF (Oct 2026)
 
 Owner reported "gift page has no button" on the LIVE site — root cause: the live
