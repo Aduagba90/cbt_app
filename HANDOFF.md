@@ -748,8 +748,12 @@ first-vs-latest improvement and per-subject weak spots. Names shortened for priv
   calculator is cosmetic). TIERS: 30d 500/400/300, 90d 900/700/550, 180d 1500/1200/950
   per seat for 10-29/30-99/100+ students (50 x 90d = 35,000 — mind the order: bigger
   group = cheaper seat).
-- Discovery: "Sponsor" nav link (landing nav, after Pricing), footer "Sponsor a class",
-  line inside the landing #gift section, nudge in the schools hero, cross-link on /gift.
+- Discovery (v2 after owner review): "Sponsor" nav link (landing nav, after Pricing;
+  desktop-only), footer "Sponsor a class", a DEDICATED standalone band section on the
+  landing page right after #gift (id="sponsor", green identity, eyebrow names the personas:
+  diaspora/alumni/churches — the earlier in-gift banner was buried in gift context and
+  sponsors scrolled past it), nudge in the schools hero, cross-link on /gift.
+  Hero + sticky bar stay student/gift only by design.
   Promo strip suppressed on all sponsor endpoints (base.html exclusion tuple). CSS v=22.
 - Tests: `_work/sponsor_test.py` — 55 checks (public page, validation, guest order,
   callback + idempotency, webhook + bad signature, amount mismatch/failed paths,

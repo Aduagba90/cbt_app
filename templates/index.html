@@ -325,15 +325,19 @@
                 <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
                 {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} for {{ plans[0]['duration_days'] }} days · instant WhatsApp delivery</span>{% endif %}
             </div>
-            <div class="mt-4 pt-3 w-100 reveal" style="border-top:1px solid rgba(255,255,255,.18)">
-                <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
-                    <div class="text-start">
-                        <div class="fw-semibold"><i class="bi bi-people-fill me-1"></i> Sponsoring a whole class, school or youth group?</div>
-                        <div class="small" style="opacity:.82">One payment, one join code for every student, and a private impact report — from ₦300 per student.</div>
-                    </div>
-                    <a href="{{ url_for('sponsor_page') }}" class="btn btn-outline-light flex-shrink-0"><i class="bi bi-people me-1"></i> Sponsor a cohort</a>
-                </div>
-            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ============================ SPONSOR A COHORT ============================ -->
+<section class="pn-section pt-0" id="sponsor">
+    <div class="container">
+        <div class="pn-sponsor-band reveal">
+            <span class="pn-eyebrow pn-eyebrow-light">For the diaspora, alumni associations &amp; churches</span>
+            <h2>Sponsor a whole class.</h2>
+            <p>One payment gives every student in a school or youth group a full term of CBT preparation — and you get a private report showing exactly what your money achieved. From ₦300 per student.</p>
+            <a href="{{ url_for('sponsor_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-people me-1"></i> Sponsor a cohort</a>
         </div>
     </div>
 </section>
