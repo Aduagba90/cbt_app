@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ p['title'] }}{% endblock %}
+{% block description %}{{ p['blurb'] }} Instant download after payment — printable PDF for JAMB and WAEC preparation.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">PDF study packs</a><i class="bi bi-chevron-right"></i><span>{{ p['title'] }}</span></div>
+        <h1>📘 {{ p['title'] }}</h1>
+        <p class="lead">{{ p['blurb'] }}</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 anim-rise">
+            <h2 class="h5 mb-3">What's inside</h2>
+            <ul class="mb-0" style="line-height:2">
+                {% for d in details %}
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> {{ d }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <form method="POST" action="{{ url_for('shop_buy') }}" data-once class="card border-0 shadow-sm p-4 anim-rise d1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="slug" value="{{ p['slug'] }}">
+            <div class="text-center mb-3">
+                <span class="fs-2 fw-bold text-primary">{{ p['price']|naira }}</span>
+                <div class="small text-muted">one-time payment · instant download</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Your name</label>
+                <input class="form-control" name="buyer_name" maxlength="60" required placeholder="e.g. Mrs. Bello">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Your email</label>
+                <input type="email" class="form-control" name="buyer_email" maxlength="80" required placeholder="you@example.com">
+                <div class="form-text">The download link is sent here too.</div>
+            </div>
+            {% if paystack_ready %}
+            <button type="submit" class="btn btn-accent btn-lg w-100" data-loading="Preparing…"><i class="bi bi-lock-fill me-1"></i>Pay &amp; download now</button>
+            <p class="text-center small text-muted mt-2 mb-0">Card, transfer or USSD via Paystack · download link valid {{ 14 }} days, up to 5 downloads.</p>
+            {% else %}
+            <div class="alert alert-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up — contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>.</div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}

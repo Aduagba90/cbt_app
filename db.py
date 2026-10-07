@@ -482,6 +482,49 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(username)")
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS pdf_products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT NOT NULL UNIQUE,
+            title TEXT NOT NULL,
+            blurb TEXT,
+            price REAL NOT NULL,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pdf_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT NOT NULL UNIQUE,
+            product_id INTEGER NOT NULL,
+            buyer_name TEXT NOT NULL,
+            buyer_email TEXT NOT NULL,
+            amount REAL,
+            payment_status TEXT DEFAULT 'PENDING',
+            download_code TEXT UNIQUE,
+            downloads INTEGER DEFAULT 0,
+            paid_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.executemany(
+        "INSERT OR IGNORE INTO pdf_products (slug, title, blurb, price, is_active) VALUES (?, ?, ?, ?, 1)",
+        [
+            ("lekki-headmaster-2026",
+             "The Lekki Headmaster — Complete Study Pack",
+             "The full JAMB 2026 novel, decoded: chapter summaries, character guide, themes, exam tips and 50 practice questions with explained answers.",
+             1000.0),
+            ("jamb-english-past-questions",
+             "JAMB Use of English — Past-Style Question Pack",
+             "Up to 60 real past-style questions with a full answer key and explanations — freshly compiled from our question bank.",
+             500.0),
+            ("waec-english-past-questions",
+             "WAEC English — Past-Style Question Pack",
+             "Up to 60 WAEC English questions (lexis, structure, comprehension and orals style) with an explained answer key.",
+             500.0),
+        ])
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS agent_orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             reference TEXT NOT NULL UNIQUE,

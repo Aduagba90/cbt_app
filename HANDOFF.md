@@ -764,6 +764,41 @@ first-vs-latest improvement and per-subject weak spots. Names shortened for priv
   150x30d->300), report renders tiles + "+17" improvement + privacy names, 0 errors,
   0 overflow. Battery now 13 suites / 624 checks.
 
+## PDF Study-Pack Shop — instant-download packs, guest checkout (Oct 2026)
+
+Public /shop (no account): instant-download printable study packs. Three products
+seeded in db.py (INSERT OR IGNORE on slug — add/edit products by editing pdf_products
+rows): lekki-headmaster-2026 (N1,000, flagship), jamb-english-past-questions (N500),
+waec-english-past-questions (N500).
+
+- PDFs are GENERATED AT DOWNLOAD TIME by pdf_store.py (reportlab, same pattern as
+  _result_pdf; send_file imported LOCALLY in the route — not in app.py's flask import):
+  build_lekki_pdf() renders the full Lekki Headmaster study pack content defined at the
+  top of pdf_store.py (12 chapter summaries, 21 characters, 8 themes, tips, 50 Q&A —
+  content assembled from published study guides; verify facts before major edits),
+  build_past_questions_pdf() pulls up to 60 questions from questions_v2 (JOIN subjects
+  + exam_types; '%English%' LIKE; falls back to any subject of that exam). Every pack
+  ends with a PrepNova CTA page. Question text is XML-escaped (_esc) — questions
+  contain HTML like <u>.
+- Flow: /shop -> /shop/<slug> (details + guest form) -> /shop_buy (PN-P- reference,
+  10/10min rate limit, pdf_orders PENDING + payments row via _pdf_plan_id hidden
+  'Digital study packs' plan) -> /pdf_callback -> _fulfil_pdf (idempotent, amount
+  verified, mints download_code = 20-hex) -> success page with big download button.
+  /pdf_download/<code>: PAID orders only, cap 5 downloads + 14 days (paid_at is UTC
+  CURRENT_TIMESTAMP — compare with datetime.utcnow(), NOT now()), increments counter,
+  streams the PDF as attachment.
+- Reference prefix registry now: PN- student, PN-S- parent, PN-C- centre, PN-G- gift,
+  PN-SC- sponsor cohort, PN-A- agent stock, **PN-P- pdf shop**.
+- Discovery: account menu ("PDF study packs"), app footer, landing footer Company
+  column, line under the Paystack note in the landing pricing section, line on
+  /subscribe. No CSS changes (v stayed 23).
+- Tests: _work/shop_test.py — 36 checks (seeding, pages, validation, purchase,
+  callback, REAL PDF bytes verified (%PDF- magic, 29.6KB lekki / >15KB question
+  packs), download cap + wrong code, idempotency, webhook + signature, failure
+  paths, discovery). Battery now 15 suites / 698 checks. Playwright: browser
+  receives a genuine application/pdf (use pg.request.get for download URLs —
+  page.goto throws "Download is starting").
+
 ## Agent Program — students buy PINs wholesale, sell, keep margin (Oct 2026)
 
 Logged-in users open /agent ("Become an agent" in the account menu + app footer +

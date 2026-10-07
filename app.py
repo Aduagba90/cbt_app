@@ -29,6 +29,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import exam_engine as engine
+import pdf_store
 import post_utme as putme
 import waec as waecf
 from admin_routes import admin_bp
@@ -2571,6 +2572,8 @@ def paystack_webhook():
                 _fulfil_sponsor(reference, data)
             elif reference.startswith("PN-A-"):
                 _fulfil_agent(reference, data)
+            elif reference.startswith("PN-P-"):
+                _fulfil_pdf(reference, data)
             else:
                 _process_paystack_payment(reference, data)
     return jsonify({"ok": True})
@@ -3202,6 +3205,259 @@ def agent_callback():
         return redirect(url_for("agent_page"))
     flash(f"Payment successful — {order['quantity']} PINs are now in your stock below. Happy selling!", "success")
     return redirect(url_for("agent_page"))
+
+
+# ---------------------------------------------------------------------------
+# PDF Study-Pack Shop (public — instant-download packs, guest checkout)
+# ---------------------------------------------------------------------------
+
+PDF_MAX_DOWNLOADS = 5
+PDF_LINK_DAYS = 14
+
+PRODUCT_DETAILS = {
+    "lekki-headmaster-2026": [
+        "Chapter-by-chapter summary of all 12 chapters (Dusk to Dawn)",
+        "21-character guide — names, roles and relationships",
+        "8 major themes explained the way JAMB asks them",
+        "Exam strategy: what JAMB asks and how to answer",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, roughly 14 pages",
+    ],
+    "jamb-english-past-questions": [
+        "Up to 60 past-style Use of English questions",
+        "Comprehension, lexis, structure and novel-style practice",
+        "Full answer key with explanations for every question",
+        "Mark-yourself format with study instructions",
+    ],
+    "waec-english-past-questions": [
+        "Up to 60 WAEC English past-style questions",
+        "Lexis, structure, comprehension and orals-style practice",
+        "Full answer key with explanations",
+        "Mark-yourself format with study instructions",
+    ],
+}
+
+
+def _pdf_plan_id(cur):
+    """Hidden subscription_plans row for PDF orders (payments.plan_id is NOT NULL)."""
+    row = cur.execute("SELECT id FROM subscription_plans WHERE plan_name = 'Digital study packs'").fetchone()
+    if row:
+        return row["id"]
+    cur.execute("INSERT INTO subscription_plans (plan_name, price, duration_days, description, is_active) "
+                "VALUES ('Digital study packs', 0, 30, 'Internal row for PDF shop orders', 0)")
+    return cur.execute("SELECT id FROM subscription_plans WHERE plan_name = 'Digital study packs'").fetchone()["id"]
+
+
+@app.route("/shop")
+def shop():
+    conn = connect()
+    products = conn.execute(
+        """SELECT p.*, (SELECT COUNT(*) FROM pdf_orders o WHERE o.product_id = p.id AND o.payment_status = 'PAID') AS sold
+             FROM pdf_products p WHERE p.is_active = 1 ORDER BY p.price DESC""").fetchall()
+    conn.close()
+    return render_template("shop.html", products=products)
+
+
+@app.route("/shop/<slug>")
+def product_page(slug):
+    conn = connect()
+    product = conn.execute("SELECT * FROM pdf_products WHERE slug = ? AND is_active = 1", (slug,)).fetchone()
+    conn.close()
+    if not product:
+        abort(404)
+    return render_template("product.html", p=product, details=PRODUCT_DETAILS.get(slug, []),
+                           paystack_ready=bool(PAYSTACK_SECRET_KEY))
+
+
+@app.route("/shop_buy", methods=["POST"])
+@rate_limit(limit=10, window_seconds=600, scope="shop_buy")
+def shop_buy():
+    """Guest checkout for a PDF pack — like gifts, no account needed."""
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("shop"))
+    buyer_name = re.sub(r"\s+", " ", request.form.get("buyer_name") or "").strip()[:60]
+    buyer_email = (request.form.get("buyer_email") or "").strip().lower()[:80]
+    if len(buyer_name) < 2:
+        flash("Please enter your name.", "danger")
+        return redirect(request.referrer or url_for("shop"))
+    if not valid_email(buyer_email):
+        flash("Please enter a valid email address — your download link is sent there.", "danger")
+        return redirect(request.referrer or url_for("shop"))
+    conn = connect()
+    cur = conn.cursor()
+    product = cur.execute("SELECT * FROM pdf_products WHERE slug = ? AND is_active = 1",
+                          ((request.form.get("slug") or "").strip()[:60],)).fetchone()
+    if not product:
+        conn.close()
+        flash("That pack is not available.", "danger")
+        return redirect(url_for("shop"))
+    reference = f"PN-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    cur.execute(
+        "INSERT INTO pdf_orders (reference, product_id, buyer_name, buyer_email, amount, payment_status) "
+        "VALUES (?, ?, ?, ?, ?, 'PENDING')",
+        (reference, product["id"], buyer_name, buyer_email, product["price"]))
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
+        "VALUES (?, ?, ?, ?, 30, ?, 'PENDING', 'NGN')",
+        (buyer_email, _pdf_plan_id(cur), f"PDF — {product['title']}"[:120], product["price"], reference))
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": buyer_email,
+                "amount": int(round(float(product["price"]) * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/pdf_callback",
+                "metadata": {"pdf": 1, "slug": product["slug"],
+                             "custom_fields": [{"display_name": "Pack", "variable_name": "pack",
+                                                "value": product["title"][:100]}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (pdf shop)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("product_page", slug=product["slug"]))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (pdf shop): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("product_page", slug=product["slug"]))
+    return redirect(payload["data"]["authorization_url"])
+
+
+def _fulfil_pdf(reference, payment_data):
+    """Verify a PDF order, mark it paid and mint the download code. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        order = cur.execute("SELECT * FROM pdf_orders WHERE reference = ?", (reference,)).fetchone()
+        if not order:
+            return False, "Order not found.", None
+        if order["payment_status"] == "PAID":
+            return True, "already", order
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE pdf_orders SET payment_status = 'FAILED' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'FAILED' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment was not successful.", None
+        paid_kobo = int(payment_data.get("amount") or 0)
+        expected_kobo = int(round(float(order["amount"]) * 100))
+        if paid_kobo < expected_kobo or (payment_data.get("currency") or "NGN") != "NGN":
+            log.warning("Paystack amount mismatch (pdf) %s: paid=%s expected=%s", reference, paid_kobo, expected_kobo)
+            cur.execute("UPDATE pdf_orders SET payment_status = 'AMOUNT_MISMATCH' WHERE id = ?", (order["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'AMOUNT_MISMATCH' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment amount did not match your order. Please contact support.", None
+        code = secrets.token_hex(10).upper()
+        cur.execute(
+            """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = ?,
+                                  channel = ?, currency = ?, amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
+               WHERE transaction_reference = ?""",
+            (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200], payment_data.get("channel"),
+             payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
+        cur.execute("UPDATE pdf_orders SET payment_status = 'PAID', download_code = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (code, order["id"]))
+        conn.commit()
+        order = cur.execute("SELECT * FROM pdf_orders WHERE id = ?", (order["id"],)).fetchone()
+        if mail_configured():
+            product = cur.execute("SELECT title FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
+            try:
+                send_email("PrepNova CBT — your study pack is ready",
+                           order["buyer_email"],
+                           (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}.\n\n"
+                            f"Download link (valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n"
+                            f"{app_url()}/pdf_download/{order['download_code']}\n\nReference: {reference}"),
+                           email_wrap("Your study pack is ready",
+                                      (f"Hello <b>{order['buyer_name']}</b>,<br><br>Thank you for buying "
+                                       f"<b>{product['title']}</b>.<br><br>"
+                                       f"<a href='{app_url()}/pdf_download/{order['download_code']}'>Download it here</a> "
+                                       f"(valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads)."),
+                                      "Open PrepNova", f"{app_url()}/shop"))
+            except Exception:
+                log.exception("PDF receipt email failed")
+        return True, "ok", order
+    finally:
+        conn.close()
+
+
+@app.route("/pdf_callback")
+def pdf_callback():
+    """Paystack returns the buyer here — download button page."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("shop"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}",
+                            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (pdf)")
+        flash("We could not verify your payment right now. If you were debited, your download link will be emailed to you shortly.", "warning")
+        return redirect(url_for("shop"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with your reference.", "danger")
+        return redirect(url_for("shop"))
+    ok, msg, order = _fulfil_pdf(reference, payload.get("data") or {})
+    if not ok:
+        flash(msg, "danger")
+        return redirect(url_for("shop"))
+    conn = connect()
+    product = conn.execute("SELECT * FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
+    conn.close()
+    return render_template("pdf_success.html", order=order, p=product,
+                           download_url=f"{app_url()}/pdf_download/{order['download_code']}",
+                           max_downloads=PDF_MAX_DOWNLOADS, link_days=PDF_LINK_DAYS)
+
+
+@app.route("/pdf_download/<code>")
+def pdf_download(code):
+    """Serve the paid PDF (unguessable code, capped downloads, time-limited)."""
+    code = (code or "").strip().upper()[:40]
+    conn = connect()
+    order = conn.execute("SELECT * FROM pdf_orders WHERE download_code = ? AND payment_status = 'PAID'", (code,)).fetchone()
+    if not order:
+        conn.close()
+        abort(404)
+    product = conn.execute("SELECT * FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
+    expired = False
+    if order["paid_at"]:
+        try:
+            from datetime import datetime as _dt
+            paid = _dt.strptime(order["paid_at"][:19], "%Y-%m-%d %H:%M:%S")
+            expired = (datetime.utcnow() - paid).days > PDF_LINK_DAYS
+        except ValueError:
+            expired = False
+    if expired or int(order["downloads"] or 0) >= PDF_MAX_DOWNLOADS:
+        conn.close()
+        abort(404)
+    cur = conn.cursor()
+    cur.execute("UPDATE pdf_orders SET downloads = downloads + 1 WHERE id = ?", (order["id"],))
+    conn.commit()
+    from flask import send_file  # local import matches the result-slip generator pattern
+    slug = product["slug"]
+    site = app_url()
+    if slug == "lekki-headmaster-2026":
+        buf = pdf_store.build_lekki_pdf(site)
+    elif slug == "jamb-english-past-questions":
+        buf = pdf_store.build_past_questions_pdf(conn, "JAMB", "%English%",
+                                                 "JAMB Use of English — Past-Style Question Pack",
+                                                 "Practice questions compiled from the PrepNova question bank", 60, site)
+    elif slug == "waec-english-past-questions":
+        buf = pdf_store.build_past_questions_pdf(conn, "WAEC", "%English%",
+                                                 "WAEC English — Past-Style Question Pack",
+                                                 "Practice questions compiled from the PrepNova question bank", 60, site)
+    else:
+        conn.close()
+        abort(404)
+    conn.close()
+    return send_file(buf, as_attachment=True, download_name=f"PrepNova_{slug}.pdf", mimetype="application/pdf")
 
 
 # ---------------------------------------------------------------------------

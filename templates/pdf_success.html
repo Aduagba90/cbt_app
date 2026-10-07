@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Your study pack is ready{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">PDF study packs</a><i class="bi bi-chevron-right"></i><span>Download</span></div>
+        <h1>📘 Your study pack is ready!</h1>
+        <p class="lead">Payment confirmed — thank you, {{ order['buyer_name'] }}. Download {{ p['title'] }} below.</p>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4 text-center anim-rise">
+            <p class="small text-muted mb-2">{{ p['title'] }} · {{ order['amount']|naira }}</p>
+            <a href="{{ url_for('pdf_download', code=order['download_code']) }}" class="btn btn-accent btn-lg w-100"><i class="bi bi-download me-1"></i>Download your PDF now</a>
+            <div class="pn-gift-code mt-4" style="font-size:.8rem; word-break:break-all; user-select:all;">{{ download_url }}</div>
+            <button class="btn btn-sm btn-outline-secondary mt-3" onclick="navigator.clipboard.writeText('{{ download_url }}').then(function(b){ b.textContent='Copied ✓'; })">Copy download link</button>
+            <p class="small text-muted mt-3 mb-0">Reference: <span class="mono">{{ order['reference'] }}</span><br>
+            Link valid for {{ link_days }} days, up to {{ max_downloads }} downloads. <b>Copy it now — this page is shown once.</b></p>
+        </div>
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3">Make it count</h2>
+            <ol class="ps-3 mb-0 small" style="line-height:1.9">
+                <li>Print the pack or save it to your phone.</li>
+                <li>Work through it section by section — don't cram.</li>
+                <li>Finish with the practice questions, then mark yourself honestly.</li>
+                <li>Then test your exam-day speed with a <b>free 7-day trial</b> of full timed mocks in the PrepNova app.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}PDF study packs{% endblock %}
+{% block description %}Instant-download PDF study packs for JAMB and WAEC candidates: The Lekki Headmaster complete study pack (JAMB 2026 novel), plus past-style question packs with explained answers.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>PDF study packs</span></div>
+        <h1>📘 PDF study packs</h1>
+        <p class="lead">Instant-download, printable study packs — pay once, download immediately, read anywhere (even offline). No account needed.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for p in products %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 anim-rise d{{ loop.index0 }}">
+            <div class="card-body d-flex flex-column">
+                <div class="pn-stat-icon {{ 'tint-gold' if loop.first else 'tint-blue' }} mb-3"><i class="bi {{ 'bi-book-half' if loop.first else 'bi-file-earmark-text' }}"></i></div>
+                <h2 class="h5">{{ p['title'] }}</h2>
+                <p class="small text-muted flex-grow-1">{{ p['blurb'] }}</p>
+                <div class="d-flex align-items-center justify-content-between mt-2">
+                    <div><span class="fs-4 fw-bold text-primary">{{ p['price']|naira }}</span>{% if p['sold'] %}<span class="small text-muted ms-1">· {{ p['sold'] }} sold</span>{% endif %}</div>
+                    <a href="{{ url_for('product_page', slug=p['slug']) }}" class="btn {{ 'btn-accent' if loop.first else 'btn-primary' }}">View pack</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3 mt-4 anim-rise d2">
+    <div class="col-md-4"><div class="pn-feature h-100"><span class="pn-feature-icon tint-green"><i class="bi bi-lightning-charge"></i></span>
+        <h4>Instant download</h4><p>Pay by card, transfer or USSD — the download starts the moment payment is confirmed.</p></div></div>
+    <div class="col-md-4"><div class="pn-feature h-100"><span class="pn-feature-icon tint-blue"><i class="bi bi-phone"></i></span>
+        <h4>Read anywhere</h4><p>Print it or read on your phone — no internet needed after downloading.</p></div></div>
+    <div class="col-md-4"><div class="pn-feature h-100"><span class="pn-feature-icon tint-gold"><i class="bi bi-gift"></i></span>
+        <h4>Great as a gift</h4><p>The download link works for anyone you send it to — perfect for parents buying for their children.</p></div></div>
+</div>
+{% endblock %}
