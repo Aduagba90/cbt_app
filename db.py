@@ -526,6 +526,14 @@ def init_db():
              "So the Path Does Not Die — Complete Study Pack",
              "The WAEC 2026–2030 African prose by Pede Hollist, decoded: chapter summaries, 25-character guide, themes, key terms, exam tips and 50 practice questions with explained answers.",
              1000.0),
+            ("to-kill-a-mockingbird",
+             "To Kill a Mockingbird — Complete Study Pack",
+             "Harper Lee's classic, decoded for WASSCE 2026–2030: all 31 chapters in 12 summaries, a 26-character guide, themes, quote bank and 50 practice questions with explained answers.",
+             1000.0),
+            ("an-inspector-calls",
+             "An Inspector Calls — Complete Study Pack",
+             "Priestley's play, decoded for WASSCE 2026–2030: act-by-act summaries, every character, themes, staging devices and 50 practice questions with explained answers.",
+             1000.0),
         ])
 
     cur.execute("""

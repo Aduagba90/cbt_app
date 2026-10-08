@@ -3243,12 +3243,30 @@ PRODUCT_DETAILS = {
         "Exam strategy + 50 practice questions with a fully explained key",
         "Clean printable layout, instant download",
     ],
+    "to-kill-a-mockingbird": [
+        "All 31 chapters in 12 clear section summaries (Parts One and Two)",
+        "26-character guide — the Finches, Boo Radley, the Ewells, the Cunninghams",
+        "8 major themes incl. the mockingbird symbol decoded",
+        "Quote bank and exam strategy for essay and objective questions",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, instant download",
+    ],
+    "an-inspector-calls": [
+        "The entire play, act by act, in 8 clear summaries",
+        "Every character decoded — the Birlings, Gerald, Goole, Eva Smith/Daisy Renton",
+        "8 themes incl. responsibility, class and the generational divide",
+        "Staging decoded — the lighting cue, the photograph, dramatic irony",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, instant download",
+    ],
 }
 
 # (badge text, bootstrap colour) shown on shop + product pages
 PRODUCT_BADGES = {
     "lekki-headmaster-2026": ("JAMB 2026 · compulsory novel", "primary"),
     "so-the-path-does-not-die": ("WAEC 2026–2030 · set text", "success"),
+    "to-kill-a-mockingbird": ("WAEC 2026–2030 · set text", "success"),
+    "an-inspector-calls": ("WAEC 2026–2030 · set text", "success"),
     "jamb-english-past-questions": ("question pack", "secondary"),
     "waec-english-past-questions": ("question pack", "secondary"),
 }
@@ -3463,6 +3481,10 @@ def pdf_download(code):
         buf = pdf_store.build_lekki_pdf(site)
     elif slug == "so-the-path-does-not-die":
         buf = pdf_store.build_so_path_pdf(site)
+    elif slug == "to-kill-a-mockingbird":
+        buf = pdf_store.build_mockingbird_pdf(site)
+    elif slug == "an-inspector-calls":
+        buf = pdf_store.build_inspector_pdf(site)
     elif slug == "jamb-english-past-questions":
         buf = pdf_store.build_past_questions_pdf(conn, "JAMB", "%English%",
                                                  "JAMB Use of English — Past-Style Question Pack",

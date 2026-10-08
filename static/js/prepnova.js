@@ -387,3 +387,15 @@
   });
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", setup); } else { setup(); }
 })();
+
+
+/* ---------- Landing drawer: close on any link click (navigation proceeds) ---------- */
+document.addEventListener("click", function (e) {
+    var a = e.target.closest("#pnDrawer a[href]");
+    if (!a) { return; }
+    var oc = document.getElementById("pnDrawer");
+    if (oc && window.bootstrap && bootstrap.Offcanvas) {
+        var inst = bootstrap.Offcanvas.getInstance(oc);
+        if (inst) { inst.hide(); }
+    }
+});

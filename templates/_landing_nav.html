@@ -26,9 +26,35 @@
             {% if session.get('user') %}
             <a href="{{ url_for('dashboard') }}" class="btn btn-accent btn-sm"><i class="bi bi-grid-1x2 me-1"></i> Go to dashboard</a>
             {% else %}
-            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">Log in</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm d-none d-sm-inline-flex">Log in</a>
             <a href="{{ url_for('register') }}" class="btn btn-accent btn-sm">Start free trial</a>
             {% endif %}
+            <button class="btn btn-outline-light btn-sm pn-burger d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#pnDrawer" aria-controls="pnDrawer" aria-label="Open menu"><i class="bi bi-list" style="font-size:1.25rem"></i></button>
+        </div>
+    </div>
+    <div class="offcanvas offcanvas-end pn-drawer" tabindex="-1" id="pnDrawer" aria-label="Site menu">
+        <div class="offcanvas-header">
+            <a class="pn-brand" href="{{ url_for('index') }}"><span class="pn-logo">PN</span><span>PrepNova <span style="color:var(--pn-primary)">CBT</span></span></a>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column">
+            <div class="pn-drawer-links">
+                <a href="{{ '#tools' if on_landing else url_for('tools.combination_checker') }}"><i class="bi bi-tools"></i>Free tools</a>
+                <a href="{{ '#features' if on_landing else '/#features' }}"><i class="bi bi-stars"></i>Features</a>
+                <a href="{{ '#pricing' if on_landing else '/#pricing' }}"><i class="bi bi-tag"></i>Pricing</a>
+                <a href="{{ url_for('shop') }}"><i class="bi bi-book"></i>Exam novels</a>
+                <a href="{{ url_for('sponsor_page') }}"><i class="bi bi-people"></i>Sponsor a class</a>
+                <a href="{{ '#faq' if on_landing else '/#faq' }}"><i class="bi bi-question-circle"></i>FAQ</a>
+                <a href="{{ url_for('centre.schools') }}"><i class="bi bi-mortarboard"></i>For centres</a>
+            </div>
+            <div class="pn-drawer-foot d-grid gap-2">
+                {% if session.get('user') %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary"><i class="bi bi-grid-1x2 me-1"></i> Go to dashboard</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Log in</a>
+                <a href="{{ url_for('register') }}" class="btn btn-accent"><i class="bi bi-rocket-takeoff me-1"></i> Start free trial</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </nav>

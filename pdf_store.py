@@ -829,6 +829,787 @@ SO_PATH_QUESTIONS = [
 ]
 
 # ---------------------------------------------------------------------------
+# To Kill a Mockingbird (Harper Lee) — WASSCE 2026-2030 non-African prose
+# Content assembled from widely published chapter summaries and study guides.
+# ---------------------------------------------------------------------------
+
+MOCKINGBIRD_TITLE = "To Kill a Mockingbird — Complete WASSCE Study Pack"
+
+MOCKINGBIRD_ABOUT = [
+    "To Kill a Mockingbird is the West African Examinations Council's recommended non-African "
+    "prose text for WASSCE Literature-in-English 2026-2030. It was written by the American author "
+    "Harper Lee and published in 1960, winning the Pulitzer Prize in 1961 and becoming one of the "
+    "most loved classics of modern literature.",
+
+    "The story is told by Jean Louise 'Scout' Finch, an adult looking back on her childhood in "
+    "Maycomb, a small segregated town in Alabama, USA, during the Great Depression of the 1930s. "
+    "Scout, her brother Jem and their summer friend Dill are fascinated by their reclusive "
+    "neighbour Boo Radley. But their games are overtaken by a bigger event: their father, the "
+    "lawyer Atticus Finch, defends Tom Robinson, a black man falsely accused of raping a white "
+    "woman, Mayella Ewell. The trial exposes the racism of the town, shatters the children's "
+    "innocence, and teaches them what real courage means - and when Bob Ewell takes revenge on "
+    "the children one Halloween night, the mysterious Boo Radley finally steps out of the "
+    "shadows.",
+
+    "This pack condenses all 31 chapters into 12 clear section summaries, adds a 26-character "
+    "guide, 8 themes, a quote bank, exam tips, and 50 practice questions in the WASSCE objective "
+    "style. Read it alongside the novel: it is a revision companion, not a replacement.",
+]
+
+# (section heading, summary text)
+MOCKINGBIRD_CHAPTERS = [
+    ("Part One, Chapters 1-3 — Maycomb and the Radley house",
+     "Maycomb, Alabama, in the mid-1930s: a tired, deeply segregated town where every family's "
+     "history is common knowledge. Scout lives with her older brother Jem, her widowed father "
+     "Atticus Finch (a lawyer and state legislator), and Calpurnia, the black cook who helps "
+     "raise them. Summer brings Dill - Charles Baker Harris - a small boy from Meridian, "
+     "Mississippi, who dares Jem to run and touch the forbidden Radley house, home of the "
+     "unseen Arthur 'Boo' Radley, whom the children imagine as a monster. Scout starts school "
+     "and clashes with Miss Caroline Fisher, a young teacher who punishes her for already "
+     "knowing how to read. Walter Cunningham Jr, a poor but proud farmer's son, is shamed at "
+     "lunch (Calpurnia scolds Scout for criticising him), and Burris Ewell, from the town's "
+     "trashiest family, attends school one day a year and leaves with vermin in his hair."),
+    ("Part One, Chapters 4-6 — The knothole treasures",
+     "Scout finds chewing gum in the knothole of a tree by the Radley place - then two Indian-head "
+     "pennies, twine, soap carvings of a boy and a girl, a spelling medal and a broken pocket "
+     "watch: gifts left, the children slowly realise, by Boo Radley himself. They invent the 'Boo "
+     "Radley game', acting out rumours about him, until Atticus suspects and stops it. On the "
+     "last night of Dill's summer they sneak into the Radley garden to peep through a shutter; "
+     "Nathan Radley, Boo's older brother, fires a shotgun over the intruders, and in the panic "
+     "Jem loses his trousers - which he later finds mended and neatly folded over the fence, "
+     "another quiet message from Boo."),
+    ("Part One, Chapters 7-8 — A cemented knothole, a fire and a blanket",
+     "Jem finally tells Scout that the gifts must be Boo's - then discovers the knothole cemented "
+     "up. Nathan Radley claims the tree is dying, though it is perfectly healthy. It is Jem's "
+     "first real heartbreak, and Atticus finds him crying. That winter rare snow falls, and Miss "
+     "Maudie Atkinson's house burns to the ground while the neighbourhood fights the flames. In "
+     "the confusion someone quietly drapes a blanket around Scout's shoulders - it was Boo. Miss "
+     "Maudie, the children's warm, candid neighbour, takes the loss of her house cheerfully: she "
+     "always wanted a smaller garden."),
+    ("Part One, Chapters 9-11 — Francis, the mad dog and Mrs Dubose",
+     "Atticus takes on the Tom Robinson case, and Scout is taunted at school and by her cousin "
+     "Francis at the Finch's Landing Christmas with a racist slur about her father; she fights "
+     "Francis, and her Uncle Jack later learns - on Atticus's advice - to hear a child's side of "
+     "the story. Atticus explains why he must defend Tom: he could not tell his children what to "
+     "do if he did not. The children discover their father's hidden gift when he shoots the "
+     "rabid dog Tim Johnson dead in one shot - 'One-Shot Finch' - while telling them it is a sin "
+     "to kill a mockingbird, which only sings and does no harm. Finally Jem destroys Mrs "
+     "Dubose's camellias after she insults Atticus, and as punishment reads to her daily; after "
+     "her death Atticus reveals she was breaking a morphine addiction before she died - his "
+     "definition of real courage: knowing you are licked before you begin but beginning anyway."),
+    ("Part Two, Chapters 12-13 — First Purchase and Aunt Alexandra",
+     "With Atticus away, Calpurnia takes the children to her own church, First Purchase African "
+     "M.E. Church, where there are no hymn books because only four members can read - "
+     "Calpurnia's son Zeebo leads the hymns by singing each line first. Lula, one congregant, "
+     "objects to white children worshipping there, but the rest welcome them, and Reverend Sykes "
+     "takes a collection for Tom Robinson's wife Helen. Scout sees that Calpurnia lives 'a "
+     "modest double life'. Then Aunt Alexandra, Atticus's sister, moves in to give the children "
+     "'a feminine influence', preaching family pride and 'gentle breeding', disapproving of "
+     "Scout's overalls and of Calpurnia."),
+    ("Part Two, Chapters 14-15 — Dill under the bed and the mob at the jail",
+     "Scout and Jem clash with Alexandra after suggesting they visit Calpurnia's home; Dill runs "
+     "away from his new family in Meridian and is found hiding under Scout's bed, lonely and "
+     "neglected. On the eve of the trial Atticus sits guard outside the Maycomb jail where Tom "
+     "is held - and a lynch mob of farmers led by Walter Cunningham Sr arrives for him. Scout, "
+     "who has slipped out unseen, runs to her father, then innocently greets Mr Cunningham, "
+     "asking after his son and his legal 'entailment' troubles, until shame breaks the mob apart "
+     "and they leave. Mr Underwood, the newspaper editor, has been covering Atticus with a "
+     "shotgun from his window all along."),
+    ("Part Two, Chapters 16-17 — The trial begins",
+     "The whole town floods in for the trial; the courtroom is packed by lunchtime, blacks and "
+     "whites sitting apart. Reverend Sykes lets the children into the coloured balcony, 'Colored "
+     "Balcony'. Judge Taylor, informal but shrewd, presides; Mr Gilmer prosecutes. Sheriff Heck "
+     "Tate testifies that he was called to the Ewell home and found Mayella battered: her right "
+     "eye was blackened and there were finger marks all around her throat - injuries to the "
+     "right side of her face, meaning her attacker led with his left. Bob Ewell testifies "
+     "crudely that he saw Tom Robinson attacking his daughter; Atticus makes him write his name, "
+     "showing the court that Ewell is left-handed."),
+    ("Part Two, Chapters 18-19 — Mayella and Tom testify",
+     "Mayella Ewell, nineteen, lonely and ignorant - her red geraniums are the only cared-for "
+     "thing in the squalid Ewell yard - insists Tom raped her, but crumbles under Atticus's "
+     "polite questioning and cannot explain how a man with one working arm held her down. Tom "
+     "testifies calmly that Mayella had asked him inside many times for small chores, and that "
+     "on the day in question she grabbed and kissed him; he ran when Bob Ewell arrived screaming "
+     "at her. Tom's left arm is twelve inches shorter than his right, mangled in a cotton gin "
+     "when he was a boy. His fatal words on cross-examination: he 'felt right sorry' for her - "
+     "an admission a white jury cannot forgive. Dill, sickened by Mr Gilmer's sneering tone, "
+     "cries and is taken out, meeting Dolphus Raymond."),
+    ("Part Two, Chapters 20-21 — The verdict",
+     "Dolphus Raymond, the white man who lives happily among black people, reveals his paper "
+     "sack holds only Coca-Cola: he pretends to be a drunk because it helps whites accept his "
+     "lifestyle. Atticus's closing speech dismantles the state's case - no doctor was called, "
+     "Mayella's injuries point to a left-handed attacker, and Tom's crippled left arm could not "
+     "have inflicted them - and names the real evil: the assumption that all black men lie, an "
+     "assumption he submits does not apply to the human race. Calpurnia arrives with a note: the "
+     "children are in the courtroom. The jury stays out for hours - remarkably long - but "
+     "returns the inevitable verdict: guilty. As the balcony empties, Reverend Sykes tells "
+     "Scout to stand: 'Your father's passin'."),
+    ("Part Two, Chapters 22-24 — Aftermath and the missionary tea",
+     "Jem weeps at the injustice. Miss Maudie tells the children the long deliberation was a "
+     "baby-step forward - Atticus is the only man who could have made a jury think that long - "
+     "and that it was 'only children wept' that night. Bob Ewell spits in Atticus's face and "
+     "vows revenge; Atticus, who pities him, is unbothered - a mistake. Then Calpurnia is called "
+     "out: Tom, awaiting appeal, was shot dead - seventeen bullet holes - trying to climb the "
+     "prison fence. Atticus breaks the news to Helen Robinson himself. At Alexandra's missionary "
+     "tea, Mrs Merriweather lectures on Christian charity for distant Africans while scorning "
+     "her own servants and, indirectly, Atticus - and Miss Maudie freezes her with a sharp "
+     "reply."),
+    ("Part Two, Chapters 25-27 — A town settles, a menace stirs",
+     "Maycomb briefly pities Helen Robinson, then returns to normal: Tom, people said, had been "
+     "'tired of white men's chances' and took his own. In school Scout's class studies Hitler's "
+     "persecution of the Jews; Scout puzzles over Miss Gates's horror at that cruelty abroad "
+     "when she heard her say after the trial that black people in Maycomb were 'gettin' above "
+     "themselves'. Bob Ewell gets and immediately loses a WPA job, blames Atticus, breaks into "
+     "Judge Taylor's house on a Sunday night, and follows Helen Robinson to work muttering abuse "
+     "until Link Deas, Tom's former employer, warns him off. As Halloween approaches, the town "
+     "organises a pageant at the school - Scout is cast as a ham."),
+    ("Part Two, Chapters 28-31 — 'Hey, Boo'",
+     "In the dark after the pageant - Scout's wire ham costume made her miss her cue - Bob "
+     "Ewell attacks the children. Jem's arm is broken in the struggle; a pale, unfamiliar man "
+     "carries him home, and Scout follows to find Sheriff Tate, Atticus, Dr Reynolds and the "
+     "man standing in Jem's room. Ewell is found dead under the oak with a kitchen knife in him. "
+     "When Scout realises the rescuer is Boo Radley, all she can say is 'Hey, Boo'. Sheriff Tate "
+     "insists Ewell fell on his own knife: dragging the shy Boo into the limelight would, as "
+     "Scout puts it, be 'sort of like shootin' a mockingbird'. Scout walks Boo home, stands a "
+     "moment on the Radley porch seeing the neighbourhood as Boo has watched it for years, and "
+     "finally understands Atticus: you never really know a person until you consider things from "
+     "his point of view. Atticus sits by Jem's bedside - 'he would be there when Jem waked up in "
+     "the morning.'"),
+]
+
+# (name, who they are)
+MOCKINGBIRD_CHARACTERS = [
+    ("Jean Louise 'Scout' Finch", "The narrator, an adult recalling her childhood; a fiery "
+     "tomboy in overalls who fights first and asks questions after; grows into her father's "
+     "lesson of empathy."),
+    ("Jeremy Atticus 'Jem' Finch", "Scout's brother, four years older; his shattered faith in "
+     "justice after the verdict marks his coming of age; his broken arm opens and closes the "
+     "novel."),
+    ("Atticus Finch", "Widowed father, lawyer and state legislator; defends Tom Robinson despite "
+     "the town's hostility; the novel's model of integrity and quiet courage - and secretly "
+     "'One-Shot Finch', the best marksman in the county."),
+    ("Arthur 'Boo' Radley", "The reclusive neighbour never seen in daylight; leaves gifts in the "
+     "knothole, mends Jem's trousers, puts a blanket on Scout, and finally saves the children "
+     "from Bob Ewell - a mockingbird protected in the end."),
+    ("Charles Baker 'Dill' Harris", "The tiny, imaginative summer visitor from Meridian, "
+     "Mississippi; invents the Boo Radley games; runs away from home; says he wants to be a "
+     "clown and laugh at people."),
+    ("Calpurnia", "The Finches' black cook, strict and loving, virtually family; takes the "
+     "children to First Purchase church; lives 'a modest double life' between two worlds."),
+    ("Tom Robinson", "The black field hand falsely accused of raping Mayella Ewell; his left arm "
+     "was crippled in a cotton gin; a decent, humble family man; shot dead 'trying to escape' - "
+     "the novel's murdered mockingbird."),
+    ("Mayella Ewell", "Nineteen, lonely and ignorant, she tried to kiss Tom and then accused him "
+     "of rape to hide her shame; her red geraniums betray her longing for beauty and a better "
+     "life."),
+    ("Robert E. Lee 'Bob' Ewell", "Mayella's drunken, abusive father - and her real attacker; "
+     "spits at Atticus, stalks Helen Robinson, and dies on his own knife attacking the children."),
+    ("Alexandra Finch Hancock", "Atticus's sister ('Aunt Alexandra'); moves in to provide 'a "
+     "feminine influence'; obsessed with family 'streaks' and gentle breeding; softens after "
+     "Tom's death."),
+    ("Miss Maudie Atkinson", "The children's candid, kind neighbour and Atticus's friend; tells "
+     "the truth about Boo; loses her house to fire without bitterness; reassures the children "
+     "after the verdict."),
+    ("Mrs Henry Lafayette Dubose", "The vicious old neighbour whose insults drive Jem to destroy "
+     "her camellias; after her death Atticus reveals she beat a morphine addiction before "
+     "dying - his example of real courage."),
+    ("Sheriff Heck Tate", "The county sheriff; testifies that Mayella's injuries were to the "
+     "right side of her face; at the end insists 'Bob Ewell fell on his knife' to shield Boo "
+     "from public thanks."),
+    ("Judge John Taylor", "The informal, shrewd, cigar-chewing judge who appointed Atticus to "
+     "defend Tom, knowing he was the only man who would do it properly."),
+    ("Mr Gilmer", "The prosecutor; his sneering, contemptuous cross-examination of Tom makes "
+     "Dill sick and leaves the balcony whispering."),
+    ("Link Deas", "Tom's former employer, who blurts out in court that Tom never caused trouble; "
+     "later gives Helen Robinson a job and warns Ewell off her."),
+    ("Reverend Sykes", "Pastor of First Purchase; collects for Helen Robinson; seats the "
+     "children in the balcony and tells Scout to stand as her father passes."),
+    ("Zeebo", "Calpurnia's son; leads the hymns at First Purchase by line-singing because most "
+     "of the congregation cannot read."),
+    ("Lula", "The one First Purchase member who objects to white children attending her church."),
+    ("Walter Cunningham Sr", "A proud, poor farmer entangled in legal 'entailment'; leads the "
+     "lynch mob at the jail until Scout's innocence shames him; pays Atticus in farm goods."),
+    ("Nathan Radley", "Boo's older brother; cements the knothole to cut off Boo's friendship "
+     "with the children; fires the shotgun at the 'intruders'."),
+    ("Miss Caroline Fisher", "Scout's young first-grade teacher, trained in modern 'Dewey "
+     "Decimal' methods; punishes Scout for being taught to read at home."),
+    ("Francis Hancock", "Alexandra's grandson; repeats a racist slur about Atticus at Christmas "
+     "and gets a beating from Scout."),
+    ("Uncle John 'Jack' Finch", "Atticus's brother, the doctor; scolds Scout for fighting "
+     "Francis, then learns - and applies - the lesson that adults must listen to children."),
+    ("Mrs Grace Merriweather", "The missionary-circle lady who weeps for the Mrunas in Africa "
+     "while scorning her own black servants and sneering at Atticus - the novel's portrait of "
+     "religious hypocrisy."),
+    ("Dolphus Raymond", "The white man who lives openly with a black woman and their mixed "
+     "children; pretends to be a drunk (his bottle is Coca-Cola) because it gives whites an "
+     "explanation they can accept."),
+]
+
+# (theme, explanation)
+MOCKINGBIRD_THEMES = [
+    ("Racial injustice and the broken promise of the court",
+     "Atticus tells the children a court is the one place where all men should be treated "
+     "equally - yet an all-white jury convicts Tom on evidence that proves his innocence. The "
+     "trial exposes Maycomb's polite, everyday racism, far more dangerous than the mob's."),
+    ("The mockingbird symbol — innocence destroyed",
+     "Mockingbirds only sing and do no harm. Tom, harmless and helpful, is destroyed by false "
+     "accusation; Boo, harmless and kind, would be destroyed by public exposure - which is why "
+     "Scout says dragging him into the open would be 'sort of like shootin' a mockingbird'."),
+    ("Moral courage and integrity",
+     "Real courage, Atticus says, is knowing you are licked before you begin but beginning "
+     "anyway. Mrs Dubose beats morphine before dying; Atticus defends Tom in a case he cannot "
+     "win, because conscience 'doesn't abide by majority rule'."),
+    ("Empathy — climbing into another's skin",
+     "Atticus's central lesson: you never really understand a person until you consider things "
+     "from his point of view. The novel fulfils it when Scout finally stands on Boo's porch and "
+     "sees the street through his eyes."),
+    ("Coming of age and the death of innocence",
+     "Jem's faith in Maycomb's goodness is shattered by the verdict; Dill cries at injustice; "
+     "Scout trades fists for understanding. The children lose innocence but gain moral sight."),
+    ("Class and the Maycomb caste system",
+     "Maycomb ranks everyone: old landed families, farmers like the proud Cunninghams, the "
+     "'white trash' Ewells, and black citizens at the bottom. Atticus's answer: trash is "
+     "defined by behaviour, not poverty."),
+    ("Gender roles and 'ladyhood'",
+     "Alexandra wants Scout in dresses and gentility; Scout prefers overalls and brawling. The "
+     "missionary tea exposes 'ladylike' hypocrisy - charity for Africa, contempt for Maycomb's "
+     "own."),
+    ("Education — school versus home",
+     "Miss Caroline's rigid methods fail Scout, while Atticus and Calpurnia teach her to read, "
+     "behave and above all to empathise. The novel argues that character is educated at home."),
+]
+
+MOCKINGBIRD_TIPS = [
+    "Master the two clocks: the story is set in Depression-era Alabama (1933-35), but the novel "
+    "was published in 1960, at the dawn of the American civil rights movement - WAEC loves the "
+    "connection between the trial and that context.",
+    "Learn the left-hand logic by heart: Mayella's injuries were to the RIGHT side of her face "
+    "(so her attacker led with his left), Bob Ewell is demonstrably left-handed, and Tom's left "
+    "arm was crippled by a cotton gin. This chain is the spine of the trial questions.",
+    "For the mockingbird essay, name both mockingbirds (Tom and Boo), both 'sins' (the verdict "
+    "and the threatened exposure of Boo), and note who finally protects the mockingbird at the "
+    "end (Heck Tate and Scout).",
+    "Note the narrator technique: an adult Scout tells the story through a child's eyes, giving "
+    "humour, irony and hindsight at once; the novel is framed by Jem's broken arm (circular "
+    "structure).",
+    "Build a quote bank with speakers: 'climb into his skin and walk around in it' (Atticus); "
+    "'it's a sin to kill a mockingbird' (Atticus); the 'real courage' definition (Atticus); "
+    "'only children wept' (Miss Maudie); 'Hey, Boo' (Scout); 'he would be there when Jem waked "
+    "up in the morning' (final line).",
+    "For essay answers, use pairs: two fathers (Atticus and Bob Ewell), two mockingbirds (Tom "
+    "and Boo), two young women (Scout and Mayella), two poor families (the Cunninghams and the "
+    "Ewells) - contrast is what earns marks.",
+]
+
+# (question, [A-D], correct letter, explanation)
+MOCKINGBIRD_QUESTIONS = [
+    ("Who narrates To Kill a Mockingbird?",
+     ["Jem Finch", "Jean Louise 'Scout' Finch", "Atticus Finch", "Calpurnia"], "B",
+     "Scout narrates as an adult recalling her childhood - a child's eye with an adult's hindsight."),
+    ("The novel is set in",
+     ["Meridian, Mississippi", "Maycomb, Alabama", "Montgomery, Alabama", "Atlanta, Georgia"], "B",
+     "Maycomb, a small fictional Alabama town; Meridian is Dill's hometown."),
+    ("The story takes place during",
+     ["the 1920s boom", "the Great Depression of the 1930s", "the 1950s", "the years just after the civil war"], "B",
+     "The mid-1930s Depression shapes the poverty of farmers like the Cunninghams and the Ewells."),
+    ("Atticus Finch works as",
+     ["a lawyer and state legislator", "the town sheriff", "a doctor", "a newspaper editor"], "A",
+     "Atticus is a lawyer who also represents Maycomb in the state legislature."),
+    ("Arthur Radley is better known to the children as",
+     ["Boo", "Nathan", "Dill", "One-Shot"], "A",
+     "The reclusive neighbour the children imagine as a monster - until he saves them."),
+    ("Dill spends his summers with his aunt in Maycomb; he comes from",
+     ["Mobile", "Montgomery", "Florida", "Meridian, Mississippi"], "D",
+     "Charles Baker Harris of Meridian, Mississippi - small for his age but big on imagination."),
+    ("The first gift Scout finds in the knothole is",
+     ["two Indian-head pennies", "soap dolls", "chewing gum", "a pocket watch"], "C",
+     "Wrigley's chewing gum comes first, followed later by pennies, twine, soap carvings, a spelling medal and a watch."),
+    ("Who cements up the knothole?",
+     ["Nathan Radley", "Boo Radley", "Atticus", "Mr Cunningham"], "A",
+     "Boo's older brother Nathan claims the tree is dying - though it is healthy - cutting off Boo's friendship with the children."),
+    ("Jem finds his lost trousers",
+     ["thrown away by Nathan", "kept by the sheriff", "mended and folded on the fence", "burnt in the fire"], "C",
+     "Boo quietly mends them and folds them - one of his first messages of friendship."),
+    ("What happens to Miss Maudie's house?",
+     ["It is burgled", "It burns down", "It is flooded", "It is sold to the Ewells"], "B",
+     "It burns on the night of the rare snow - and in the chaos Boo drapes a blanket over Scout."),
+    ("Who puts the blanket around Scout during the fire?",
+     ["Atticus", "Miss Maudie", "Boo Radley", "Jem"], "C",
+     "Scout is horrified to learn she was that close to Boo without noticing him."),
+    ("The rabid dog Atticus shoots is called",
+     ["Old Dan", "Tim Johnson", "Jack", "Blue"], "B",
+     "Sheriff Tate hands his rifle to Atticus - 'One-Shot Finch' - who drops the dog in one shot."),
+    ("Atticus says it is a sin to kill a mockingbird because it",
+     ["only sings and does no harm", "cannot fly", "is very rare", "belongs to the state"], "A",
+     "Mockingbirds make music for people to enjoy and do no harm - the novel's symbol of innocence."),
+    ("Mrs Henry Lafayette Dubose is fighting an addiction to",
+     ["morphine", "alcohol", "gambling", "tobacco"], "A",
+     "After her death Atticus reveals she chose to die free of morphine - his example of real courage."),
+    ("As punishment for ruining her camellias, Jem must",
+     ["apologise in writing", "plant a new garden", "wash her steps weekly", "read to Mrs Dubose daily"], "D",
+     "Jem reads Ivanhoe to her each day - in fact helping her break the addiction before she dies."),
+    ("Calpurnia takes the children to worship at",
+     ["Maycomb Methodist Church", "the county jail chapel", "Finch's Landing chapel", "the First Purchase African M.E. Church"], "D",
+     "First Purchase - where Scout discovers Calpurnia's 'modest double life'."),
+    ("Hymns at First Purchase are led by line-singing because",
+     ["most of the congregation cannot read", "the organ is broken", "the minister is absent", "it is tradition from slavery"], "A",
+     "Only four members read - so Zeebo, Calpurnia's son, sings each line and the congregation repeats it."),
+    ("Who objects to the white children at First Purchase?",
+     ["Reverend Sykes", "Lula", "Zeebo", "Calpurnia"], "B",
+     "Lula challenges Calpurnia for bringing white children - but the rest of the congregation welcomes them."),
+    ("Aunt Alexandra moves in mainly to",
+     ["help with the trial", "run Atticus's finances", "give Scout 'a feminine influence'", "care for Calpurnia"], "C",
+     "She disapproves of Scout's overalls and pushes family pride and 'gentle breeding'."),
+    ("Who runs away from home and hides under Scout's bed?",
+     ["Dill", "Jem", "Walter Cunningham", "Francis"], "A",
+     "Dill flees his neglected life in Meridian and is found under the bed, hungry but happy to be 'home'."),
+    ("The lynch mob at the jail is led by",
+     ["Bob Ewell", "Mr Underwood", "Nathan Radley", "Walter Cunningham Sr"], "D",
+     "Farmers come for Tom; Scout's innocent chatter about Walter Jr and the entailment shames Cunningham into leaving."),
+    ("Scout unknowingly breaks up the mob by",
+     ["screaming for the sheriff", "recognising Mr Cunningham and talking to him", "threatening them", "reciting Atticus's speech"], "B",
+     "She singles Cunningham out as an individual father - and individuals cannot hide in a mob."),
+    ("Mr Underwood protects Atticus during the mob scene with",
+     ["a phone call to the governor", "a group of deacons", "a shotgun from his window", "a court order"], "C",
+     "The newspaper editor - who never lets Atticus know - covered him all along."),
+    ("According to Sheriff Tate, Mayella's injuries were mainly on the",
+     ["left side of her face", "both arms", "her back", "right side of her face"], "D",
+     "Her right eye was blackened - injuries to the right side mean the attacker led with his LEFT hand."),
+    ("In court Atticus proves Bob Ewell is",
+     ["right-handed", "illiterate", "drunk", "left-handed"], "D",
+     "Ewell writes his name with his left hand, fitting the injuries - while Tom's left arm is useless."),
+    ("Tom Robinson's left arm was crippled by",
+     ["a farming accident with a tractor", "a fight in prison", "a cotton gin when he was a boy", "birth"], "C",
+     "His arm was caught in a cotton gin when he was twelve, leaving it about a foot shorter and quite useless."),
+    ("According to Tom's testimony, Mayella",
+     ["screamed for help as he passed", "fainted with fear", "grabbed and kissed him", "attacked him with a knife"], "C",
+     "Tom says she hugged him around the waist - and he ran when Bob Ewell appeared, cursing her."),
+    ("Tom's fatal admission on cross-examination is that he",
+     ["was drunk that day", "felt sorry for Mayella", "had been in prison before", "loved her"], "B",
+     "A black man pitying a white woman offends the jury more than any evidence - Dill and Jem feel the room turn."),
+    ("Dolphus Raymond's paper sack actually contains",
+     ["whisky", "Coca-Cola", "gin", "water"], "B",
+     "He pretends to be a drunk so whites can explain why he lives among black people."),
+    ("Dill bursts into tears during the trial because of",
+     ["the verdict", "Atticus's speech", "Mayella's crying", "Mr Gilmer's sneering manner toward Tom"], "D",
+     "The way Gilmer speaks to Tom - as if to a child or a criminal - sickens Dill; Scout takes him out."),
+    ("The jury's verdict is",
+     ["not guilty", "a mistrial", "manslaughter only", "guilty"], "D",
+     "Guilty - though the unusually long deliberation is, for Miss Maudie, a 'baby-step' of progress."),
+    ("As the balcony empties after the verdict, Reverend Sykes tells Scout to stand because",
+     ["the judge is leaving", "the jury returns", "her father is passing below", "Atticus calls her"], "C",
+     "'Miss Jean Louise, stand up. Your father's passin'.' - the balcony's silent tribute."),
+    ("Miss Maudie calls the trial's outcome a baby-step because",
+     ["Tom was acquitted of part of the charge", "Ewell apologised", "the jury deliberated so long", "Atticus won the case"], "C",
+     "Atticus is the only lawyer who could have kept a jury out that long - a crack in the wall of prejudice."),
+    ("After the trial, Bob Ewell's first act of revenge is to",
+     ["burn the Finches' house", "attack Scout", "sue Atticus", "spit in Atticus's face"], "D",
+     "He spits at and threatens Atticus in the post office corner - Atticus pities him, dangerously."),
+    ("Tom Robinson dies",
+     ["of fever in prison", "shot trying to climb the prison fence", "in a farm accident", "by suicide"], "B",
+     "Seventeen bullet holes - he 'was tired of white men's chances' and ran for the fence during exercise period."),
+    ("Miss Gates's hypocrisy is that she",
+     ["prays for Tom yet mocks Boo", "teaches yet cannot read", "loves flowers yet hates geraniums", "pities persecuted Jews abroad yet spoke against blacks at home"], "D",
+     "Scout hears her condemn Hitler's persecution - after hearing her say blacks in Maycomb were 'gettin' above themselves'."),
+    ("At the Halloween pageant Scout is dressed as",
+     ["a pumpkin", "a butter bean", "a ghost", "a ham"], "D",
+     "Her chicken-wire ham costume - which later saves her life by deflecting Ewell's knife."),
+    ("The man who carries Jem home after the attack is",
+     ["Boo Radley", "Sheriff Tate", "Atticus", "Dr Reynolds"], "A",
+     "The pale, silent stranger in the corner of Jem's room is Boo - 'Hey, Boo'."),
+    ("Sheriff Tate insists publicly that Bob Ewell",
+     ["was murdered by a prowler", "died of a heart attack", "fell on his own knife", "was killed by Jem"], "C",
+     "'Bob Ewell fell on his knife' - Tate refuses to drag the shy Boo into the limelight."),
+    ("Scout says giving Boo public thanks would be 'sort of like",
+     ["stealin' from the poor", "telling a lie", "shootin' a mockingbird", "breakin' a promise"], "C",
+     "Exposing Boo would destroy an innocent who did no harm - the theme's final statement."),
+    ("Scout's final act of the novel is to",
+     ["walk Boo home and stand on the Radley porch", "wave goodbye from the porch", "read to Jem", "plant camellias"], "A",
+     "Standing on Boo's porch, she finally sees the street from his point of view - Atticus's lesson fulfilled."),
+    ("Atticus's empathy lesson is that you never really understand a person until you",
+     ["argue with him", "defeat him in court", "consider things from his point of view", "read his diary"], "C",
+     "...'until you climb into his skin and walk around in it' - the novel's moral key."),
+    ("The novel opens and closes with",
+     ["Jem's broken arm", "the trial", "the fire at Miss Maudie's", "Dill's arrival"], "A",
+     "The first chapter anticipates how Jem broke his arm; the last line promises Atticus will be there when he wakes."),
+    ("The last line of the novel tells us that Atticus",
+     ["sat by Jem all night", "won a new trial", "retired from law", "moved away from Maycomb"], "A",
+     "'...he would be there when Jem waked up in the morning.'"),
+    ("The Cunninghams and the Ewells differ in that the Cunninghams",
+     ["are rich landowners", "keep their pride and pay their debts in goods", "never attend school", "live in town"], "B",
+     "Both are poor; the Cunninghams' honesty and independence keep them above the Ewells' 'trash'."),
+    ("Walter Cunningham Sr pays Atticus his legal fees with",
+     ["cash", "stamps and farm produce", "nothing at all", "a cheque"], "B",
+     "Hickory nuts, stove wood, smilax and holly - the produce of a farmer with no cash."),
+    ("Jem destroys Mrs Dubose's camellias after she",
+     ["insults his mother", "calls Atticus names", "beats Scout", "reports them to the police"], "B",
+     "He cuts off every bud with Scout's new baton after her vicious words about their father."),
+    ("After Tom's death, who gives Helen Robinson a job and protects her from Ewell?",
+     ["Link Deas", "Judge Taylor", "Mr Underwood", "Mr Gilmer"], "A",
+     "Tom's former employer hires Helen and warns Ewell to stop following her."),
+    ("Aunt Alexandra initially wants Atticus to",
+     ["dismiss Calpurnia", "defend Tom harder", "move away from Maycomb", "send Scout to boarding school"], "A",
+     "Now that Alexandra is there, she says they no longer need Calpurnia - Atticus refuses flatly."),
+    ("The best statement of the novel's title theme is",
+     ["all laws are just", "children should be seen and not heard", "every man has a price", "it is a sin to destroy the innocent"], "D",
+     "The mockingbird only sings - killing it is a sin, as destroying innocents like Tom and Boo is."),
+]
+
+# ---------------------------------------------------------------------------
+# An Inspector Calls (J. B. Priestley) — WASSCE 2026-2030 non-African drama
+# Content assembled from widely published act summaries and study guides.
+# ---------------------------------------------------------------------------
+
+INSPECTOR_TITLE = "An Inspector Calls — Complete WASSCE Study Pack"
+
+INSPECTOR_ABOUT = [
+    "An Inspector Calls is the West African Examinations Council's recommended non-African drama "
+    "text for WASSCE Literature-in-English 2026-2030. It was written by the English playwright "
+    "and broadcaster J. B. Priestley, first performed in 1945, and is now one of the most "
+    "performed plays in the English language.",
+
+    "The play is set in 1912, in the dining room of the wealthy Birling family in the "
+    "industrial city of Brumley, as they celebrate Sheila Birling's engagement to Gerald Croft. "
+    "An Inspector Goole arrives with news that a working-class girl, Eva Smith, has died in the "
+    "infirmary after drinking disinfectant - and, one by one, he exposes how each of the five "
+    "people present helped to destroy her. Written for a 1945 audience that had survived two "
+    "world wars and the Depression, the play is Priestley's powerful plea for social "
+    "responsibility: 'We are members of one body. We are responsible for each other.'",
+
+    "This pack summarises the play act by act, decodes every character, theme and staging "
+    "device, and finishes with 50 practice questions in the WASSCE objective style. The play is "
+    "short - master every line, then use this pack to sharpen your answers.",
+]
+
+# (section heading, summary text)
+INSPECTOR_CHAPTERS = [
+    ("The play and its two clocks",
+     "Hold two dates in your head and everything about the play makes sense. It is SET in 1912, "
+     "when Edwardian capitalism seemed unshakeable - but it was WRITTEN in 1945, after two world "
+     "wars and the Great Depression had proven Arthur Birling's confident speeches absurd. "
+     "Priestley uses this dramatic irony deliberately: the 1945 audience hears a 1912 fool "
+     "praise the 'unsinkable' Titanic and declare that 'nobody wants war', and laughs - then "
+     "realises the joke is aimed at every capitalist who never learns. The play is a morality "
+     "play in modern dress: the Inspector is a conscience, and the lesson is socialism's core "
+     "command - we are responsible for each other."),
+    ("Act One — The celebration and Arthur Birling's speeches",
+     "The wealthy Birling family dine in style to celebrate the engagement of their daughter "
+     "Sheila to Gerald Croft, son of the aristocratic Lord and Lady Croft - a merger as much as "
+     "a marriage, since Crofts Limited and Birling and Company are rivals. Arthur Birling, "
+     "self-made manufacturer, ex-lord-mayor and hopeful knight, lectures the young men: a man "
+     "has to mind himself and his family, 'lower costs and higher prices' are the creed, the "
+     "Titanic is unsinkable, nobody wants war, and Russia will always be behindhand. Every "
+     "claim is a time-bomb the audience hears explode. Eric, the son, drinks too much; Sheila "
+     "teases Gerald about never coming near her last summer. Then Edna the parlour maid "
+     "announces a police inspector."),
+    ("Act One — Goole arrives; Arthur's reckoning",
+     "Inspector Goole - massive, purposeful, in plain clothes - announces that a girl has just "
+     "died in the infirmary after swallowing disinfectant, and that she had worked for Birling "
+     "and Company. Eva Smith was a lively, pretty worker paid twenty-two and sixpence a week; "
+     "when she asked for twenty-five shillings she led a strike and was sacked as a ringleader. "
+     "Birling refuses all responsibility - it is his duty to keep labour costs down. He is "
+     "worried only about a public scandal and his threatened knighthood. When Birling tries to "
+     "bluff, the Inspector cuts him with the play's most damning fact: a man has to mind "
+     "himself AND his family - but the girl could not even mind herself."),
+    ("Act One into Act Two — Sheila and Gerald",
+     "The Inspector shows Sheila a photograph: Eva had found a job at Milwards, the smart "
+     "shop, until a jealous customer - Sheila herself - complained that the assistant smirked "
+     "at her trying on a hat and threatened that Milwards would lose the Birling account if she "
+     "stayed. Sheila got her sacked, and her guilt is instant and total. Then Gerald, pale, "
+     "confesses his own connection: he had met the girl - by then calling herself Daisy Renton "
+     "- at the Palace music-hall bar, rescuing her from the fat, womanising Alderman Meggarty; "
+     "he kept her as his mistress in rooms and gave her money, then dropped her quietly when "
+     "his business took him away. The engagement cracks: Sheila returns his ring."),
+    ("Act Two — Sybil Birling and the charity",
+     "Mrs Birling, socially superior and ice-cold, is a prominent member of the Brumley Women's "
+     "Charity Organisation. Eva, pregnant and destitute, appealed to it for help - but used the "
+     "name 'Mrs Birling', which Sybil took as a personal insult. Using her influence she "
+     "persuaded the committee to refuse the girl any assistance, and demanded that the "
+     "baby's father be made an example of - 'he should be compelled to marry her'. Piece by "
+     "piece the Inspector draws out the trap: the father is a heavy-drinking youngster who "
+     "stole money to support her - her own son, Eric. The audience realises before she does; "
+     "when she does, the act shatters on Eric's entrance."),
+    ("Act Three — Eric and the Inspector's sermon",
+     "Eric, drunk and ashamed, tells his story: he met Eva at the Palace bar, forced his way "
+     "into her lodgings, made her pregnant - and when she needed money he stole fifty pounds "
+     "from his father's office. Eva would not take stolen money and cut him off. With all five "
+     "confessions complete, the Inspector delivers his sermon before leaving: 'We are members "
+     "of one body. We are responsible for each other.' And if men will not learn that lesson, "
+     "'then they will be taught it in fire and blood and anguish.' To the 1945 audience the "
+     "meaning was unmistakable: the lesson had already been taught - twice."),
+    ("Act Three — The double twist and the phone call",
+     "The relief begins when Gerald, suspicious, telephones the Chief Constable - a golfing "
+     "friend of Birling's: there is no Inspector Goole on the force. Gerald then calls the "
+     "infirmary: no girl has died there for months. The older Birlings recover instantly - it "
+     "was all a hoax, a 'tedious' joke; Birling even hopes it will not cost him his "
+     "knighthood. But Sheila and Eric refuse to build the wall back up: they know what they "
+     "did, hoax or not. Then, as the parents laugh, the telephone rings. A girl has just died "
+     "in the infirmary after swallowing disinfectant - and a police inspector is on his way to "
+     "the house to ask some questions. The curtain falls on the family frozen exactly where "
+     "the play began - the cycle starting again for real."),
+    ("Staging, structure and devices",
+     "The play is a 'well-made play' in one continuous evening in a single dining room: unity "
+     "of time and place, each confession a ratchet of tension. Master the devices. The "
+     "lighting: 'pink and intimate' for the celebration, switched to 'brighter and harder' when "
+     "the Inspector arrives. The photograph: shown to one character at a time, so the audience "
+     "never sees it and must trust each reaction. Eva Smith never appears on stage - Edna the "
+     "maid is the only working-class person we see - because Eva represents millions: as the "
+     "Inspector says, there are 'millions and millions and millions of Eva Smiths and John "
+     "Smiths still left with us'. The Inspector's name - Goole - sounds like 'ghoul', a ghost; "
+     "he knows everything before anyone speaks. The ending is a perfect circle: the false "
+     "inspector leaves, and a real one is announced."),
+]
+
+# (name, who they are)
+INSPECTOR_CHARACTERS = [
+    ("Arthur Birling", "Self-made manufacturer, ex-lord mayor, prospective knight; the play's "
+     "unrepentant capitalist. Sacked Eva Smith for striking; learns nothing from the evening "
+     "but fear of scandal - his first and last concern is his reputation."),
+    ("Sybil Birling", "His wife, socially his superior, cold and prejudiced - 'girls of that "
+     "class'. Refused the pregnant Eva charity help and demanded her baby's father be made an "
+     "example of - condemning her own son without knowing it; refuses guilt to the very end."),
+    ("Sheila Birling", "The daughter; began the evening a spoilt, jealous girl who had Eva "
+     "sacked from Milwards, and ends it the play's conscience - returning her ring and "
+     "refusing to pretend nothing happened. Priestley's hope: the young can change."),
+    ("Eric Birling", "The awkward, hard-drinking son; made Eva pregnant and stole fifty pounds "
+     "from his father's office to support her; confesses and accepts his guilt - and tells "
+     "Arthur the truth about himself: 'You're not the kind of father a chap could go to when "
+     "he's in trouble.'"),
+    ("Gerald Croft", "Sheila's fiancé, son of Lord and Lady Croft; rescued Daisy Renton from "
+     "Alderman Meggarty, kept her as his mistress, then quietly dropped her - kindness and "
+     "exploitation in one man; exposes the 'hoax', which Priestley lets the audience judge."),
+    ("Inspector Goole", "'Goole' - ghoul, ghost. Not a real police inspector; omniscient, "
+     "knowing each confession before it is spoken; the family's conscience and Priestley's "
+     "mouthpiece, delivering the sermon on responsibility before vanishing."),
+    ("Eva Smith / Daisy Renton", "Never seen on stage. Pretty, spirited, principled working-"
+     "class girl - 'Smith' is the everywoman's name - sacked, sacked again, exploited, "
+     "refused, impregnated, abandoned. She stands for the millions the powerful never see."),
+    ("Edna", "The Birlings' parlour maid; announces the Inspector at the start and the fatal "
+     "phone call at the end; the only member of the working class the audience actually sees."),
+    ("The unseen powers", "Lord and Lady Croft (the aristocracy above the Birlings), the Chief "
+     "Constable (Arthur's golfing crony - the Establishment closing ranks), and the real "
+     "police inspector now on his way: the machinery of class and law that shadows the play."),
+]
+
+# (theme, explanation)
+INSPECTOR_THEMES = [
+    ("Social responsibility — personal and collective",
+     "The play's spine. The Inspector's sermon - 'We are members of one body. We are "
+     "responsible for each other' - indicts every chain of small cruelties that killed Eva. "
+     "Priestley's test of character is simple: who accepts responsibility and who hides from "
+     "it."),
+    ("Class and social snobbery",
+     "Sybil's 'girls of that class', Arthur's pride in marrying into the Crofts, Gerald's "
+     "casual keeping of a mistress - the Birlings treat working people as disposable. Eva is "
+     "sacked twice for trivial offences against the dignity of the rich."),
+    ("Generational conflict",
+     "The older generation (Arthur and Sybil) defend status, reputation and denial; the "
+     "younger (Sheila and Eric) confess, feel shame and change. Priestley stakes the future on "
+     "the young - and on his 1945 audience voting differently from their parents."),
+    ("Capitalism versus socialism",
+     "Arthur's creed - 'lower costs and higher prices', a man minds himself and his family - "
+     "is refuted by both the plot and history. The Inspector speaks Priestley's socialism: "
+     "business people must stop treating labour as a cost and start treating workers as human "
+     "beings."),
+    ("Guilt, confession and denial",
+     "Each character is measured by their response to guilt: Sheila and Eric confess and "
+     "change; Gerald confesses partially and retreats; Arthur and Sybil deny everything. The "
+     "same evening hardens some and softens others - character revealed under interrogation."),
+    ("Gender and the position of women",
+     "Eva is prey to men with money - Meggarty in the bar, Gerald the keeper, Eric the drunk "
+     "intruder - and punished for pregnancy while the men go free; her only power is refusal "
+     "(of stolen money). Sheila, meanwhile, is traded in a marriage that merges firms - even "
+     "the daughters of the rich are property."),
+    ("Time — dramatic irony and prophecy",
+     "The 1912 setting lets Priestley's 1945 audience laugh at the 'unsinkable' Titanic and "
+     "'nobody wants war' - then the Inspector prophesies 'fire and blood and anguish' for a "
+     "world that refuses the lesson of responsibility: the wars the audience had just "
+     "survived."),
+    ("Appearance versus reality — and the supernatural",
+     "A respectable family at a celebration is revealed as a machine of small destructions; a "
+     "police inspector is possibly a ghost or conscience. The play is a morality play in "
+     "evening dress: the Judge figure arrives, weighs each soul, and the ending promises the "
+     "real judgement to come."),
+]
+
+INSPECTOR_TIPS = [
+    "Memorise the two clocks - set 1912, written 1945 - and four ironies from Arthur's "
+    "speeches (the unsinkable Titanic; nobody wants war; Russia will always be behindhand; "
+    "lower costs and higher prices). Every staging and theme essay can be anchored to them.",
+    "The lighting cue is a guaranteed question area: 'pink and intimate' (comfortable "
+    "illusion) becomes 'brighter and harder' (truth) the moment the Inspector enters. Learn "
+    "it word for word.",
+    "For 'who is most responsible' essays, build a ladder with reasons: Arthur (began it, "
+    "feels nothing), Sybil (cruellest refusal, feels nothing), Gerald (exploited her "
+    "kindness), Eric (pregnancy, theft), Sheila (least harm, most change). Justify your "
+    "order - marks are in the argument.",
+    "Draw the generational table: Arthur and Sybil (deny, defend, forget) versus Sheila and "
+    "Eric (confess, feel, change) - with Gerald half in each. Priestley's hope is the young.",
+    "Eva never appears on stage - she is a construct, 'millions and millions of Eva Smiths "
+     "and John Smiths still left with us'. In essays, argue what Priestley GAINS by keeping "
+     "her invisible (universality; our imagination; the men's words are the only evidence).",
+    "Build a quote bank with speakers: 'We are members of one body. We are responsible for "
+    "each other' (the Inspector); 'a man has to mind himself and his family' (Arthur); "
+    "'girls of that class' (Sybil); 'fire and blood and anguish' (the Inspector); 'I was "
+    "almost certain for a knighthood' (Arthur); 'You're not the kind of father a chap could "
+    "go to when he's in trouble' (Eric).",
+]
+
+# (question, [A-D], correct letter, explanation)
+INSPECTOR_QUESTIONS = [
+    ("Who wrote An Inspector Calls?",
+     ["George Bernard Shaw", "J. B. Priestley", "Oscar Wilde", "Arthur Miller"], "B",
+     "John Boynton Priestley, English playwright and broadcaster; first performed in 1945."),
+    ("The play is set in",
+     ["1945", "1912", "1930", "1918"], "B",
+     "1912, the Edwardian era - but written in 1945, so every confident prediction in the play is dramatic irony."),
+    ("The Birlings live in",
+     ["London", "Brumley", "Birmingham", "Crofton"], "B",
+     "Brumley, an industrial city in the North Midlands - Arthur Birling's factory town."),
+    ("The family gathers at the start to celebrate",
+     ["Sheila's engagement to Gerald Croft", "Arthur's knighthood", "Sybil's birthday", "Eric's graduation"], "A",
+     "The engagement dinner of Sheila Birling and Gerald Croft - a business-and-class merger as much as a romance."),
+    ("Gerald's parents are",
+     ["Lord and Lady Croft", "factory owners in Brumley", "the town's doctors", "shopkeepers"], "A",
+     "Aristocratic owners of Crofts Limited - socially above the self-made Birlings."),
+    ("According to Arthur Birling, 'a man has to mind himself and'",
+     ["his neighbours", "his country", "his workers", "his family"], "D",
+     "The play's capitalist creed - which the Inspector's whole visit exists to demolish."),
+    ("Birling calls the Titanic",
+     ["a waste of money", "too slow", "unsinkable, absolutely unsinkable", "an American folly"], "C",
+     "Written in 1945, the line is dramatic irony of the most delicious kind."),
+    ("Arthur's business philosophy is",
+     ["lower costs and higher prices", "fair wages for fair work", "workers first", "quality before profit"], "A",
+     "The profit creed that made him sack a girl for asking for two and sixpence more a week."),
+    ("Eva Smith worked at Birling and Company earning",
+     ["twenty-five shillings a week", "thirty shillings a week", "twenty-two and sixpence a week", "a monthly salary"], "C",
+     "She asked for twenty-five shillings, led the strike - and was sacked as a ringleader."),
+    ("Arthur sacks Eva Smith because she",
+     ["stole from the factory", "led a strike for higher wages", "insulted a customer", "was lazy"], "B",
+     "She was among the ringleaders of a strike after the refusal of a modest rise - and Birling feels no shame about it."),
+    ("Sheila had Eva Smith dismissed from Milwards because",
+     ["Eva was rude to her", "Eva stole a hat", "Eva smirked when Sheila tried on a hat", "Eva was late for work"], "C",
+     "Jealous and humiliated, Sheila used her family's customer power: the shop feared losing the Birling account."),
+    ("Eva Smith changed her name to",
+     ["Edna Smith", "Daisy Renton", "Mary Birling", "Sarah Croft"], "B",
+     "As Gerald's mistress she was known as Daisy Renton - the name he knows her by."),
+    ("Gerald first met the girl at",
+     ["the Palace music-hall bar", "Milwards", "the infirmary", "Birling's factory"], "A",
+     "He rescued her from the fat, womanising Alderman Meggarty at the Palace bar."),
+    ("Gerald's relationship with Daisy was",
+     ["keeping her as his mistress in rooms he paid for", "a brief engagement", "purely friendship", "a business partnership"], "A",
+     "Kindness mixed with exploitation: he saved her, kept her, and quietly dropped her when his work took him away."),
+    ("How does Sheila react when her part in Eva's story is exposed?",
+     ["she denies everything", "she blames her mother", "she faints", "she accepts guilt at once"], "D",
+     "Unlike her parents, Sheila's conscience works instantly - she calls herself ashamed and responsible."),
+    ("What does Sheila do with the engagement ring after Gerald's confession?",
+     ["wears it proudly", "throws it away", "sells it", "gives it back to Gerald"], "D",
+     "She returns the ring - the engagement, like the family's respectability, is broken."),
+    ("Mrs Birling is a prominent member of",
+     ["the Brumley Women's Charity Organisation", "the parish council", "the factory board", "the ladies' golf club"], "A",
+     "The very charity that should have helped Eva - and refused her."),
+    ("Eva appealed to the charity under the name",
+     ["Mrs Gerald Croft", "Mrs Birling", "Mrs Eric Smith", "Lady Croft"], "B",
+     "Pregnant and desperate, she used 'Mrs Birling' - which Sybil took as a personal insult and punished."),
+    ("Mrs Birling demands that the baby's father should be",
+     ["paid compensation", "jailed", "compelled to marry her", "forgiven"], "C",
+     "'He should be made an example of' - she is unknowingly demanding punishment for her own son."),
+    ("Eric first met Eva at",
+     ["the Palace bar", "the factory", "Milwards", "the charity"], "A",
+     "Like Gerald, he met her at the Palace - but drunk, and he forced his way into her lodgings."),
+    ("To support the pregnant Eva, Eric",
+     ["asked his father", "sold his car", "worked double shifts", "stole fifty pounds from his father's office"], "D",
+     "Eva refused to keep taking stolen money - her one act of power in the play."),
+    ("The Inspector's parting sermon begins",
+     ["'You are all under arrest'", "'We are members of one body. We are responsible for each other.'", "'Money is the root'", "'The poor are always with us'"], "B",
+     "The play's thesis - society as one body, every member answerable for every other."),
+    ("The Inspector warns that if men will not learn responsibility, they will be taught it in",
+     ["'poverty and shame'", "'war and famine'", "'fire and blood and anguish'", "'courtrooms and prisons'"], "C",
+     "For the 1945 audience: the two world wars they had just lived through."),
+    ("How does the family discover Goole is not a real inspector?",
+     ["Sybil recognises him", "Edna finds his card", "he confesses", "Gerald telephones the Chief Constable"], "D",
+     "No Inspector Goole on the force - and the Chief Constable is Birling's golfing friend, the Establishment closing ranks."),
+    ("After the 'hoax' is revealed, who refuses to pretend nothing happened?",
+     ["Arthur and Sybil", "Gerald and Arthur", "nobody", "Sheila and Eric"], "D",
+     "The young generation hold to the lesson: 'You began to learn something. And now you've stopped.'"),
+    ("Birling's chief worry throughout the evening is",
+     ["Eva's death", "Sheila's feelings", "his public reputation and knighthood", "Eric's drinking"], "C",
+     "He was 'almost certain for a knighthood' - status outranks conscience every time."),
+    ("The final phone call announces that",
+     ["Gerald's parents are coming", "the strike has begun", "a girl has died in the infirmary and a police inspector is on his way", "Eric has been arrested"], "C",
+     "The exact events of the play begin again for real - the cyclical structure's final turn."),
+    ("The stage lighting at the start is described as",
+     ["bright and hard", "pink and intimate", "cold blue", "dark and shadowy"], "B",
+     "It changes to 'brighter and harder' when the Inspector arrives - comfort giving way to truth."),
+    ("How does the Inspector use the photograph?",
+     ["shows it to everyone at once", "shows it to one person at a time", "never shows it", "pins it to the wall"], "B",
+     "Neither the audience nor the others ever see it - each reaction must be trusted, keeping the mystery."),
+    ("Eva Smith never appears on stage because",
+     ["the actress was unavailable", "she is dead before the play", "Priestley forgot her", "she represents millions of working women"], "D",
+     "'Millions and millions and millions of Eva Smiths and John Smiths still left with us' - she is a construct, not a character."),
+    ("The only working-class character the audience actually sees is",
+     ["Eva Smith", "Daisy Renton", "the factory foreman", "Edna the parlour maid"], "D",
+     "Edna announces the Inspector at the start and the fatal phone call at the end."),
+    ("The Inspector's name, Goole, suggests",
+     ["a legal term", "a Yorkshire town only", "the word 'ghoul' - a ghost or spirit", "a German surname"], "C",
+     "Priestley hints the Inspector may be supernatural - a conscience or ghost who already knows everything."),
+    ("Which structure best describes the play?",
+     ["a five-act classical tragedy", "a two-part epic", "a well-made play in one continuous evening", "a musical drama"], "C",
+     "Unity of time and place: one dining room, one evening, each confession tightening the spring."),
+    ("The play is set entirely in",
+     ["the factory", "the Palace bar", "the infirmary", "the dining room of the Birling house"], "D",
+     "One set - the family's comfortable world, into which the outside world intrudes."),
+    ("Dramatic irony in the play depends on the audience knowing",
+     ["the ending", "that war and the Titanic followed 1912", "Eva's real name", "the Inspector's identity"], "B",
+     "1945 audiences heard 1912's confident fools and knew exactly what history did to them."),
+    ("Sheila warns the family not to try to build up a wall because",
+     ["the neighbours will talk", "Eric will run away", "father will be angry", "the Inspector will break it down"], "D",
+     "Her line becomes the play's test: the young learn there is no hiding from truth."),
+    ("Which pairing best shows the generational divide?",
+     ["Arthur and Gerald", "Sheila and Sybil versus Edna", "Gerald and Eric", "Arthur and Sybil versus Sheila and Eric"], "D",
+     "Parents deny; children change. Priestley's hope is invested in the young."),
+    ("Eric's bitter line to his father is",
+     ["'You're not the kind of father a chap could go to when he's in trouble.'", "'I wish I were dead.'", "'You never loved mother.'", "'I'll leave tonight.'"], "A",
+     "It indicts the whole Birling household - prosperity without love or communication."),
+    ("Alderman Meggarty is",
+     ["a police officer", "the vicar", "a fat, womanising town dignitary", "Gerald's uncle"], "C",
+     "Harassing Daisy at the Palace bar when Gerald intervened - respectability hiding rottenness."),
+    ("Priestley's political message is closest to",
+     ["unregulated capitalism", "aristocratic rule", "socialism — society is responsible for its members", "isolationism"], "C",
+     "Written for the 1945 Labour moment: one body, one responsibility - the welfare state in drama form."),
+    ("The genre of the play is best described as",
+     ["a detective thriller with the structure of a morality play", "a farce", "a romantic comedy", "a history play"], "A",
+     "It borrows the whodunit's machinery, but the 'criminals' are an entire respectable family - and the judge is a ghost."),
+    ("What time of day does the play cover?",
+     ["a whole year", "a week", "one evening, roughly in real time", "two days"], "C",
+     "The action is continuous - the interrogation has the pressure of a single evening."),
+    ("Birling and Company's relationship with Crofts Limited is that of",
+     ["rivals", "partners", "owner and subsidiary", "customer and supplier"], "A",
+     "The engagement is also a business alliance - love as merger."),
+    ("The first word of the Inspector's final speech that sums up the play is:",
+     ["'We'", "'Remember'", "'Beware'", "'Confess'"], "A",
+     "'We are members of one body...' - the collective pronoun is the whole ideology."),
+    ("When the Inspector leaves, the older Birlings feel",
+     ["deep remorse", "relief and a determination to forget", "fear of arrest", "pity for Eva"], "B",
+     "Only reputation frightened them; once the 'hoax' seems proven, they laugh - until the phone rings."),
+    ("Sheila's description of her parents' relief is that they are",
+     ["'wise'", "'pretending nothing much has happened'", "'kind'", "'right to forget'"], "B",
+     "She refuses the family's amnesia - the lesson, once learned, cannot be unlearned."),
+    ("The word the Inspector uses for Eva's death is that she died in",
+     ["'her sleep'", "'agonising pain' after swallowing disinfectant", "'an accident'", "'childbirth'"], "B",
+     "Burnt-out inside from disinfectant - the play's recurring image of her end."),
+    ("Whose phone call confirms no girl died at the infirmary that night?",
+     ["Gerald's", "Sybil's", "Eric's", "the Chief Constable's direct call to Arthur"], "A",
+     "Gerald calls the infirmary himself after checking the police - setting up the final reversal."),
+    ("The curtain falls as the family",
+     ["stands in shock after the final phone call", "celebrates the engagement", "goes to bed", "greets the real inspector"], "A",
+     "The phone call announces the whole evening beginning again for real - judgement arriving at last."),
+    ("Arthur Birling's public standing in Brumley is that of",
+     ["a church bishop", "the Chief Constable", "a university don", "a former lord mayor hoping for a knighthood"], "D",
+     "Self-made manufacturer, ex-lord mayor, and - he hopes - soon Sir Arthur: status is his god, and scandal is his only fear."),
+]
+
+# ---------------------------------------------------------------------------
 # PDF generation
 # ---------------------------------------------------------------------------
 
@@ -879,7 +1660,8 @@ def _final_cta(story, s, site_url):
 
 
 def _build_novel_pack(title, subtitle, tagline, about, chapters, characters_note,
-                      characters, themes, tips, questions, site_url):
+                      characters, themes, tips, questions, site_url,
+                      summary_heading="Chapter-by-chapter summary"):
     """Shared engine for the recommended-novel study packs."""
     s = _styles()
     buf = BytesIO()
@@ -888,7 +1670,7 @@ def _build_novel_pack(title, subtitle, tagline, about, chapters, characters_note
     story += [Paragraph("About this pack", s["h1"])]
     for para in about:
         story.append(Paragraph(_esc(para), s["body"]))
-    story += [Paragraph("Chapter-by-chapter summary", s["h1"])]
+    story += [Paragraph(summary_heading, s["h1"])]
     for heading, text in chapters:
         story += [Paragraph(_esc(heading), s["chap"]), Paragraph(_esc(text), s["body"])]
     story += [PageBreak(), Paragraph("Character guide", s["h1"]),
@@ -949,6 +1731,34 @@ def build_so_path_pdf(site_url):
         "Drill this table — WAEC's favourite question style is 'who did what'. Know every name "
         "and alias.",
         SO_PATH_CHARACTERS, SO_PATH_THEMES, SO_PATH_TIPS, SO_PATH_QUESTIONS, site_url)
+
+
+def build_mockingbird_pdf(site_url):
+    """To Kill a Mockingbird study pack: summaries, characters, themes, 50 questions."""
+    return _build_novel_pack(
+        MOCKINGBIRD_TITLE,
+        "WASSCE 2026-2030 Literature-in-English — non-African prose by Harper Lee",
+        "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 quote bank \u00b7 exam "
+        "tips \u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        MOCKINGBIRD_ABOUT,
+        MOCKINGBIRD_CHAPTERS,
+        "Drill this table — WAEC's favourite question style is 'who said or did what'.",
+        MOCKINGBIRD_CHARACTERS, MOCKINGBIRD_THEMES, MOCKINGBIRD_TIPS, MOCKINGBIRD_QUESTIONS,
+        site_url)
+
+
+def build_inspector_pdf(site_url):
+    """An Inspector Calls study pack: act summaries, characters, themes, 50 questions."""
+    return _build_novel_pack(
+        INSPECTOR_TITLE,
+        "WASSCE 2026-2030 Literature-in-English — non-African drama by J. B. Priestley",
+        "Act-by-act summaries \u00b7 character guide \u00b7 themes \u00b7 staging devices "
+        "\u00b7 exam tips \u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        INSPECTOR_ABOUT,
+        INSPECTOR_CHAPTERS,
+        "Drill this table — WAEC's favourite question style is 'who said or did what'.",
+        INSPECTOR_CHARACTERS, INSPECTOR_THEMES, INSPECTOR_TIPS, INSPECTOR_QUESTIONS,
+        site_url, summary_heading="The play, act by act")
 
 
 def build_past_questions_pdf(conn, exam_name, subject_like, title, subtitle, count, site_url):

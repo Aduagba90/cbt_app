@@ -19,7 +19,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=25">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=27">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">
@@ -129,7 +129,7 @@
 
 {% if session.get('user') %}<div class="pn-tabbar-space d-lg-none" aria-hidden="true"></div>{% endif %}
 <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='js/prepnova.js') }}?v=6"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
