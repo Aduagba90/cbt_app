@@ -522,6 +522,10 @@ def init_db():
              "WAEC English — Past-Style Question Pack",
              "Up to 60 WAEC English questions (lexis, structure, comprehension and orals style) with an explained answer key.",
              500.0),
+            ("so-the-path-does-not-die",
+             "So the Path Does Not Die — Complete Study Pack",
+             "The WAEC 2026–2030 African prose by Pede Hollist, decoded: chapter summaries, 25-character guide, themes, key terms, exam tips and 50 practice questions with explained answers.",
+             1000.0),
         ])
 
     cur.execute("""

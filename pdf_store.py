@@ -371,6 +371,464 @@ LEKKI_QUESTIONS = [
 
 
 # ---------------------------------------------------------------------------
+# So the Path Does Not Die (Pede Hollist) — WASSCE 2026-2030 African prose
+# Content assembled from widely published chapter summaries and study guides.
+# ---------------------------------------------------------------------------
+
+SO_PATH_TITLE = "So the Path Does Not Die — Complete WASSCE Study Pack"
+
+SO_PATH_ABOUT = [
+    "So the Path Does Not Die is the West African Examinations Council's recommended African prose "
+    "text for WASSCE Literature-in-English 2026-2030. It was written by Pede Hollist, a Sierra Leonean "
+    "novelist and university teacher who lives in the United States, and was first published in 2008.",
+
+    "The novel follows Finaba - 'Fina' - from a village in Sierra Leone where her grandmother Baramusu, "
+    "a powerful traditional leader of women, secretly takes her into the forest to be initiated into "
+    "womanhood. Fina's father Amadu storms the initiation house to save her from the fate that killed "
+    "her elder sister Dimusu - and the family is cursed and driven out of the village. In Freetown, Fina "
+    "battles poverty, her father's death, discrimination against her Fula people and sexual violence. A "
+    "diamond dealer's gift of a passport opens the door to America, where she builds a new life, marries "
+    "badly, divorces, and falls in love with Cammy, a wealthy Trinidadian doctor. But on her wedding day "
+    "a secret from her past walks into the church - and the question of where she truly belongs finally "
+    "pulls her back to a war-torn Sierra Leone.",
+
+    "This pack condenses the whole novel - a prologue, twenty-four chapters and an epilogue - into twelve "
+    "clear section summaries, a 25-character guide, 8 themes, exam tips, and 50 practice questions in the "
+    "WASSCE objective style. Read it alongside the novel: it is a revision companion, not a replacement.",
+]
+
+# (section heading, summary text)
+SO_PATH_CHAPTERS = [
+    ("Prologue — The folktale of Musudugu",
+     "Before the story begins, Baramusu tells young Finaba the folktale of Musudugu, a village of only "
+     "women, protected by the virgin daughter of Atala the Supreme. Its one law: darkness must never "
+     "cover a man in Musudugu - any woman who bore a son had to return him to his father once he could "
+     "stand. But a girl named Kumba Kargbo questioned the rule and spoke of letting a man stay, and the "
+     "elders told her to follow the ways of the village or leave. The tale plants the novel's central "
+     "idea: tradition holds a people together - until someone questions the path."),
+    ("Chapters 1-2 — The aborted initiation",
+     "Baramusu, a renowned digba (initiation leader) in the Koinadugu community, visits her son Amadu's "
+     "house to insist that Finaba become a 'musu ba' - an initiated woman. Finaba's mother Nabou refuses: "
+     "her first daughter Dimusu bled to death after her own initiation. While Nabou is away, Baramusu "
+     "secretly leads the delighted Finaba into the fafei, the initiation house deep in the forest. Amadu "
+     "does what no man may do - he enters the fafei and carries his daughter out. The family is cursed "
+     "and outcast, and the famed healer Pa Yatta declares that Nabou's children are 'Denkileni' - "
+     "children who come to show the path, born in pairs and rarely long-lived. To save Finaba from "
+     "Dimusu's fate, the family turns its back on the village forever."),
+    ("Chapter 3 — Exile and a father's death",
+     "The family settles in Freetown, holding to a new family adage: each person must be free to choose "
+     "their own path. Then Amadu dies suddenly - tetanus from a rusted corrugated-iron cut at the "
+     "building site. Nabou turns down an offer to become Alhaji Umaru's second wife, and Finaba is "
+     "placed in the household of Pa Heddle, who pays her school fees but is drawn to her young friends; "
+     "one of them becomes pregnant. When life in the Heddle home turns cold and hostile, Finaba wins "
+     "admission to Crowther College as a boarder - her escape."),
+    ("Chapters 4-5 — Crowther College",
+     "At Crowther College Fina finds freedom - and humiliation. As a Fula she faces tribal "
+     "discrimination, and her boyfriend Kemi Koker drops her over her ethnic identity. Her roommate "
+     "Memuna suffers abuse from her boyfriend Simeon. When Fina struggles with chemistry, the men who "
+     "should help her turn predatory: Dr Davis Kamanga makes sexual advances, and Kizzy - Hezekiah "
+     "Mendelssohn Bacchus, the senior laboratory technician - lures her to his room and sexually "
+     "assaults her. Her late father's phantom had warned her not to take the easy path; too late. Yet "
+     "two kind Americans anchor her: Meredith Frank, who runs the church mission clinic and treats "
+     "Sierra Leone as home, and her fiance Chip Munroe. Then Sidibe, a diamond dealer who admires her "
+     "dignity, hands her the impossible: a Sierra Leonean passport and dollars. America is suddenly "
+     "within reach."),
+    ("Chapter 6 — Arrival in America",
+     "Fina lands in the United States, welcomed by the newly-married Chip and Meredith. She enrols in "
+     "business management at County Community College, rents her own apartment and takes a night-shift "
+     "job at the Twenty-four Seven Child Care and Learning Academy. School by day, work by night, sleep "
+     "sacrificed - until she is fired after Juanita, the owner, finds the hyperactive Billy Bob tied to "
+     "a chair. A Sierra Leonean contact, Sangallay, finds her customer-care work at Be Assured, and she "
+     "moves to Maryland. There she reconnects with Edna, her foster sister from the Heddle home - who "
+     "announces that she is marrying Kizzy, Fina's attacker. Fina keeps her past with Kizzy to herself "
+     "and lets sleeping dogs lie."),
+    ("Chapters 7-8 — Jemal, Aman and Cammy",
+     "At Be Assured Fina's diligence wins over Aman, the district manager, and the two become "
+     "inseparable friends. When Fina's mother dies, Aman hands her a thousand dollars without "
+     "hesitation. Hoping to secure citizenship, Fina marries Jemal, a relative - ignoring warnings from "
+     "Aman and Aman's sister Shantea that he is a drug-addicted wife-beater. Reality is exactly as "
+     "promised: Jemal abuses her physically, sexually and financially until she divorces him and moves "
+     "in with Aman. At a party thrown by a doctor friend of Bayo - Aman's boyfriend - Fina lights up "
+     "the dance floor with her calypso moves and catches the eye of Cammy, Cameroon Dexter Priddy, a "
+     "Trinidadian medical doctor."),
+    ("Chapters 9-10 — Love and its fault lines",
+     "Fina and Cammy fall deeply in love. But a news report on female genital mutilation opens a wound "
+     "between them: Cammy condemns the practice; Fina, circumcised herself, defends it as tradition and "
+     "compares it to male circumcision. She finally shocks him by revealing her own circumcision - he "
+     "loves her still, and proposes marriage. Meanwhile Sierra Leone descends into civil war. Fina's "
+     "younger sister Isa, with their mother gone, has a baby, Sarata, with Hassan; Fina arranges their "
+     "escape to Guinea and carries the whole family's upkeep, even taking a home-equity loan rather "
+     "than accept Cammy's repayable help. Weighed down and depressed as the wedding approaches, she "
+     "discovers she is pregnant - and for a moment everything lifts."),
+    ("Chapters 11-13 — The interrupted wedding",
+     "On her wedding morning Fina wakes from a nightmare of the aborted initiation. It is an omen. The "
+     "inter-cultural ceremony brings together Fina's people - the loud, warm 'Man dem' - and Cammy's "
+     "guests, including his rascal friend Lincoln 'Scraps'. Kizzy, now Edna's husband, is among the "
+     "crowd. Then, as Fina walks to the altar, a stranger rises and declares that Fina is his wife. It "
+     "is Jemal. Fina flees the church with Cammy behind her, and only Scraps, waking from his nap, "
+     "confronts the intruder and shoulders him out of the way. The wedding collapses in gossip and "
+     "confusion."),
+    ("Chapters 14-15 — The vestry",
+     "In the vestry Cammy first scolds Fina for disgracing him, then cools. Fina explains: Jemal is her "
+     "ex-husband; the church had pronounced the marriage dissolved during one of his mysterious "
+     "disappearances, and she carries the divorce papers. Cammy is ashamed but still walks out, "
+     "abandoning her at the church. Edna and Aman console her; Aman bluntly blames Fina for hiding the "
+     "marriage. Fed up with America, Fina packs to go home to Sierra Leone."),
+    ("Chapters 16-19 — Glen, and the slow repair",
+     "Two shocks follow. At Cammy's family gathering a young man resembling Cammy's dead elder brother "
+     "Donovan appears claiming to be Cammy's son - Glen, named for his foster parents, in urgent need "
+     "of a kidney from a matching relative. And at the police station the church-fight case is settled: "
+     "Kizzy is released with a curfew sentence. Edna begs Fina to ask Cammy to testify for Kizzy; Fina, "
+     "remembering his assault, refuses - then burns with guilt, and the two foster sisters' childhood "
+     "bond rekindles in a speechless embrace. Cammy apologises; Fina accepts coolly and repeats that "
+     "she is going home. They trade the songs of their wounds - his brother's death, her initiation and "
+     "her sister's suffering - and heal a little. When Fina finally tells Cammy everything about Jemal, "
+     "he answers with his own confession, and she supports his decision to donate a kidney to Glen. "
+     "Then Fina screams and faints."),
+    ("Chapters 20-22 — Bitter truths",
+     "In hospital, Fina has suffered a threatened miscarriage. Aman, meanwhile, is auctioning "
+     "everything that reminds her of the slippery Bayo Karumwi - until he reappears, explains his "
+     "near-death escape from a Lassa-fever-struck village, and proposes; Aman turns him down for "
+     "changing their plans without asking her. At Edna's house-warming, Fina announces she will go home "
+     "and train young girls to be independent; Cammy laughs uneasily and coins the phrase 'diaspora "
+     "complex'. Then Kizzy insults Cammy and blurts out his past affair with Fina - and Fina calmly "
+     "tells Cammy the truth about Kizzy's assault in college. Cammy answers with his darkest secret: "
+     "as a drunk young man he believed he had killed a girl in a car crash, and Scraps buried the story "
+     "with the police. At the hospital, as the families gather for the kidney transplant, Anushka "
+     "reveals the real story - Scraps, not Cammy, was driving that night."),
+    ("Chapters 23-24 and Epilogue — A new path",
+     "Fina returns to a Sierra Leone scarred by war and searches for Baramusu through a recovery "
+     "agency. The trail fails - the blind old woman Svetlana finds, Mama Yegbe, is not her grandmother "
+     "- but hope returns in a new family: Mama Yegbe, the orphanage children, Mawaf the war-displaced "
+     "girl she adopts as her own daughter, and her baby with Cammy, Dimusu-Celeste, named for the "
+     "sister she lost and the mother-in-law who stood by her. She takes a job at the orphanage and "
+     "teaches part-time at a nursery school. Old Sidibe Kaykay, scarred by rebels, proposes marriage; "
+     "instead Fina sends Cammy photographs of their daughter. At Aman and Bayo's wedding in Lagos, a "
+     "power outage and a dance floor reunite Fina and Cammy; she tells him of her rededication to "
+     "Islam, and he is not perturbed. In the epilogue Cammy moves to Sierra Leone to share Fina's path "
+     "- so the path does not die."),
+]
+
+# (name, who they are)
+SO_PATH_CHARACTERS = [
+    ("Finaba 'Fina' Marah", "The protagonist; a 'yeliba' (born storyteller) and a 'Denkileni' (a child "
+     "who shows the path). Her aborted initiation shapes a lifelong search for belonging that finally "
+     "ends in Sierra Leone."),
+    ("Baramusu", "Fina's grandmother, a powerful digba (women's initiation leader) in Koinadugu. She "
+     "starts Fina's initiation and later disappears in the war; Fina's search for her frames the ending."),
+    ("Nabou", "Fina's mother. She loses her first daughter Dimusu to initiation and refuses to let "
+     "Finaba be cut; after Amadu's death she rejects becoming Alhaji Umaru's second wife."),
+    ("Amadu", "Fina's father and Baramusu's son. He breaks the greatest taboo by carrying Fina out of "
+     "the fafei, and dies of tetanus in Freetown soon after the family's exile."),
+    ("Dimusu", "Fina's elder sister, a 'Denkileni' who dies after her initiation - the reason Fina is "
+     "never cut. Fina later names her own daughter Dimusu-Celeste in her memory."),
+    ("Isa", "Fina's younger sister, born in Freetown. Her boyfriend Hassan fathers her children; during "
+     "the war Fina funds their escape to Guinea."),
+    ("Pa Yatta", "The famed healer who examines Dimusu and Finaba and declares them 'Denkileni' - "
+     "children who come to show the path, born fifteen moons apart."),
+    ("Pa Heddle", "Fina's guardian in Freetown after Amadu's death. He pays her school fees but preys "
+     "on her young friends; one of them becomes pregnant."),
+    ("Edna", "Pa Heddle's daughter and Fina's foster sister. She emigrates to America and - unknowingly "
+     "- marries Kizzy, Fina's assailant; their childhood bond survives everything."),
+    ("Kemi Koker", "Fina's boyfriend at Crowther College, who drops her because she is Fula - the face "
+     "of ethnic discrimination in the novel."),
+    ("Memuna", "Fina's roommate at Crowther College, trapped in an abusive relationship with Simeon."),
+    ("Kizzy (Hezekiah Mendelssohn Bacchus)", "Senior laboratory technician at Crowther College who "
+     "sexually assaults Fina; later Edna's husband in America. His church-fight sentence and his "
+     "drunken outburst about Fina drive the late twists."),
+    ("Meredith Frank", "The American who manages the church mission clinic, grew up in Sierra Leone and "
+     "treats it as home; Fina's model of resilience. She marries Chip Munroe and welcomes Fina to "
+     "America."),
+    ("Sidibe (Sidibe Kaykay)", "The diamond dealer who respects Fina's dignity and gifts her the "
+     "passport and dollars that open the door to America; later, rebel-scarred and aged, he proposes "
+     "marriage to her in Sierra Leone."),
+    ("Aman", "Fina's best friend in America, a district manager at Be Assured. Sharp-tongued and loyal "
+     "- a thousand dollars for Fina's mother's burial; her on-off romance with Bayo mirrors Fina's "
+     "story."),
+    ("Shantea", "Aman's sister, who warns Fina about Jemal's violence and drug addiction."),
+    ("Jemal", "Fina's first husband - a relative, drug addict and wife-beater. His dramatic "
+     "interruption of her wedding to Cammy is the novel's climax."),
+    ("Cammy (Cameroon Dexter Priddy)", "A wealthy Trinidadian medical doctor; Fina's great love. He "
+     "carries secrets - a son, Glen, and a fatal crash - and finally relocates to Sierra Leone to "
+     "share Fina's path."),
+    ("Celeste Priddy", "Cammy's mother, who urges the couple to continue the interrupted wedding; "
+     "Fina's daughter is named after her."),
+    ("Glen", "Cammy's son by a former relationship, raised by foster parents; his failing kidney leads "
+     "Cammy to donate his own."),
+    ("Lincoln 'Scraps'", "Cammy's loyal rascal of a friend. He buried Cammy's drunk-driving story with "
+     "the police - and had himself been the driver that fatal night."),
+    ("Bayo Karumwi", "A Yoruba doctoral student in mechanical engineering; Aman's on-off boyfriend, "
+     "later her husband. Their Lagos wedding reunites Fina and Cammy."),
+    ("Mama Yegbe", "The blind old woman found by the recovery agency - not Baramusu, but she becomes "
+     "Fina's adopted grandmother and names Fina's daughter."),
+    ("Mawaf", "The war-displaced girl who keeps Mama Yegbe company; Fina adopts her as her second "
+     "daughter."),
+    ("Dimusu-Celeste", "Fina and Cammy's baby daughter, named for Fina's dead sister and Cammy's "
+     "mother - the next generation of the path."),
+]
+
+# (theme, explanation)
+SO_PATH_THEMES = [
+    ("Tradition and the individual — 'the path'",
+     "The novel's controlling image. The prologue's all-women village of Musudugu shows tradition as "
+     "survival; Amadu's rescue of Fina shows it as a death sentence when followed blindly. Every major "
+     "character must choose between the inherited path and a self-made one - and the title insists the "
+     "path itself must not die, only change."),
+    ("Female genital mutilation: culture versus human rights",
+     "Baramusu's initiation carries belonging, status and womanhood; Dimusu's death and Fina's lifelong "
+     "sense of incompleteness carry its cost. Hollist refuses a simple villain: the digba is the "
+     "novel's most loving grandmother, and Fina herself defends the practice to Cammy before revealing "
+     "her own circumcision."),
+    ("Identity and belonging",
+     "Fina is cursed at home for an initiation she never chose, mocked in Freetown as a Fula, and "
+     "'other' in America. Her belief that the aborted initiation is the root of every misfortune gives "
+     "the search for belonging its psychological engine."),
+    ("The diaspora condition — 'home' and 'abroad'",
+     "The Washington chapters dramatise the immigrant's bargains: papers, menial night work, the myth "
+     "of the American dream, and the debates - Africans, African Americans and Caribbeans arguing over "
+     "the 'diaspora complex'. Baramusu's proverb of the bird that must fly out to find food sums it up."),
+    ("Ethnic discrimination and tribalism",
+     "Fina is rejected by Kemi Koker and humiliated at Crowther College simply for being Fula - a "
+     "minority identity. The novel shows tribalism as the village curse's urban twin."),
+    ("War, displacement and loss",
+     "Sierra Leone's civil war offstage: Isa's flight to Guinea, Sidibe's rebel scars, Mawaf's refuge "
+     "story, an orphanage of traumatised children. War strips Fina of the past yet hands her the "
+     "family she finally chooses."),
+    ("Love, marriage and gender-based violence",
+     "Three men shadow Fina: the predator Kizzy, the abuser Jemal, the loving but secretive Cammy. "
+     "Alongside them stand Memuna's Simeon and Pa Heddle's prey. Hollist weighs marriage as both "
+     "women's ruin and - with honesty and sacrifice - their repair."),
+    ("Female resilience, survival and sisterhood",
+     "From Nabou's refusal to Aman's thousand dollars, Edna's embrace, Meredith's example and Mama "
+     "Yegbe's naming ceremony, women pass strength down the generations. Fina's final vocation - "
+     "raising and training girls - turns survival into inheritance."),
+]
+
+SO_PATH_TIPS = [
+    "Master the journey, not just the events: village (Koinadugu) to Freetown, then America (the "
+    "Washington area and Maryland), then back to Sierra Leone - with a short stop in Lagos for Aman "
+    "and Bayo's wedding. Every WASSCE question on plot, setting or character development sits on this "
+    "map.",
+    "Learn names AND aliases: Fina is Finaba; Kizzy is Hezekiah Mendelssohn Bacchus; Cammy is Cameroon "
+    "Dexter Priddy; Scraps is Lincoln. Objective questions love asking 'who is…?' and 'whose full name "
+    "is…?'",
+    "Know the key terms: digba (initiation leader), musu ba (initiated woman), fafei (the initiation "
+    "house), yeliba (born storyteller), Denkileni (children who come to show the path), sara (memorial "
+    "service). WAEC quotes them directly in options.",
+    "Track the two interrupted ceremonies - the initiation in the forest and the church wedding. The "
+    "novel is book-ended by them; comparing what each interruption costs is a classic essay question.",
+    "Understand the title: 'the path' is tradition and destiny. Baramusu says Fina will show the "
+    "people the way because they have strayed. The epilogue answers the question the prologue asks - "
+    "the path survives by bending, not by breaking.",
+    "For essay answers, pair your characters: Fina and Dimusu (the path not taken), Fina and Baramusu "
+    "(two kinds of power), Aman-and-Bayo versus Fina-and-Cammy (two marriages), Mama Yegbe and Mawaf "
+    "(the family Fina chooses).",
+]
+
+# (question, [A-D], correct letter, explanation)
+SO_PATH_QUESTIONS = [
+    ("Who is the protagonist of So the Path Does Not Die?",
+     ["Aman", "Nabou", "Celeste Priddy", "Finaba Marah"], "D",
+     "Finaba - 'Fina' - Marah is the protagonist; the novel follows her from a Sierra Leonean village "
+     "to Freetown, America and back."),
+    ("The story moves through all of these places EXCEPT",
+     ["Freetown", "Washington DC area", "Lagos", "Accra"], "D",
+     "The settings span Sierra Leone (village, Freetown, Koidu), the Washington area and Maryland, and "
+     "briefly Lagos for Aman's wedding. Accra never appears."),
+    ("Baramusu is a renowned ______ in the Koinadugu community.",
+     ["healer", "digba", "trader", "warrior"], "B",
+     "A digba is a traditional leader of women who conducts initiations - Baramusu is the most "
+     "respected one in Koinadugu."),
+    ("In the novel, a 'musu ba' is",
+     ["a born storyteller", "a widow", "an initiated woman", "a priestess"], "C",
+     "'Musu ba' means an initiated woman - belonging to the age-group and the people. Fina's aborted "
+     "initiation leaves her longing for that belonging."),
+    ("Nabou refuses to let Finaba be initiated because",
+     ["she hates Baramusu", "her first daughter Dimusu died after her own initiation",
+      "the family had become Christians", "Amadu had forbidden all tradition"], "B",
+     "Dimusu, a Denkileni like Fina, dies after her initiation - so Nabou vows that Fina will never "
+     "face the knife."),
+    ("The 'fafei' is",
+     ["the village market", "the chief's palace", "the healing shrine", "the initiation house in the forest"], "D",
+     "The fafei, deep in the forest, is where girls are initiated into womanhood. No man may enter it - "
+     "which is why Amadu's rescue is an abomination."),
+    ("Who breaks tradition by carrying Finaba out of the fafei?",
+     ["Pa Yatta", "Alhaji Umaru", "Amadu, her father", "Nabou"], "C",
+     "Amadu does what no man may do - enters the initiation house and carries his daughter out to save "
+     "her from Dimusu's fate."),
+    ("Pa Yatta, the healer, declares that Nabou's children are",
+     ["yeliba", "Denkileni", "musu ba", "digba"], "B",
+     "Denkileni are children who come to show the path, born in pairs fifteen moons apart, and usually "
+     "short-lived - Dimusu and Finaba are such a pair."),
+    ("'Denkileni' are children who",
+     ["never grow old", "are born twins", "must become healers", "come to show the path and often die young"], "D",
+     "The term names children sent to show the people the way; their lives are typically cut short, as "
+     "Dimusu's is."),
+    ("The folktale of Musudugu told in the prologue is about a village of",
+     ["famous hunters", "only women", "fishermen", "gold traders"], "B",
+     "Musudugu is a legendary village of only women, protected by the virgin daughter of Atala the "
+     "Supreme."),
+    ("In the Musudugu folktale, the one law was that",
+     ["darkness must not cover a man in Musudugu", "everyone must farm daily",
+      "only virgins could speak", "children must be seen and not heard"], "A",
+     "Any woman who bore a son had to return him to his father once he could stand - no man could "
+     "remain overnight. Kumba Kargbo questioned the rule."),
+    ("Amadu dies in Freetown of",
+     ["malaria", "a motor accident", "tetanus", "Lassa fever"], "C",
+     "He cuts his heel on a rusted corrugated-iron sheet at the building site and, afraid of losing "
+     "his job, refuses hospital treatment until the tetanus kills him."),
+    ("After Amadu's death, Nabou rejects an offer to become the second wife of",
+     ["Pa Heddle", "Pa Yatta", "Sidibe", "Alhaji Umaru"], "D",
+     "She turns down the wealthy Alhaji Umaru, choosing independence over security - an early lesson "
+     "for Fina."),
+    ("Finaba is sent to live in whose household in Freetown?",
+     ["The Heddles", "The Munroes", "The Priddys", "The Kokers"], "A",
+     "Pa Heddle's household - with Taiwo, Kehinde, Ade and Edna - becomes Fina's foster home."),
+    ("Edna is",
+     ["Aman's sister", "Pa Heddle's daughter", "Cammy's sister", "Meredith's daughter"], "B",
+     "Edna is Pa Heddle's daughter; she and Fina grow up as foster sisters and their bond survives "
+     "even the Kizzy secret."),
+    ("Kemi Koker ends his relationship with Finaba because",
+     ["she is Fula", "she is poor", "she refused to marry him", "she was leaving for America"], "A",
+     "At Crowther College Fina suffers tribal humiliation as a Fula - Kemi Koker drops her over her "
+     "ethnic identity."),
+    ("Kizzy's full name is",
+     ["Hezekiah Mendelssohn Bacchus", "Henry Mendeleyev Bacchus",
+      "Hezekiah Moses Bacchus", "Kamara Dexter Bacchus"], "A",
+     "Kizzy is Hezekiah Mendelssohn Bacchus, the senior laboratory technician at Crowther College."),
+    ("Kizzy works at Crowther College as",
+     ["a lecturer", "the bursar", "the senior laboratory technician", "the provost"], "C",
+     "He is the college's senior lab technician - the man Fina turns to for chemistry help, with "
+     "devastating consequences."),
+    ("The American who manages the church mission clinic and treats Sierra Leone as home is",
+     ["Celeste Priddy", "Anushka", "Juanita", "Meredith Frank"], "D",
+     "Meredith Frank grew up in Sierra Leone, runs the mission clinic with quiet resilience, and later "
+     "marries Chip Munroe."),
+    ("Who gives Fina a Sierra Leonean passport and dollars for her American dream?",
+     ["Chip Munroe", "Sidibe", "Cammy", "Sangallay"], "B",
+     "Sidibe, the diamond dealer, respects Fina's dignity and surprises her with the passport and "
+     "money - cautioning her that 'the world is a trade zone'."),
+    ("In America, Fina studies ______ at County Community College.",
+     ["nursing", "law", "business management", "pharmacy"], "C",
+     "Meredith helps her enrol, and Fina studies business management by day while working at night."),
+    ("Fina's first job in America is a night shift at",
+     ["a gas station", "a hospital ward", "a restaurant", "the Twenty-four Seven Child Care and Learning Academy"], "D",
+     "She works nights at the Twenty-four Seven Child Care and Learning Academy while schooling by "
+     "day."),
+    ("Juanita fires Fina from the daycare after",
+     ["Fina stole money", "Fina came late three times", "a child, Billy Bob, was found tied to a chair",
+      "the parents complained"], "C",
+     "The hyperactive Billy Bob is found tied to a chair without Fina's knowledge - exhausted from "
+     "school and night work, she loses the job."),
+    ("______ helps Fina get the customer-care job at Be Assured.",
+     ["Sangallay", "Kizzy", "Glen", "Bayo"], "A",
+     "Sangallay, a Sierra Leonean contact, secures her the Be Assured job, and she moves to Maryland."),
+    ("Aman works at Be Assured as",
+     ["a cleaner", "the district manager", "the accountant", "the CEO's secretary"], "B",
+     "Aman is Fina's district manager at Be Assured; Fina's faithfulness at work earns her a "
+     "friendship for life."),
+    ("Aman gives Fina one thousand dollars when",
+     ["Fina's mother dies", "Fina loses her job", "Fina is hospitalised", "Fina's rent is due"], "A",
+     "When Isa breaks the news of Nabou's death, Aman hands Fina a thousand dollars without "
+     "hesitation - and is surprised how quickly Muslims bury their dead."),
+    ("Fina's first husband in America is",
+     ["Cammy", "Bayo", "Jemal", "Kizzy"], "C",
+     "Hoping to secure citizenship through marriage, Fina marries Jemal, a relative - against all "
+     "warnings."),
+    ("Jemal is best described as",
+     ["a wealthy diamond dealer", "a drug-addicted wife-beater", "a quiet pastor", "a medical doctor"], "B",
+     "Shantea, Aman's sister, confirms the warnings: Jemal abuses Fina physically, sexually and "
+     "financially until she divorces him."),
+    ("Who confirms to Fina that Jemal beats his wives?",
+     ["Edna", "Shantea, Aman's sister", "Celeste", "Meredith"], "B",
+     "Shantea - Aman's sister - confirms what Aman suspects; Fina, already emotionally gone, marries "
+     "him anyway."),
+    ("Fina meets Cammy at",
+     ["a church programme", "the hospital where she works", "a party thrown by a doctor friend of Bayo",
+      "a wedding in Lagos"], "C",
+     "At the party, Fina's knowledge of calypso songs and dance moves captures Cammy - himself a "
+     "Caribbean man."),
+    ("Cammy, whose full name is Cameroon Dexter Priddy, is a medical doctor from",
+     ["Nigeria", "Ghana", "Jamaica", "Trinidad"], "D",
+     "Cammy is a Trinidadian doctor - the 'wealthy, successful young doctor from Trinidad'."),
+    ("What first causes a sharp misunderstanding between Fina and Cammy?",
+     ["money", "a news report on female genital mutilation", "Jemal", "Fina's family"], "B",
+     "Cammy condemns FGM as it relates to African culture; Fina defends it as tradition, comparing it "
+     "to male circumcision - before shocking him with the news of her own circumcision."),
+    ("Fina's younger sister Isa has a baby girl named",
+     ["Sarata", "Dimusu", "Mawaf", "Nabou"], "A",
+     "Isa welcomes Sarata with her boyfriend Hassan, who cohabits with her - and another baby follows."),
+    ("When the civil war intensifies, Fina arranges for Isa and her children to escape to",
+     ["Liberia", "Ghana", "Guinea", "Senegal"], "C",
+     "Devoid of funds in Guinea, Isa and her family become 'a financial cross Fina must carry'."),
+    ("Rather than accept Cammy's repayable help, Fina",
+     ["sells her car", "works double shifts", "asks Aman", "takes a home-equity loan"], "D",
+     "Fina's independence maddens Cammy: she cuts her expensive living, mortgages belongings and takes "
+     "a home-equity loan instead."),
+    ("Fina's relatives at her wedding are playfully called",
+     ["'Man dem'", "'Kono boys'", "'Fula squad'", "'Wahala men'"], "A",
+     "The 'Man dem' - identified by their greeting style - fill the wedding with noise, debate and "
+     "social commentary."),
+    ("The wedding is interrupted by a stranger who",
+     ["claims to be Cammy's father", "claims Fina is his wife", "says the church is on fire",
+      "demands the bride price"], "B",
+     "Jemal, Fina's ex-husband, stands up and claims her as his wife - and Fina flees the church."),
+    ("Who eventually confronts the intruder at the church?",
+     ["Glen", "Kizzy", "Scraps", "Bayo"], "C",
+     "Lincoln 'Scraps', asleep through most of the drama, wakes up and shoulders the "
+     "stranger-proposing husband out of the way."),
+    ("Fina proves her marriage to the intruder was dissolved by producing",
+     ["church divorce papers", "a police report", "a witness, Edna", "her diary"], "A",
+     "The church had pronounced the marriage dissolved during Jemal's mysterious disappearance - and "
+     "Fina carries the papers."),
+    ("Cammy's mother is",
+     ["Anushka", "Celeste Priddy", "Juanita", "Meredith"], "B",
+     "Celeste Priddy urges the couple to continue the interrupted ceremony - and Fina later names her "
+     "daughter after her."),
+    ("Glen shocks Cammy's family by claiming to be",
+     ["Cammy's creditor", "a distant cousin", "Scraps' brother", "Cammy's son"], "D",
+     "The young man, resembling Cammy's dead elder brother Donovan, claims to be Cammy's son."),
+    ("Glen urgently needs from Cammy",
+     ["money for school", "a job", "forgiveness", "a kidney transplant from a matching relative"], "D",
+     "Glen's kidney is failing; he searches for his closest relative whose kidney might match - and "
+     "Cammy eventually donates his own."),
+    ("After the church fight, Kizzy is",
+     ["deported", "jailed for a year", "released with a curfew sentence", "fined"], "C",
+     "The police case over the wedding scuffle ends with Kizzy released on a curfew sentence binding "
+     "within the Washington area."),
+    ("Cammy believed for years that he had killed a girl while",
+     ["serving in the army", "working as a doctor", "fighting in a club", "drunk driving"], "D",
+     "Cammy confesses his rueful past: he believed he had accidentally killed a girl while driving "
+     "drunk, and Scraps had 'died the issue down' with the police."),
+    ("Who reveals that Scraps, not Cammy, was driving on the night of the fatal accident?",
+     ["Anushka", "Edna", "Glen", "Celeste"], "A",
+     "At the hospital, Anushka tells Cammy the real version: Scraps was the driver that night, and "
+     "switched positions with Cammy because they were all drunk."),
+    ("The blind old woman the recovery agency finds for Fina is",
+     ["Baramusu", "Mama Yegbe", "Nabou", "Dimusu"], "B",
+     "Svetlana's agency finds a blind old woman - but she is Mama Yegbe, not Baramusu. The search for "
+     "her grandmother is dashed, yet a new family begins."),
+    ("Mawaf is",
+     ["Mama Yegbe's nurse", "Fina's cousin", "the war-displaced girl Fina adopts as her daughter",
+      "Sidibe's daughter"], "C",
+     "Mawaf is Mama Yegbe's 'girl Friday', a war refugee whose refuge story Fina learns; with "
+     "Svetlana's help Fina adopts her."),
+    ("Fina names her own daughter",
+     ["Sarata", "Nabou-Junior", "Finaba", "Dimusu-Celeste"], "D",
+     "The baby is named for Fina's dead sister Dimusu and Cammy's mother Celeste - two women who "
+     "shaped her path. Mama Yegbe conducts the naming ceremony."),
+    ("At Edna's house-warming, Fina announces that she will go home to",
+     ["marry Sidibe", "train young girls to be independent", "open a clinic", "farm cocoa"], "B",
+     "Fina reveals her future intention to travel home and train young girls to be independent - "
+     "Cammy laughs amidst discomfort and coins 'diaspora complex'."),
+    ("In the epilogue, Cammy",
+     ["remarries in America", "takes Fina to Trinidad", "dies in the war",
+      "relocates to Sierra Leone to live with Fina"], "D",
+     "Cammy resolves not to leave the woman he loves: he returns to live with Fina in Sierra Leone and "
+     "encourage her 'path'."),
+]
+
+# ---------------------------------------------------------------------------
 # PDF generation
 # ---------------------------------------------------------------------------
 
@@ -420,52 +878,77 @@ def _final_cta(story, s, site_url):
                                       "redistribute — support Nigerian-built learning tools.", s["sub"])]
 
 
-def build_lekki_pdf(site_url):
-    """The Lekki Headmaster study pack: summaries, characters, themes, 50 questions."""
+def _build_novel_pack(title, subtitle, tagline, about, chapters, characters_note,
+                      characters, themes, tips, questions, site_url):
+    """Shared engine for the recommended-novel study packs."""
     s = _styles()
     buf = BytesIO()
     story = []
-    _cover(story, s, LEKKI_TITLE,
-           "JAMB UTME 2026 Use of English — recommended novel by Kabir Alabi Garba",
-           "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 exam tips \u00b7 50 practice "
-           "questions with answers. Compiled for PrepNova CBT.")
+    _cover(story, s, title, subtitle, tagline)
     story += [Paragraph("About this pack", s["h1"])]
-    for para in LEKKI_ABOUT:
+    for para in about:
         story.append(Paragraph(_esc(para), s["body"]))
     story += [Paragraph("Chapter-by-chapter summary", s["h1"])]
-    for num, name, text in LEKKI_CHAPTERS:
-        story += [Paragraph(f"Chapter {num}: {name}", s["chap"]), Paragraph(_esc(text), s["body"])]
+    for heading, text in chapters:
+        story += [Paragraph(_esc(heading), s["chap"]), Paragraph(_esc(text), s["body"])]
     story += [PageBreak(), Paragraph("Character guide", s["h1"]),
-              Paragraph("Drill this table — JAMB's favourite question style is matching names to roles.", s["body"])]
+              Paragraph(characters_note, s["body"])]
     rows = [[Paragraph("<b>Name</b>", s["key"]), Paragraph("<b>Who they are</b>", s["key"])]]
-    for name, role in LEKKI_CHARACTERS:
+    for name, role in characters:
         rows.append([Paragraph(f"<b>{_esc(name)}</b>", s["key"]), Paragraph(_esc(role), s["key"])])
     tbl = Table(rows, colWidths=[42 * mm, 134 * mm])
     tbl.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.4, LIGHT),
                              ("BACKGROUND", (0, 0), (-1, 0), LIGHT),
                              ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     story += [tbl, Paragraph("Themes", s["h1"])]
-    for name, text in LEKKI_THEMES:
-        story += [Paragraph(name, s["chap"]), Paragraph(_esc(text), s["body"])]
+    for name, text in themes:
+        story += [Paragraph(_esc(name), s["chap"]), Paragraph(_esc(text), s["body"])]
     story += [Paragraph("Exam tips", s["h1"])]
-    for i, tip in enumerate(LEKKI_TIPS, 1):
+    for i, tip in enumerate(tips, 1):
         story.append(Paragraph(f"{i}. {_esc(tip)}", s["body"]))
-    story += [PageBreak(), Paragraph("50 practice questions", s["h1"]),
+    story += [PageBreak(), Paragraph(f"{len(questions)} practice questions", s["h1"]),
               Paragraph("Answer them, then check the key on the next pages. Every answer is "
                         "explained.", s["body"])]
-    for i, (q, opts, _ans, _exp) in enumerate(LEKKI_QUESTIONS, 1):
+    for i, (q, opts, _ans, _exp) in enumerate(questions, 1):
         story += [Paragraph(f"<b>{i}.</b> {_esc(q)}", s["q"]),
                   Paragraph(f"A. {_esc(opts[0])}", s["opt"]),
                   Paragraph(f"B. {_esc(opts[1])}", s["opt"]),
                   Paragraph(f"C. {_esc(opts[2])}", s["opt"]),
                   Paragraph(f"D. {_esc(opts[3])}", s["opt"])]
     story += [PageBreak(), Paragraph("Answer key with explanations", s["h1"])]
-    for i, (_q, _opts, ans, exp) in enumerate(LEKKI_QUESTIONS, 1):
+    for i, (_q, _opts, ans, exp) in enumerate(questions, 1):
         story.append(Paragraph(f"<b>{i}. {ans}</b> — {_esc(exp)}", s["key"]))
     _final_cta(story, s, site_url)
-    _doc(buf, LEKKI_TITLE).build(story)
+    _doc(buf, title).build(story)
     buf.seek(0)
     return buf
+
+
+def build_lekki_pdf(site_url):
+    """The Lekki Headmaster study pack: summaries, characters, themes, 50 questions."""
+    return _build_novel_pack(
+        LEKKI_TITLE,
+        "JAMB UTME 2026 Use of English — recommended novel by Kabir Alabi Garba",
+        "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 exam tips \u00b7 50 practice "
+        "questions with answers. Compiled for PrepNova CBT.",
+        LEKKI_ABOUT,
+        [(f"Chapter {num}: {name}", text) for num, name, text in LEKKI_CHAPTERS],
+        "Drill this table — JAMB's favourite question style is matching names to roles.",
+        LEKKI_CHARACTERS, LEKKI_THEMES, LEKKI_TIPS, LEKKI_QUESTIONS, site_url)
+
+
+def build_so_path_pdf(site_url):
+    """So the Path Does Not Die study pack: summaries, characters, themes, 50 questions."""
+    return _build_novel_pack(
+        SO_PATH_TITLE,
+        "WASSCE 2026-2030 Literature-in-English — African prose by Pede Hollist",
+        "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 key terms \u00b7 exam tips "
+        "\u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        SO_PATH_ABOUT,
+        SO_PATH_CHAPTERS,
+        "Drill this table — WAEC's favourite question style is 'who did what'. Know every name "
+        "and alias.",
+        SO_PATH_CHARACTERS, SO_PATH_THEMES, SO_PATH_TIPS, SO_PATH_QUESTIONS, site_url)
 
 
 def build_past_questions_pdf(conn, exam_name, subject_like, title, subtitle, count, site_url):

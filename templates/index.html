@@ -9,6 +9,10 @@
 {% block main %}
 <!-- ============================ HERO ============================ -->
 <header class="pn-hero">
+    <a class="pn-annc" href="{{ url_for('product_page', slug='lekki-headmaster-2026') }}">
+        <i class="bi bi-stars me-1"></i><b>NEW:</b> The Lekki Headmaster Complete Study Pack<span class="d-none d-md-inline"> — JAMB 2026's compulsory novel</span>
+        <span class="pn-annc-cta">₦1,000 · instant download <i class="bi bi-arrow-right"></i></span>
+    </a>
     <div class="pn-hero-grid"></div>
     <div class="pn-orb a"></div>
     <div class="pn-orb b"></div>
@@ -85,6 +89,52 @@
             <div class="col-md-3 col-6 reveal" data-delay="2"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-wifi-1 fs-4 text-primary"></i><span class="small fw-bold">Light on data</span></div></div>
             <div class="col-md-3 col-6 reveal" data-delay="3"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-credit-card-2-front fs-4 text-primary"></i><span class="small fw-bold">Pay with card, transfer or USSD</span></div></div>
         </div>
+    </div>
+</section>
+
+<!-- ============================ EXAM NOVELS ============================ -->
+<section class="pn-section" id="novels">
+    <div class="container">
+        <div class="text-center mb-4 reveal">
+            <span class="pn-eyebrow">Recommended novels · instant download</span>
+            <h2 class="mt-2">The 2026 <span class="hl">Exam Novels</span>, decoded</h2>
+            <p class="lead mx-auto" style="max-width:780px">Every JAMB candidate answers questions on the compulsory novel — Medicine, Law, Engineering, everybody. And WAEC Literature students meet their set texts head-on. Don't leave those marks on the table.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 reveal">
+                <div class="pn-novel-card">
+                    <span class="pn-novel-badge jamb">JAMB 2026 · compulsory novel</span>
+                    <h3 class="h4">The Lekki Headmaster</h3>
+                    <p class="small text-muted">Kabir Alabi Garba's novel, decoded chapter by chapter — the novel questions every single UTME candidate will face, whatever their course.</p>
+                    <ul class="pn-novel-points">
+                        <li>All 12 chapters summarised, Dusk to Dawn</li>
+                        <li>21-character guide + 8 major themes</li>
+                        <li>50 practice questions with explained answers</li>
+                    </ul>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fs-4 fw-bold">₦1,000</span>
+                        <a href="{{ url_for('product_page', slug='lekki-headmaster-2026') }}" class="btn btn-accent"><i class="bi bi-lightning-charge me-1"></i>Get the pack</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 reveal" data-delay="1">
+                <div class="pn-novel-card">
+                    <span class="pn-novel-badge waec">WAEC 2026–2030 · set text</span>
+                    <h3 class="h4">So the Path Does Not Die</h3>
+                    <p class="small text-muted">Pede Hollist's African prose for WASSCE Literature-in-English — Fina's whole journey, from an aborted initiation to a new path home.</p>
+                    <ul class="pn-novel-points">
+                        <li>Prologue, 24 chapters + epilogue in 12 summaries</li>
+                        <li>25-character guide, themes + key terms decoded</li>
+                        <li>50 practice questions with explained answers</li>
+                    </ul>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fs-4 fw-bold">₦1,000</span>
+                        <a href="{{ url_for('product_page', slug='so-the-path-does-not-die') }}" class="btn btn-accent"><i class="bi bi-lightning-charge me-1"></i>Get the pack</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-center small mt-4 reveal" data-delay="2"><i class="bi bi-file-earmark-text me-1"></i>Also available: <a href="{{ url_for('shop') }}">JAMB &amp; WAEC English past-style question packs</a> — ₦500 each, instant download.</p>
     </div>
 </section>
 
@@ -301,7 +351,7 @@
             {% endfor %}
         </div>
         <p class="text-center small text-muted mt-4 reveal"><i class="bi bi-lock-fill me-1"></i> Payments are processed by Paystack. We never see or store your card details.</p>
-            <p class="text-center small mt-2 reveal"><i class="bi bi-book-half me-1"></i> Also available: <a href="{{ url_for('shop') }}">instant-download PDF study packs</a> — The Lekki Headmaster (JAMB 2026 novel) from ₦1,000.</p>
+            <p class="text-center small mt-2 reveal"><i class="bi bi-book me-1"></i> Also available: <a href="{{ url_for('shop') }}">Exam Novels study packs</a> — The Lekki Headmaster (JAMB 2026) &amp; So the Path Does Not Die (WAEC 2026–2030), ₦1,000 each.</p>
             
             <div class="mt-4 mx-auto reveal" style="max-width:640px">
                 <div class="pn-gift-banner">

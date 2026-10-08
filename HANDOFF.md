@@ -764,10 +764,33 @@ first-vs-latest improvement and per-subject weak spots. Names shortened for priv
   150x30d->300), report renders tiles + "+17" improvement + privacy names, 0 errors,
   0 overflow. Battery now 13 suites / 624 checks.
 
-## PDF Study-Pack Shop — instant-download packs, guest checkout (Oct 2026)
+## Exam Novels shop (rebranded from "PDF study packs") — +WAEC novel pack + landing takeover (Oct 2026)
 
-Public /shop (no account): instant-download printable study packs. Three products
-seeded in db.py (INSERT OR IGNORE on slug — add/edit products by editing pdf_products
+REBRAND (user decision): "PDF study packs" was too format-focused. Everything user-facing now says
+"Exam Novels" / "The 2026 Exam Novels — read less, score more" (account menu, app footer, landing
+footer, landing nav "Exam novels", subscribe line, all breadcrumbs, shop page). URLs unchanged (/shop).
+
+NEW PRODUCT #4: so-the-path-does-not-die (N1,000) — WAEC 2026-2030 African prose (Pede Hollist).
+pdf_store.py has SO_PATH_* constants (prologue + 24 chapters + epilogue in 12 grouped summaries,
+25 characters, 8 themes, 6 tips, 50 Q&A; multi-source corroborated: literaturepadi, Scribd WASSCE
+notes, World Literature Today). Both novel packs share the generic _build_novel_pack() engine
+(build_lekki_pdf / build_so_path_pdf are thin wrappers — Lekki output unchanged).
+
+LANDING TAKEOVER (user decision: full): (1) .pn-annc gold announcement bar as first child of
+header.pn-hero linking to the Lekki pack; (2) #novels section with 2 novel cards + question-pack
+line right after the hero trust bar (before #exams); (3) "Exam novels" in _landing_nav.html;
+(4) pricing-section line. CSS v=25.
+
+GOTCHA (cost an hour): Bootstrap rows have margin-top: calc(-1 * var(--bs-gutter-y)) — the hero row
+(g-4/g-lg-5) pulls itself UP 24/48px, overlapping anything placed just before it; the later-in-DOM
+position:relative container also paints above. Fix: .pn-annc has margin-bottom 1.5rem (3rem >=992px)
+mirroring the gutter + z-index:3. Any future element inserted before a guttered .row needs the same
+compensation. Playwright elementFromPoint at THREE heights (top/center/bottom) catches this.
+
+
+
+Public /shop (no account): instant-download printable study packs. Four products
+seeded in db.py (2 novels + 2 question packs) (INSERT OR IGNORE on slug — add/edit products by editing pdf_products
 rows): lekki-headmaster-2026 (N1,000, flagship), jamb-english-past-questions (N500),
 waec-english-past-questions (N500).
 
@@ -792,10 +815,10 @@ waec-english-past-questions (N500).
 - Discovery: account menu ("PDF study packs"), app footer, landing footer Company
   column, line under the Paystack note in the landing pricing section, line on
   /subscribe. No CSS changes (v stayed 23).
-- Tests: _work/shop_test.py — 36 checks (seeding, pages, validation, purchase,
+- Tests: _work/shop_test.py — 42 checks (seeding, pages, validation, purchase,
   callback, REAL PDF bytes verified (%PDF- magic, 29.6KB lekki / >15KB question
   packs), download cap + wrong code, idempotency, webhook + signature, failure
-  paths, discovery). Battery now 15 suites / 698 checks. Playwright: browser
+  paths, discovery). Battery now 15 suites / 702 checks. Playwright: browser
   receives a genuine application/pdf (use pg.request.get for download URLs —
   page.goto throws "Download is starting").
 

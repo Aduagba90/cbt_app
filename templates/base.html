@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=23">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=25">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">
@@ -73,7 +73,7 @@
                         <li><a class="dropdown-item" href="{{ url_for('battle.lobby') }}"><i class="bi bi-swords"></i> Challenge a friend</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('gift_page') }}"><i class="bi bi-balloon-heart"></i> Gift a subscription</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('agent_page') }}"><i class="bi bi-briefcase"></i> Become an agent</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('shop') }}"><i class="bi bi-book-half"></i> PDF study packs</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('shop') }}"><i class="bi bi-book"></i> Exam Novels</a></li>
 <li><a class="dropdown-item" href="{{ url_for('invite') }}"><i class="bi bi-gift"></i> Invite friends</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Log out</a></li>
@@ -111,7 +111,7 @@
             <a href="{{ url_for('privacy') }}">Privacy</a>
             <a href="{{ url_for('gift_page') }}">🎁 Gift a subscription</a>
             <a href="{{ url_for('agent_page') }}">💼 Become an agent</a>
-            <a href="{{ url_for('shop') }}">📘 PDF study packs</a>
+            <a href="{{ url_for('shop') }}">📘 Exam Novels</a>
             <a href="mailto:{{ support_email }}">Support</a>
         </span>
     </div>

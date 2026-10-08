@@ -3235,6 +3235,22 @@ PRODUCT_DETAILS = {
         "Full answer key with explanations",
         "Mark-yourself format with study instructions",
     ],
+    "so-the-path-does-not-die": [
+        "The prologue, all 24 chapters and the epilogue in 12 clear summaries",
+        "25-character guide — names, roles and aliases (Kizzy, Cammy, Scraps…)",
+        "8 major themes explained the WASSCE way",
+        "Key terms decoded: digba, fafei, musu ba, yeliba, Denkileni",
+        "Exam strategy + 50 practice questions with a fully explained key",
+        "Clean printable layout, instant download",
+    ],
+}
+
+# (badge text, bootstrap colour) shown on shop + product pages
+PRODUCT_BADGES = {
+    "lekki-headmaster-2026": ("JAMB 2026 · compulsory novel", "primary"),
+    "so-the-path-does-not-die": ("WAEC 2026–2030 · set text", "success"),
+    "jamb-english-past-questions": ("question pack", "secondary"),
+    "waec-english-past-questions": ("question pack", "secondary"),
 }
 
 
@@ -3255,7 +3271,7 @@ def shop():
         """SELECT p.*, (SELECT COUNT(*) FROM pdf_orders o WHERE o.product_id = p.id AND o.payment_status = 'PAID') AS sold
              FROM pdf_products p WHERE p.is_active = 1 ORDER BY p.price DESC""").fetchall()
     conn.close()
-    return render_template("shop.html", products=products)
+    return render_template("shop.html", products=products, badges=PRODUCT_BADGES)
 
 
 @app.route("/shop/<slug>")
@@ -3266,7 +3282,7 @@ def product_page(slug):
     if not product:
         abort(404)
     return render_template("product.html", p=product, details=PRODUCT_DETAILS.get(slug, []),
-                           paystack_ready=bool(PAYSTACK_SECRET_KEY))
+                           badges=PRODUCT_BADGES, paystack_ready=bool(PAYSTACK_SECRET_KEY))
 
 
 @app.route("/shop_buy", methods=["POST"])
@@ -3445,6 +3461,8 @@ def pdf_download(code):
     site = app_url()
     if slug == "lekki-headmaster-2026":
         buf = pdf_store.build_lekki_pdf(site)
+    elif slug == "so-the-path-does-not-die":
+        buf = pdf_store.build_so_path_pdf(site)
     elif slug == "jamb-english-past-questions":
         buf = pdf_store.build_past_questions_pdf(conn, "JAMB", "%English%",
                                                  "JAMB Use of English — Past-Style Question Pack",

@@ -1,27 +1,29 @@
 {% extends "base.html" %}
-{% block title %}PDF study packs{% endblock %}
-{% block description %}Instant-download PDF study packs for JAMB and WAEC candidates: The Lekki Headmaster complete study pack (JAMB 2026 novel), plus past-style question packs with explained answers.{% endblock %}
+{% block title %}2026 Exam Novels — study packs{% endblock %}
+{% block description %}The recommended novels for JAMB and WAEC, decoded into complete study packs: The Lekki Headmaster (JAMB 2026 compulsory novel) and So the Path Does Not Die (WAEC 2026–2030 African prose), plus past-style question packs. Instant download, no account needed.{% endblock %}
 
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
-        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>PDF study packs</span></div>
-        <h1>📘 PDF study packs</h1>
-        <p class="lead">Instant-download, printable study packs — pay once, download immediately, read anywhere (even offline). No account needed.</p>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Exam Novels</span></div>
+        <h1>📚 The 2026 Exam Novels</h1>
+        <p class="lead">The recommended novels every candidate must read, decoded into complete study packs — chapter summaries, character guides, themes and 50 explained questions. Pay once, download instantly, read anywhere (even offline). No account needed.</p>
     </div>
 </div>
 
 <div class="row g-4">
     {% for p in products %}
     <div class="col-md-6 col-lg-4">
+        {% set novel = 'past-questions' not in p['slug'] %}
         <div class="card border-0 shadow-sm h-100 anim-rise d{{ loop.index0 }}">
             <div class="card-body d-flex flex-column">
-                <div class="pn-stat-icon {{ 'tint-gold' if loop.first else 'tint-blue' }} mb-3"><i class="bi {{ 'bi-book-half' if loop.first else 'bi-file-earmark-text' }}"></i></div>
+                <div class="pn-stat-icon {{ 'tint-gold' if novel else 'tint-blue' }} mb-3"><i class="bi {{ 'bi-book-half' if novel else 'bi-file-earmark-text' }}"></i></div>
+                {% if badges.get(p['slug']) %}<span class="badge rounded-pill bg-{{ badges[p['slug']][1] }} bg-opacity-10 text-{{ badges[p['slug']][1] }}-emphasis align-self-start mb-2">{{ badges[p['slug']][0] }}</span>{% endif %}
                 <h2 class="h5">{{ p['title'] }}</h2>
                 <p class="small text-muted flex-grow-1">{{ p['blurb'] }}</p>
                 <div class="d-flex align-items-center justify-content-between mt-2">
                     <div><span class="fs-4 fw-bold text-primary">{{ p['price']|naira }}</span>{% if p['sold'] %}<span class="small text-muted ms-1">· {{ p['sold'] }} sold</span>{% endif %}</div>
-                    <a href="{{ url_for('product_page', slug=p['slug']) }}" class="btn {{ 'btn-accent' if loop.first else 'btn-primary' }}">View pack</a>
+                    <a href="{{ url_for('product_page', slug=p['slug']) }}" class="btn {{ 'btn-accent' if novel else 'btn-primary' }}">View pack</a>
                 </div>
             </div>
         </div>
