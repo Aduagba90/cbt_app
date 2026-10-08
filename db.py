@@ -534,6 +534,22 @@ def init_db():
              "An Inspector Calls — Complete Study Pack",
              "Priestley's play, decoded for WASSCE 2026–2030: act-by-act summaries, every character, themes, staging devices and 50 practice questions with explained answers.",
              1000.0),
+            ("the-marriage-of-anansewa",
+             "The Marriage of Anansewa — Complete Study Pack",
+             "Efua Sutherland's comedy of tricks and funerals, decoded for WASSCE 2026–2030: act-by-act summaries, 13-character guide, themes and 50 practice questions with explained answers.",
+             1000.0),
+            ("redemption-road",
+             "Redemption Road — Complete Study Pack",
+             "Elma Shaw's Liberia, decoded for WASSCE 2026–2030: Bendu's whole journey in 12 summaries, a 16-character guide, themes and 50 practice questions with explained answers.",
+             1000.0),
+            ("waec-african-poetry",
+             "African Poetry — Complete Anthology Pack",
+             "All six WAEC 2026–2030 poems decoded: Once Upon a Time, New Tongue, Night, Not My Business, Hearty Garlands and A Breast of the Sea — analysis, devices, themes and 50 practice questions.",
+             700.0),
+            ("waec-literature-bundle",
+             "The Complete WAEC Literature Bundle",
+             "All six WAEC 2026–2030 study packs in one download: So the Path Does Not Die, To Kill a Mockingbird, An Inspector Calls, The Marriage of Anansewa, Redemption Road and the African Poetry anthology — 300 practice questions with explained answers. Save ₦2,200.",
+             3500.0),
         ])
 
     cur.execute("""

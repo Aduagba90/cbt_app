@@ -3259,6 +3259,39 @@ PRODUCT_DETAILS = {
         "50 practice questions with a fully explained answer key",
         "Clean printable layout, instant download",
     ],
+    "the-marriage-of-anansewa": [
+        "The whole play, act by act, in 10 clear summaries",
+        "13-character guide — Ananse, Anansewa, the four chiefs, Christie, the Storyteller…",
+        "8 themes incl. greed, the head-drink and the fake funeral",
+        "The folklore frame decoded — Storyteller, Players and the spider's web",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, instant download",
+    ],
+    "redemption-road": [
+        "All 31 chapters + the final letter in 12 clear summaries",
+        "16-character guide — Bendu, Commander Cobra, Tenneh, May, the whole household",
+        "8 themes incl. justice, trauma and the road to redemption",
+        "The title's history decoded — Liberia's 1980 coup and the executions",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, instant download",
+    ],
+    "waec-african-poetry": [
+        "All six set poems analysed: Once Upon a Time, New Tongue, Night, Not My Business, Hearty Garlands, A Breast of the Sea",
+        "The six poets at a glance — country, persona and concern",
+        "8 anthology-wide themes + poem-pairing guide for essays",
+        "Devices decoded — metonymy, apostrophe, panegyric, allusion",
+        "50 practice questions with a fully explained answer key",
+        "Clean printable layout, instant download",
+    ],
+    "waec-literature-bundle": [
+        "So the Path Does Not Die — complete pack (12 summaries, 25 characters, 50 questions)",
+        "To Kill a Mockingbird — complete pack (12 summaries, 26 characters, 50 questions)",
+        "An Inspector Calls — complete pack (act-by-act, staging, 50 questions)",
+        "The Marriage of Anansewa — complete pack (act-by-act, 50 questions)",
+        "Redemption Road — complete pack (12 summaries, 16 characters, 50 questions)",
+        "African Poetry — complete anthology pack (6 poems, 50 questions)",
+        "300 practice questions total with explained answer keys — save ₦2,200",
+    ],
 }
 
 # (badge text, bootstrap colour) shown on shop + product pages
@@ -3267,6 +3300,10 @@ PRODUCT_BADGES = {
     "so-the-path-does-not-die": ("WAEC 2026–2030 · set text", "success"),
     "to-kill-a-mockingbird": ("WAEC 2026–2030 · set text", "success"),
     "an-inspector-calls": ("WAEC 2026–2030 · set text", "success"),
+    "the-marriage-of-anansewa": ("WAEC 2026–2030 · set text", "success"),
+    "redemption-road": ("WAEC 2026–2030 · set text", "success"),
+    "waec-african-poetry": ("WAEC 2026–2030 · poetry anthology", "success"),
+    "waec-literature-bundle": ("BEST VALUE · all 6 WAEC packs", "warning"),
     "jamb-english-past-questions": ("question pack", "secondary"),
     "waec-english-past-questions": ("question pack", "secondary"),
 }
@@ -3485,6 +3522,14 @@ def pdf_download(code):
         buf = pdf_store.build_mockingbird_pdf(site)
     elif slug == "an-inspector-calls":
         buf = pdf_store.build_inspector_pdf(site)
+    elif slug == "the-marriage-of-anansewa":
+        buf = pdf_store.build_anansewa_pdf(site)
+    elif slug == "redemption-road":
+        buf = pdf_store.build_redemption_pdf(site)
+    elif slug == "waec-african-poetry":
+        buf = pdf_store.build_poetry_pdf(site)
+    elif slug == "waec-literature-bundle":
+        buf = pdf_store.build_waec_bundle_pdf(site)
     elif slug == "jamb-english-past-questions":
         buf = pdf_store.build_past_questions_pdf(conn, "JAMB", "%English%",
                                                  "JAMB Use of English — Past-Style Question Pack",

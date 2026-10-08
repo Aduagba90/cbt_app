@@ -835,6 +835,39 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   open/close/navigate (anchor + external link), both new product pages, 6 shop cards,
   css v=27 actually served, 0 console errors, 0 overflow.
 
+## Full WAEC Literature lineup: 4 new products incl. the Bundle (Oct 2026)
+
+Shop now has 10 products. NEW: the-marriage-of-anansewa (N1,000), redemption-road (N1,000),
+waec-african-poetry (N700), waec-literature-bundle (N3,500, saves N2,200 — the top-priced
+product, so price-DESC shop ordering puts it FIRST; it's the gold card at the top of /shop).
+
+- CONTENT (all multi-source corroborated; pdf_store.py constants): ANANSEWA_* (Efua
+  Sutherland — 4-act comedy; Ananse's four-suitor scheme, the same-date head-drink crisis,
+  the fake funeral; 10 sections, 13 chars, 50 Q), REDEMPTION_* (Elma Shaw — Bendu Lewis,
+  Peace in Practice, Duluma camp, Commander Cobra/Moses Varney, daughter May via ICRC,
+  Tenneh; 12 sections, 16 chars, 50 Q), POETRY_* (the six 2026-2030 African poems: Once
+  Upon a Time/Okara, New Tongue/Kamara, Night/Soyinka, Not My Business/Osundare, Hearty
+  Garlands/Afriyie-Vidza, A Breast of the Sea/Cheney-Coker; 6 poem analyses as 'chapters',
+  poets-at-a-glance as 'characters', 50 Q). WARNING: lasu-info published a FABRICATED
+  Redemption Road plot ("Jerome Washington") — real protagonist is Bendu Lewis (corroborated
+  by publisher/Goodreads/literaturepadi/fctemis).
+- ENGINE: _build_novel_pack split — _append_pack(story, ...) appends a full pack to an
+  existing story (no doc/CTA); params summary_heading + characters_heading (poetry uses
+  "The poems, one by one" / "The poets at a glance"). Builders: build_anansewa_pdf,
+  build_redemption_pdf, build_poetry_pdf. build_waec_bundle_pdf concatenates all six WAEC
+  packs via the _WAEC_PACKS table into ONE 177KB PDF (cover + What's-inside TOC + 6 packs +
+  single CTA; 300 questions total) — generated at download time like everything else.
+- LANDING: novels-section footer line now points to the full lineup + bundle (test asserts
+  "Complete Literature Bundle", "Anansewa", "Redemption Road" on landing).
+- Answer letters rebalanced 13/13/12/12 across ANANSEWA/REDEMPTION/POETRY (same reorder
+  script, seed 42). GOTCHA: after a rebalance pass, option ORDER in the file changes —
+  later text edits must anchor on the regex block, not memorised question text.
+- Tests: shop suite 61 checks (10 seeds, badges incl. BEST VALUE + poetry, purchase+download
+  loop for all 9 paid products incl. bundle >120KB, bundle-line landing check). Battery
+  15 suites / 721 checks. Browser audit: 10 cards at 390/1366 (0 overflow, 0 errors),
+  bundle page + 177,619-byte application/pdf through the browser via pg.request.get,
+  all new product badges, landing intact.
+
 ## Exam Novels shop (rebranded from "PDF study packs") — +WAEC novel pack + landing takeover (Oct 2026)
 
 REBRAND (user decision): "PDF study packs" was too format-focused. Everything user-facing now says
@@ -889,7 +922,7 @@ waec-english-past-questions (N500).
 - Tests: _work/shop_test.py — 42 checks (seeding, pages, validation, purchase,
   callback, REAL PDF bytes verified (%PDF- magic, 29.6KB lekki / >15KB question
   packs), download cap + wrong code, idempotency, webhook + signature, failure
-  paths, discovery). Battery now 15 suites / 712 checks. Playwright: browser
+  paths, discovery). Battery now 15 suites / 721 checks. Playwright: browser
   receives a genuine application/pdf (use pg.request.get for download URLs —
   page.goto throws "Download is starting").
 
