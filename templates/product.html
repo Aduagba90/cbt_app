@@ -1,5 +1,9 @@
 {% extends "base.html" %}
+{% from "_share.html" import share_row %}
 {% block title %}{{ p['title'] }}{% endblock %}
+{% block og_title %}{{ p['title'] }} — instant download{% endblock %}
+{% block og_description %}{{ p['blurb'] }} {{ p['price']|naira }} one-time — instant download, no account needed.{% endblock %}
+{% block og_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/share-novels.png') }}{% endblock %}
 {% block description %}{{ p['blurb'] }} Instant download after payment — printable PDF for JAMB and WAEC preparation.{% endblock %}
 
 {% block content %}
@@ -46,6 +50,7 @@
             {% else %}
             <div class="alert alert-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up — contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>.</div>
             {% endif %}
+            <div class="text-center mt-3">{{ share_row(request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']), p['title'] ~ ' — complete study pack, instant download:') }}</div>
         </form>
     </div>
 </div>

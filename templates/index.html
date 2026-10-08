@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_share.html" import share_row %}
 {% block title %}JAMB, WAEC & Post-UTME CBT Practice{% endblock %}
 {% block body_class %}pn-landing{% endblock %}
 
@@ -84,18 +85,18 @@
 <section class="py-4 bg-white border-bottom">
     <div class="container">
         <div class="row g-3 text-center text-md-start align-items-center">
-            <div class="col-md-3 col-6 reveal"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-shield-check fs-4 text-primary"></i><span class="small fw-bold">Secure, cheat-proof exam room</span></div></div>
-            <div class="col-md-3 col-6 reveal" data-delay="1"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-phone fs-4 text-primary"></i><span class="small fw-bold">Works on any phone or laptop</span></div></div>
-            <div class="col-md-3 col-6 reveal" data-delay="2"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-wifi-1 fs-4 text-primary"></i><span class="small fw-bold">Light on data</span></div></div>
-            <div class="col-md-3 col-6 reveal" data-delay="3"><div class="d-flex align-items-center gap-2 justify-content-center justify-content-md-start"><i class="bi bi-credit-card-2-front fs-4 text-primary"></i><span class="small fw-bold">Pay with card, transfer or USSD</span></div></div>
+            <div class="col-md-3 col-6 reveal"><div class="pn-proof-chip justify-content-center justify-content-md-start"><span class="ic t-green"><i class="bi bi-shield-check"></i></span><b>Secure, cheat-proof exam room</b></div></div>
+            <div class="col-md-3 col-6 reveal" data-delay="1"><div class="pn-proof-chip justify-content-center justify-content-md-start"><span class="ic t-blue"><i class="bi bi-phone"></i></span><b>Works on any phone or laptop</b></div></div>
+            <div class="col-md-3 col-6 reveal" data-delay="2"><div class="pn-proof-chip justify-content-center justify-content-md-start"><span class="ic t-navy"><i class="bi bi-wifi-1"></i></span><b>Light on data</b></div></div>
+            <div class="col-md-3 col-6 reveal" data-delay="3"><div class="pn-proof-chip justify-content-center justify-content-md-start"><span class="ic t-gold"><i class="bi bi-credit-card-2-front"></i></span><b>Pay with card, transfer or USSD</b></div></div>
         </div>
     </div>
 </section>
 
 <!-- ============================ EXAM NOVELS ============================ -->
-<section class="pn-section" id="novels">
+<section class="pn-section pn-novels-wrap" id="novels">
     <div class="container">
-        <div class="text-center mb-4 reveal">
+        <div class="pn-section-head reveal">
             <span class="pn-eyebrow">Recommended novels · instant download</span>
             <h2 class="mt-2">The 2026 <span class="hl">Exam Novels</span>, decoded</h2>
             <p class="lead mx-auto" style="max-width:780px">Every JAMB candidate answers questions on the compulsory novel — Medicine, Law, Engineering, everybody. And WAEC Literature students meet their set texts head-on. Don't leave those marks on the table.</p>
@@ -135,13 +136,14 @@
             </div>
         </div>
         <p class="text-center small mt-4 reveal" data-delay="2"><i class="bi bi-file-earmark-text me-1"></i>Also available: <a href="{{ url_for('shop') }}">JAMB &amp; WAEC English past-style question packs</a> — ₦500 each, instant download.</p>
+        <div class="text-center mt-3 reveal" data-delay="2">{{ share_row(request.url_root.rstrip('/') ~ url_for('shop'), 'The 2026 Exam Novels study packs — The Lekki Headmaster (JAMB 2026) & So the Path Does Not Die (WAEC 2026–2030), from ₦500:', label='Share the novels') }}</div>
     </div>
 </section>
 
 <!-- ============================ EXAMS ============================ -->
 <section class="pn-section" id="exams">
     <div class="container">
-        <div class="text-center mb-5 reveal">
+        <div class="pn-section-head reveal">
             <span class="pn-eyebrow">Built for Nigerian exams</span>
             <h2>One platform for every exam that matters</h2>
             <p class="lead mx-auto" style="max-width:600px">Whether you are writing UTME, SSCE or a university screening test, practise exactly the way you will be examined.</p>
@@ -182,9 +184,9 @@
 </section>
 
 <!-- ============================ FREE TOOLS ============================ -->
-<section class="pn-section pn-section-alt" id="tools">
+<section class="pn-section pt-0" id="tools">
     <div class="container">
-        <div class="text-center mb-5 reveal">
+        <div class="pn-section-head sm reveal">
             <span class="pn-eyebrow">Free — no account needed</span>
             <h2>Check your admission facts before you register</h2>
             <p class="lead mx-auto" style="max-width:620px">Two free tools every candidate should use before filling the JAMB form. No sign-up, no cost — ever.</p>
@@ -206,6 +208,69 @@
                     <span class="btn btn-outline-primary btn-sm mt-2">Calculate my chance <i class="bi bi-arrow-right"></i></span>
                 </a>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================ FEATURES ============================ -->
+<section class="pn-section pt-0" id="features">
+    <div class="container">
+        <div class="pn-section-head sm reveal">
+            <span class="pn-eyebrow">Why students choose PrepNova</span>
+            <h2>Everything you need to score higher</h2>
+        </div>
+        <div class="row g-4">
+            {% set feats = [
+                ("bi-display", "tint-green", "Real CBT simulation", "The same layout you will meet at the JAMB centre: question palette, flag for review, navigate freely and submit when ready."),
+                ("bi-stopwatch", "tint-red", "Server-controlled timer", "The countdown is enforced on our servers, so you learn to manage time exactly like the real thing."),
+                ("bi-lightbulb", "tint-gold", "Clear explanations", "Every question comes with a step-by-step solution so you understand the why, not just the answer."),
+                ("bi-graph-up-arrow", "tint-blue", "Performance analytics", "See your average, best score, weakest subjects and your rank against other students."),
+                ("bi-bookmark-star", "tint-purple", "Bookmarks & practice mode", "Save tricky questions and drill them in untimed practice mode with instant feedback."),
+                ("bi-file-earmark-pdf", "tint-cyan", "Verifiable result slips", "Download a PDF result slip with a QR code that parents, tutors or schools can verify online."),
+            ] %}
+            {% set bento_cols = ['col-lg-7', 'col-lg-5', 'col-lg-5', 'col-lg-7', 'col-lg-6', 'col-lg-6'] %}
+            {% set bento_big = [true, false, false, true, false, false] %}
+            {% for icon, tint, title, text in feats %}
+            <div class="col-md-6 {{ bento_cols[loop.index0] }} reveal" data-delay="{{ loop.index0 % 3 }}">
+                <div class="pn-feature{{ ' lg' if bento_big[loop.index0] }}">
+                    <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
+                    <h3>{{ title }}</h3>
+                    <p>{{ text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ============================ HOW IT WORKS ============================ -->
+<section class="pn-section pn-only" id="only">
+    <div class="container">
+        <div class="pn-section-head sm reveal">
+            <span class="pn-eyebrow">Only on PrepNova</span>
+            <h2>Built to keep you studying — not just to sell past questions</h2>
+            <p class="lead mx-auto" style="max-width:600px">Small daily habits are what move a JAMB score. These tools make the habit easy (and a little competitive).</p>
+        </div>
+        <div class="row g-3 g-lg-4">
+            {% set only = [
+                ("bi-bandaid", "tint-red", "Fix my mistakes", "Every question you miss is saved. Re-answer it correctly and it leaves your list — the fastest known way to add marks."),
+                ("bi-graph-up-arrow", "tint-blue", "Projected UTME score & target", "Set your target (say 280). After each full mock we project your /400 score from your last three and show the gap to close."),
+                ("bi-fire", "tint-gold", "Daily Challenge & streaks", "5 fresh questions every day, same set for every student in Nigeria. Keep your streak alive and see how many students you beat."),
+                ("bi-speedometer2", "tint-purple", "Pace meter", "Your result slip shows seconds per question against what JAMB allows, so you never run out of time in the real hall."),
+                ("bi-whatsapp", "tint-green", "WhatsApp result slips", "One tap posts your score to your class group with a verification link — nobody can say you edited the screenshot."),
+                ("bi-gift", "tint-cyan", "Invite a friend, both get free days", "Your invite link gives you and your friend bonus days once they finish their first mock. Study partners pay less."),
+                ("bi-ticket-perforated", "tint-navy", "School & scholarship PINs", "Schools, tutorial centres and sponsors can buy Access PINs in bulk — students unlock full access with one code, no card needed."),
+                ("bi-shield-check", "tint-red", "Anti-cheat mock exams", "Tab switches are counted and shown on your slip, exactly like the pressure of the real hall — a score you can trust."),
+            ] %}
+            {% for icon, tint, title, text in only %}
+            <div class="col-sm-6 col-lg-3 reveal" data-delay="{{ loop.index0 % 4 }}">
+                <div class="pn-only-card">
+                    <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
+                    <h3>{{ title }}</h3>
+                    <p>{{ text }}</p>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </section>
@@ -239,67 +304,6 @@
     </div>
 </section>
 
-<!-- ============================ FEATURES ============================ -->
-<section class="pn-section pn-section-alt" id="features">
-    <div class="container">
-        <div class="text-center mb-5 reveal">
-            <span class="pn-eyebrow">Why students choose PrepNova</span>
-            <h2>Everything you need to score higher</h2>
-        </div>
-        <div class="row g-4">
-            {% set feats = [
-                ("bi-display", "tint-green", "Real CBT simulation", "The same layout you will meet at the JAMB centre: question palette, flag for review, navigate freely and submit when ready."),
-                ("bi-stopwatch", "tint-red", "Server-controlled timer", "The countdown is enforced on our servers, so you learn to manage time exactly like the real thing."),
-                ("bi-lightbulb", "tint-gold", "Clear explanations", "Every question comes with a step-by-step solution so you understand the why, not just the answer."),
-                ("bi-graph-up-arrow", "tint-blue", "Performance analytics", "See your average, best score, weakest subjects and your rank against other students."),
-                ("bi-bookmark-star", "tint-purple", "Bookmarks & practice mode", "Save tricky questions and drill them in untimed practice mode with instant feedback."),
-                ("bi-file-earmark-pdf", "tint-cyan", "Verifiable result slips", "Download a PDF result slip with a QR code that parents, tutors or schools can verify online."),
-            ] %}
-            {% for icon, tint, title, text in feats %}
-            <div class="col-md-6 col-lg-4 reveal" data-delay="{{ loop.index0 % 3 }}">
-                <div class="pn-feature">
-                    <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
-                    <h3>{{ title }}</h3>
-                    <p>{{ text }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- ============================ HOW IT WORKS ============================ -->
-<section class="pn-section pn-only" id="only">
-    <div class="container">
-        <div class="text-center mb-4 reveal">
-            <span class="pn-eyebrow">Only on PrepNova</span>
-            <h2>Built to keep you studying — not just to sell past questions</h2>
-            <p class="lead mx-auto" style="max-width:600px">Small daily habits are what move a JAMB score. These tools make the habit easy (and a little competitive).</p>
-        </div>
-        <div class="row g-3 g-lg-4">
-            {% set only = [
-                ("bi-bandaid", "tint-red", "Fix my mistakes", "Every question you miss is saved. Re-answer it correctly and it leaves your list — the fastest known way to add marks."),
-                ("bi-graph-up-arrow", "tint-blue", "Projected UTME score & target", "Set your target (say 280). After each full mock we project your /400 score from your last three and show the gap to close."),
-                ("bi-fire", "tint-gold", "Daily Challenge & streaks", "5 fresh questions every day, same set for every student in Nigeria. Keep your streak alive and see how many students you beat."),
-                ("bi-speedometer2", "tint-purple", "Pace meter", "Your result slip shows seconds per question against what JAMB allows, so you never run out of time in the real hall."),
-                ("bi-whatsapp", "tint-green", "WhatsApp result slips", "One tap posts your score to your class group with a verification link — nobody can say you edited the screenshot."),
-                ("bi-gift", "tint-cyan", "Invite a friend, both get free days", "Your invite link gives you and your friend bonus days once they finish their first mock. Study partners pay less."),
-                ("bi-ticket-perforated", "tint-navy", "School & scholarship PINs", "Schools, tutorial centres and sponsors can buy Access PINs in bulk — students unlock full access with one code, no card needed."),
-                ("bi-shield-check", "tint-red", "Anti-cheat mock exams", "Tab switches are counted and shown on your slip, exactly like the pressure of the real hall — a score you can trust."),
-            ] %}
-            {% for icon, tint, title, text in only %}
-            <div class="col-sm-6 col-lg-3 reveal" data-delay="{{ loop.index0 % 4 }}">
-                <div class="pn-only-card">
-                    <span class="pn-tile-icon {{ tint }}"><i class="bi {{ icon }}"></i></span>
-                    <h3>{{ title }}</h3>
-                    <p>{{ text }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
 <section class="pn-section" id="how">
     <div class="container">
         <div class="row align-items-center g-4 g-lg-5">
@@ -324,7 +328,7 @@
 <!-- ============================ PRICING ============================ -->
 <section class="pn-section pn-section-alt" id="pricing">
     <div class="container">
-        <div class="text-center mb-5 reveal">
+        <div class="pn-section-head reveal">
             <span class="pn-eyebrow">Simple pricing</span>
             <h2>Less than the cost of one past-question booklet</h2>
             <p class="lead mx-auto" style="max-width:560px">Start with a free 7-day trial. Upgrade any time — pay securely with card, bank transfer or USSD via Paystack.</p>
@@ -365,38 +369,42 @@
     </div>
 </section>
 
-<!-- ============================ GIFT A SUBSCRIPTION ============================ -->
-<section class="pn-section pt-0" id="gift">
+<!-- ============================ COMMUNITY: GIFT + SPONSOR ============================ -->
+<section class="pn-section" id="community">
     <div class="container">
-        <div class="pn-gift-cta reveal">
-            <div class="pn-gift-cta-badge"><i class="bi bi-balloon-heart-fill"></i></div>
-            <h2>Give the gift of admission.</h2>
-            <p>Know a JAMB, WAEC or Post-UTME candidate? Pay for their full PrepNova access in under a minute — they receive a PIN on WhatsApp and unlock every mock exam instantly. You don't need an account to buy.</p>
-            <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
-                <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
-                {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} for {{ plans[0]['duration_days'] }} days · instant WhatsApp delivery</span>{% endif %}
-            </div>
-
+        <div class="pn-section-head reveal">
+            <span class="pn-eyebrow">For parents, guardians &amp; well-wishers</span>
+            <h2>Put your support where it counts</h2>
+            <p class="lead mx-auto" style="max-width:640px">Two ways to change an exam student's story in under a minute — no account needed for either.</p>
         </div>
-    </div>
-</section>
-
-<!-- ============================ SPONSOR A COHORT ============================ -->
-<section class="pn-section pt-0" id="sponsor">
-    <div class="container">
-        <div class="pn-sponsor-band reveal">
-            <span class="pn-eyebrow pn-eyebrow-light">For the diaspora, alumni associations &amp; churches</span>
-            <h2>Sponsor a whole class.</h2>
-            <p>One payment gives every student in a school or youth group a full term of CBT preparation — and you get a private report showing exactly what your money achieved. From ₦300 per student.</p>
-            <a href="{{ url_for('sponsor_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-people me-1"></i> Sponsor a cohort</a>
+        <div class="row g-4 pn-community">
+            <div class="col-lg-6 reveal">
+                <div class="pn-gift-cta" id="gift">
+                    <div class="pn-gift-cta-badge"><i class="bi bi-balloon-heart-fill"></i></div>
+                    <h3>Give the gift of admission.</h3>
+                    <p>Know a JAMB, WAEC or Post-UTME candidate? Pay for their full PrepNova access in under a minute — they receive a PIN on WhatsApp and unlock every mock exam instantly. You don't need an account to buy.</p>
+                    <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+                        <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
+                        {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} for {{ plans[0]['duration_days'] }} days · instant WhatsApp delivery</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 reveal" data-delay="1">
+                <div class="pn-sponsor-band" id="sponsor">
+                    <span class="pn-eyebrow pn-eyebrow-light">For the diaspora, alumni associations &amp; churches</span>
+                    <h3>Sponsor a whole class.</h3>
+                    <p>One payment gives every student in a school or youth group a full term of CBT preparation — and you get a private report showing exactly what your money achieved. From ₦300 per student.</p>
+                    <a href="{{ url_for('sponsor_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-people me-1"></i> Sponsor a cohort</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- ============================ TESTIMONIALS ============================ -->
-<section class="pn-section">
+<section class="pn-section pn-dark-band">
     <div class="container">
-        <div class="text-center mb-5 reveal">
+        <div class="pn-section-head reveal">
             <span class="pn-eyebrow">Student stories</span>
             <h2>Nigerian students are scoring higher with PrepNova</h2>
         </div>
@@ -423,7 +431,7 @@
 <!-- ============================ FAQ ============================ -->
 <section class="pn-section pn-section-alt" id="faq">
     <div class="container" style="max-width:820px">
-        <div class="text-center mb-5 reveal">
+        <div class="pn-section-head reveal">
             <span class="pn-eyebrow">FAQ</span>
             <h2>Questions students ask</h2>
         </div>

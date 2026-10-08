@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_share.html" import share_row %}
 {% block title %}Your study pack is ready{% endblock %}
 {% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
@@ -20,6 +21,13 @@
             <button class="btn btn-sm btn-outline-secondary mt-3" onclick="navigator.clipboard.writeText('{{ download_url }}').then(function(b){ b.textContent='Copied ✓'; })">Copy download link</button>
             <p class="small text-muted mt-3 mb-0">Reference: <span class="mono">{{ order['reference'] }}</span><br>
             Link valid for {{ link_days }} days, up to {{ max_downloads }} downloads. <b>Copy it now — this page is shown once.</b></p>
+        </div>
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-1">📣 Tell your class group</h2>
+            <p class="small text-muted mb-3">Your classmates are writing the same exam — share the pack (and the free 7-day trial) with them:</p>
+            {% set share_text = ('Real past-style questions with a full explained answer key — instant download from PrepNova:' if 'past-questions' in p['slug'] else 'Chapter summaries, character guide, themes and 50 explained questions — instant download from PrepNova:') %}
+            <a class="btn btn-success w-100 mb-3" href="https://wa.me/?text={{ (share_text ~ ' ' ~ request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']))|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share with your class group</a>
+            <div class="text-center">{{ share_row(request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']), share_text, label='Or share via') }}</div>
         </div>
         <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
             <h2 class="h5 mb-3">Make it count</h2>

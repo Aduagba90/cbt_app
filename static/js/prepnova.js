@@ -349,3 +349,41 @@
     setTimeout(function () { try { if (!synth.speaking && current === btn) { synth.resume(); } } catch (err) {} }, 250);
   }, false);
 })();
+
+
+/* ---------- Share rows: copy-link + native share sheet ---------- */
+(function () {
+  function setup() {
+    document.querySelectorAll(".pn-share").forEach(function (wrap) {
+      var nat = wrap.querySelector("[data-share-native]");
+      if (nat && !navigator.share) { nat.hidden = true; }
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var copy = e.target.closest("[data-share-copy]");
+    if (copy) {
+      var wrap = copy.closest(".pn-share");
+      var url = (wrap && wrap.getAttribute("data-share-url")) || location.href;
+      var done = function () {
+        var old = copy.innerHTML;
+        copy.innerHTML = '<i class="bi bi-check2"></i>';
+        copy.classList.add("copied");
+        setTimeout(function () { copy.innerHTML = old; copy.classList.remove("copied"); }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(done);
+      } else { done(); }
+      return;
+    }
+    var nat = e.target.closest("[data-share-native]");
+    if (nat && navigator.share) {
+      var w = nat.closest(".pn-share");
+      navigator.share({
+        title: document.title,
+        text: w ? w.getAttribute("data-share-text") : "",
+        url: w ? w.getAttribute("data-share-url") : location.href
+      }).catch(function () {});
+    }
+  });
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", setup); } else { setup(); }
+})();
