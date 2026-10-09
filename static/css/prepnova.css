@@ -136,6 +136,15 @@ a:hover { color: var(--pn-primary-700); }
 .progress-bar.bg-primary { background: var(--pn-primary) !important; }
 
 .dropdown-menu { border-radius: var(--pn-radius); border: 1px solid var(--pn-line); box-shadow: var(--pn-shadow-lg); padding: .4rem; font-size: .9rem; }
+/* The account menu (17 items) can be taller than the screen. It must scroll
+   INSIDE itself on every device — phones with browser chrome AND short laptop
+   windows. 100dvh shrinks with mobile toolbars; the plain vh line is the fallback. */
+.pn-navbar .dropdown-menu,
+.pn-admin-bar .dropdown-menu { max-height: calc(100vh - 100px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+@supports (height: 100dvh) {
+  .pn-navbar .dropdown-menu,
+  .pn-admin-bar .dropdown-menu { max-height: calc(100dvh - 100px); }
+}
 .dropdown-item { border-radius: var(--pn-radius-sm); padding: .55rem .85rem; }
 .dropdown-item:active { background: var(--pn-primary); }
 .dropdown-item i { width: 1.25rem; }
@@ -766,7 +775,7 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
 .pn-tabbar-space { height: calc(var(--pn-tabbar-h) + env(safe-area-inset-bottom)); flex: 0 0 auto; }
 body.pn-exam-body .pn-tabbar-space { display: none; }
 @media (max-width: 991.98px) {
-  .pn-navbar .dropdown-menu { max-height: calc(100vh - var(--pn-tabbar-h) - 84px); overflow-y: auto; }
+  .pn-navbar .dropdown-menu { max-height: calc(100vh - var(--pn-tabbar-h) - 84px); max-height: calc(100dvh - var(--pn-tabbar-h) - 84px); overflow-y: auto; }
   .pn-challenge-actions { bottom: calc(var(--pn-tabbar-h) + .5rem); }
 }
 @media print { .pn-tabbar, .pn-tabbar-space { display: none !important; } }

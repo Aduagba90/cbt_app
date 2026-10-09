@@ -19,7 +19,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=27">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prepnova.css') }}?v=28">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">

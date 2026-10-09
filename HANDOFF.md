@@ -835,6 +835,24 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   open/close/navigate (anchor + external link), both new product pages, 6 shop cards,
   css v=27 actually served, 0 console errors, 0 overflow.
 
+## Account-menu scroll fix (Oct 2026)
+
+The top-right account dropdown (17 items) could exceed the viewport: it hangs from the
+sticky `.pn-navbar`, so page scrolling never rescues the lower items — **Log out became
+unreachable** on short laptop windows (Windows 150% scaling leaves ~512px) and on real
+phones (browser chrome eats ~120px of the 100vh). A mobile-only cap existed
+(`@media max-width:991.98px` in the tabbar section) but desktop had none, and it used
+`100vh` (ignores mobile toolbars). Fix in `prepnova.css`: a **global**
+`.pn-navbar .dropdown-menu, .pn-admin-bar .dropdown-menu { max-height: calc(100vh - 100px);
+overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+scrollbar-width: thin; }` with a `@supports (100dvh)` override so the cap shrinks with
+phone browser toolbars; the mobile media rule now also uses `100dvh` (tab-bar offset kept).
+**css v=28** (base.html, assert-replace verified). Verified by `_work/dropdown_test.py`
+(12 checks — phone portrait/short laptop/laptop@150%/phone landscape: menu scrolls
+internally, Logout reachable + clickable end-to-end, zero errors) plus real-input checks:
+desktop mouse-wheel scroll and CDP touch swipe (down and back up) inside the menu.
+Core regressions re-run green (regress / shop_test / offline_test).
+
 ## Offline Mode — the JAMB CBT Simulator in one file (Oct 2026)
 
 The Q1 flagship. `offline_cbt.py` builds a **single self-contained HTML app** (~2.3 MB)
