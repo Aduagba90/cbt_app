@@ -3302,6 +3302,14 @@ PRODUCT_DETAILS = {
         "Resume where you stopped, attempt history and an on-screen calculator — all offline",
         "Works on any phone or laptop — just open the file in Chrome",
     ],
+    "offline-waec-cbt": [
+        "All 8 official objective papers: English Paper 1 (Lexis & Structure) and Paper 3 (Test of Orals), Mathematics, Biology, Chemistry, Physics, Economics, Government",
+        "Real 2026 WASSCE formats — the exact question count and duration of each paper",
+        "Instant marking with your percentage and a WAEC-style A1–F9 grade",
+        "Every question fully explained in the offline review",
+        "Resume where you stopped, attempt history and an on-screen calculator — all offline",
+        "Works on any phone or laptop — just open the file in Chrome",
+    ],
 }
 
 # (badge text, bootstrap colour) shown on shop + product pages
@@ -3315,6 +3323,7 @@ PRODUCT_BADGES = {
     "waec-african-poetry": ("WAEC 2026–2030 · poetry anthology", "success"),
     "waec-literature-bundle": ("BEST VALUE · all 6 WAEC packs", "warning"),
     "offline-jamb-cbt": ("WORKS OFFLINE · no data needed", "info"),
+    "offline-waec-cbt": ("WORKS OFFLINE · WAEC SSCE", "info"),
     "jamb-english-past-questions": ("question pack", "secondary"),
     "waec-english-past-questions": ("question pack", "secondary"),
 }
@@ -3348,7 +3357,7 @@ def product_page(slug):
     if not product:
         abort(404)
     sub_free = False
-    if slug == "offline-jamb-cbt" and session.get("user"):
+    if slug in ("offline-jamb-cbt", "offline-waec-cbt") and session.get("user"):
         try:
             sub = get_subscription(session["user"])
             sub_free = bool(sub["active"]) and not sub["is_trial"]
@@ -3559,6 +3568,8 @@ def pdf_download(code):
                                                  "Practice questions compiled from the PrepNova question bank", 60, site)
     elif slug == "offline-jamb-cbt":
         buf = offline_cbt.build_offline_jamb_html(conn, site, order["buyer_name"], order["reference"])
+    elif slug == "offline-waec-cbt":
+        buf = offline_cbt.build_offline_waec_html(conn, site, order["buyer_name"], order["reference"])
     else:
         conn.close()
         abort(404)
@@ -3567,6 +3578,9 @@ def pdf_download(code):
         # Self-contained HTML app: download once, then it runs with zero network.
         return send_file(buf, as_attachment=True, download_name="PrepNova_Offline_JAMB_CBT.html",
                          mimetype="text/html")
+    if slug == "offline-waec-cbt":
+        return send_file(buf, as_attachment=True, download_name="PrepNova_Offline_WAEC_Simulator.html",
+                         mimetype="text/html")
     return send_file(buf, as_attachment=True, download_name=f"PrepNova_{slug}.pdf", mimetype="application/pdf")
 
 
@@ -3574,14 +3588,17 @@ def pdf_download(code):
 @login_required
 @rate_limit(limit=3, window_seconds=3600, scope="offline_free")
 def offline_free():
-    """The offline JAMB simulator is free for active (paid) subscribers — claim it here."""
+    """The offline simulators (JAMB and WAEC) are free for active (paid) subscribers."""
+    slug = (request.form.get("slug") or "offline-jamb-cbt").strip()[:40]
+    if slug not in ("offline-jamb-cbt", "offline-waec-cbt"):
+        abort(404)
     sub = get_subscription(session["user"])
     if not sub["active"] or sub["is_trial"]:
         flash("The Offline Simulator is free with a paid PrepNova plan — choose a plan to claim it.", "warning")
         return redirect(url_for("subscribe"))
     conn = connect()
     cur = conn.cursor()
-    product = cur.execute("SELECT * FROM pdf_products WHERE slug = 'offline-jamb-cbt' AND is_active = 1").fetchone()
+    product = cur.execute("SELECT * FROM pdf_products WHERE slug = ? AND is_active = 1", (slug,)).fetchone()
     if not product:
         conn.close()
         abort(404)
@@ -3597,7 +3614,7 @@ def offline_free():
         (session["user"], _pdf_plan_id(cur), f"Offline free — {product['title']}"[:120], reference))
     conn.commit()
     conn.close()
-    log.info("Offline simulator claimed free by subscriber %s (%s)", session["user"], reference)
+    log.info("Offline simulator (%s) claimed free by subscriber %s (%s)", slug, session["user"], reference)
     return redirect(url_for("pdf_download", code=code))
 
 

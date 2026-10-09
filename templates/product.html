@@ -4,14 +4,14 @@
 {% block og_title %}{{ p['title'] }} — instant download{% endblock %}
 {% block og_description %}{{ p['blurb'] }} {{ p['price']|naira }} one-time — instant download, no account needed.{% endblock %}
 {% block og_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/share-novels.png') }}{% endblock %}
-{% block description %}{{ p['blurb'] }} Instant download after payment — {% if p['slug'] == 'offline-jamb-cbt' %}a single file that works offline on your phone or laptop.{% else %}printable PDF for JAMB and WAEC preparation.{% endif %}{% endblock %}
+{% block description %}{{ p['blurb'] }} Instant download after payment — {% if p['slug'].startswith('offline-') %}a single file that works offline on your phone or laptop.{% else %}printable PDF for JAMB and WAEC preparation.{% endif %}{% endblock %}
 
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">Study shop</a><i class="bi bi-chevron-right"></i><span>{{ p['title'] }}</span></div>
         {% if badges.get(p['slug']) %}<span class="badge rounded-pill bg-{{ badges[p['slug']][1] }} bg-opacity-10 text-{{ badges[p['slug']][1] }}-emphasis mb-2"><i class="bi bi-award me-1"></i>{{ badges[p['slug']][0] }}</span>{% endif %}
-        <h1>{{ '📴' if p['slug'] == 'offline-jamb-cbt' else '📘' }} {{ p['title'] }}</h1>
+        <h1>{{ '📴' if p['slug'].startswith('offline-') else '📘' }} {{ p['title'] }}</h1>
         <p class="lead">{{ p['blurb'] }}</p>
     </div>
 </div>
@@ -25,6 +25,11 @@
                 <li><i class="bi bi-check-circle-fill text-success me-1"></i> {{ d }}</li>
                 {% endfor %}
             </ul>
+            {% if p['slug'] == 'offline-jamb-cbt' %}
+            <p class="small text-muted mt-3 mb-0"><i class="bi bi-arrow-right me-1"></i>Also available: <a href="{{ url_for('product_page', slug='offline-waec-cbt') }}">PrepNova Offline — WAEC Exam Simulator</a> — every WAEC objective paper, same offline magic.</p>
+            {% elif p['slug'] == 'offline-waec-cbt' %}
+            <p class="small text-muted mt-3 mb-0"><i class="bi bi-arrow-right me-1"></i>Also available: <a href="{{ url_for('product_page', slug='offline-jamb-cbt') }}">PrepNova Offline — JAMB CBT Simulator</a> — the full JAMB mock, same offline magic.</p>
+            {% endif %}
         </div>
     </div>
     <div class="col-lg-5">
@@ -34,9 +39,10 @@
                 <i class="bi bi-stars text-success fs-4"></i>
                 <h2 class="h5 mb-0">Free for you — active subscriber 🎉</h2>
             </div>
-            <p class="small text-muted mb-3">The Offline JAMB CBT Simulator is included with every active PrepNova subscription. Claim your copy — same file, no payment.</p>
+            <p class="small text-muted mb-3">The Offline Simulator is included with every active PrepNova subscription. Claim your copy — same file, no payment.</p>
             <form method="POST" action="{{ url_for('offline_free') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="slug" value="{{ p['slug'] }}">
                 <button type="submit" class="btn btn-success btn-lg w-100" data-loading="Preparing…"><i class="bi bi-download me-1"></i>Download free</button>
             </form>
             <p class="text-center small text-muted mt-2 mb-0">Not subscribed? Buy it below for {{ p['price']|naira }} one-time.</p>

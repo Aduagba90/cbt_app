@@ -554,6 +554,10 @@ def init_db():
              "PrepNova Offline — JAMB CBT Simulator",
              "The complete JAMB mock exam in one file. Download once and practise anywhere — no network, no data charges. English + any 3 of 13 subjects, real 120-minute timing, instant scores and explained answers on your phone or laptop.",
              1500.0),
+            ("offline-waec-cbt",
+             "PrepNova Offline — WAEC Exam Simulator",
+             "Every WAEC objective paper in one file — English Paper 1 and the Test of Orals, Mathematics, Biology, Chemistry, Physics, Economics and Government. Official 2026 WASSCE formats and timing, instant marking with your A1–F9 grade, and explained answers. No network, no data charges.",
+             1500.0),
         ])
 
     cur.execute("""

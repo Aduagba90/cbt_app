@@ -835,6 +835,51 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   open/close/navigate (anchor + external link), both new product pages, 6 shop cards,
   css v=27 actually served, 0 console errors, 0 overflow.
 
+## Offline WAEC Simulator — every WASSCE objective paper in one file (Oct 2026, round 12)
+
+Second offline product: `offline-waec-cbt` "PrepNova Offline — WAEC Exam Simulator", ₦1,500,
+badge `("WORKS OFFLINE · WAEC SSCE", "info")`. Built on the SAME single-file engine as the
+JAMB simulator — `offline_cbt.py` now renders two personalities from one template via the
+`PN.exam` data field ("JAMB" | "WAEC").
+
+**What's inside the WAEC file (~340KB, 1,260 questions, all explained):** the full 7-subject
+WAEC bank (English 268 incl. 97 orals-tagged, Maths 262, Chemistry 166, Biology 146, Physics
+142, Economics 138, Government 138) + the **official 2026 WASSCE paper formats straight from
+`waec.py`** — 8 papers: English Paper 1 Lexis & Structure (80Q/60min), Paper 3 Test of Orals
+(60Q/45min, topic-filtered), Maths (50/90), Biology (50/50), Chemistry (50/60), Physics (50/75),
+Economics (50/60), Government (50/60). Home screen = paper picker grouped by subject; each
+attempt samples fresh questions from the bank in JS (English questions carry a 9th field =
+topic name so the Orals paper draws only orals questions, prefix match like the live engine).
+
+**Marking:** percentage + **WAEC letter grade A1–F9** (bands from `waec.GRADES`, colour-coded
+chip green/amber/red + guidance line + "boundaries are set per session" disclaimer). History
+rows show the grade chip. Everything else shared with JAMB: timer, palette, flagging,
+calculator, keyboard, resume, history, review with filters + explanations.
+
+**Python API:** `build_offline_waec_html(conn, site_url, buyer_name, buyer_ref)` (plus
+`_load_waec_bank`); `build_offline_jamb_html` unchanged; both go through `_render(data)`.
+JAMB file re-verified after refactor: 41/41 engine checks still pass.
+
+**Shop wiring:** `pdf_download` dispatches the slug → `PrepNova_Offline_WAEC_Simulator.html`
+(text/html attachment). `/offline_free` now takes a `slug` POST field validated against both
+simulators (defaults to JAMB — backward compatible); product page shows the free-claim block
+for either slug; free form posts the slug. Product pages cross-sell each other (JAMB ↔ WAEC).
+Announcement bar now reads "the JAMB & WAEC simulators that work without network" (CTA
+"from ₦1,500 · free for subscribers"). shop.html lead + og_title mention both simulators;
+`offline` card styling keyed on `slug.startswith('offline-')`; pdf_success share text has a
+WAEC variant; product/pdf_success offline conditions generalised to `startswith('offline-')`.
+
+**Tests:** new `_work/offline_waec_test.py` (35 checks: seed, card/badge/sort, product page +
+cross-sell, purchase → callback → download integrity incl. 8 paper formats, orals pool ≥60,
+9-field questions, grades table, cap, trial-vs-paid gating, slug validation, rate limit,
+CSRF, anonymous) and `_work/offline_waec_engine_test.py` (30 browser checks on file:// —
+paper flows with exact timers 60/45/90min, grade-chip-vs-percentage math, orals-only E2E
+via stem matching, retake, resume, calculator, mobile drawer, zero errors). JAMB engine
+suite 41/41, shop_test → 12 products, offline_test, regress all green. Browser audit
+`_work/audit12.py` **21/21** (12 cards @1366+390, cross-sell visibility, annc visibility,
+paid WAEC download through the browser, opened from disk, English Paper 1 runs). Screenshots
+`_work/shots8/`. Demo copy for the owner: `/home/user/PrepNova_Offline_WAEC_DEMO.html`.
+
 ## "Exam Novels" renamed to "Study shop" (Oct 2026)
 
 The shop outgrew its name (11 products: 6 novel packs, 2 question packs, the ₦3,500 bundle,

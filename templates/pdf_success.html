@@ -7,7 +7,7 @@
 <div class="pn-page-head anim-rise">
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">Study shop</a><i class="bi bi-chevron-right"></i><span>Download</span></div>
-        <h1>{{ '📴' if p['slug'] == 'offline-jamb-cbt' else '📘' }} Your {{ 'simulator' if p['slug'] == 'offline-jamb-cbt' else 'study pack' }} is ready!</h1>
+        <h1>{{ '📴' if p['slug'].startswith('offline-') else '📘' }} Your {{ 'simulator' if p['slug'].startswith('offline-') else 'study pack' }} is ready!</h1>
         <p class="lead">Payment confirmed — thank you, {{ order['buyer_name'] }}. Download {{ p['title'] }} below.</p>
     </div>
 </div>
@@ -16,7 +16,7 @@
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm p-4 text-center anim-rise">
             <p class="small text-muted mb-2">{{ p['title'] }} · {{ order['amount']|naira }}</p>
-            <a href="{{ url_for('pdf_download', code=order['download_code']) }}" class="btn btn-accent btn-lg w-100"><i class="bi bi-download me-1"></i>Download {{ 'your simulator now' if p['slug'] == 'offline-jamb-cbt' else 'your PDF now' }}</a>
+            <a href="{{ url_for('pdf_download', code=order['download_code']) }}" class="btn btn-accent btn-lg w-100"><i class="bi bi-download me-1"></i>Download {{ 'your simulator now' if p['slug'].startswith('offline-') else 'your PDF now' }}</a>
             <div class="pn-gift-code mt-4" style="font-size:.8rem; word-break:break-all; user-select:all;">{{ download_url }}</div>
             <button class="btn btn-sm btn-outline-secondary mt-3" onclick="navigator.clipboard.writeText('{{ download_url }}').then(function(b){ b.textContent='Copied ✓'; })">Copy download link</button>
             <p class="small text-muted mt-3 mb-0">Reference: <span class="mono">{{ order['reference'] }}</span><br>
@@ -25,16 +25,16 @@
         <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
             <h2 class="h5 mb-1">📣 Tell your class group</h2>
             <p class="small text-muted mb-3">Your classmates are writing the same exam — share the pack (and the free 7-day trial) with them:</p>
-            {% set share_text = ('The full JAMB mock exam in one file — works without network or data. Get it from PrepNova:' if p['slug'] == 'offline-jamb-cbt' else ('Real past-style questions with a full explained answer key — instant download from PrepNova:' if 'past-questions' in p['slug'] else 'Chapter summaries, character guide, themes and 50 explained questions — instant download from PrepNova:')) %}
+            {% set share_text = ('Every WAEC objective paper in one file — works without network or data. Get it from PrepNova:' if p['slug'] == 'offline-waec-cbt' else ('The full JAMB mock exam in one file — works without network or data. Get it from PrepNova:' if p['slug'] == 'offline-jamb-cbt' else ('Real past-style questions with a full explained answer key — instant download from PrepNova:' if 'past-questions' in p['slug'] else 'Chapter summaries, character guide, themes and 50 explained questions — instant download from PrepNova:'))) %}
             <a class="btn btn-success w-100 mb-3" href="https://wa.me/?text={{ (share_text ~ ' ' ~ request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']))|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share with your class group</a>
             <div class="text-center">{{ share_row(request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']), share_text, label='Or share via') }}</div>
         </div>
         <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
             <h2 class="h5 mb-3">Make it count</h2>
-            {% if p['slug'] == 'offline-jamb-cbt' %}
+            {% if p['slug'].startswith('offline-') %}
             <ol class="ps-3 mb-0 small" style="line-height:1.9">
                 <li>Keep the file — it is your simulator. Open it in <b>Chrome</b> on your phone or laptop.</li>
-                <li>Turn off your network completely and take a full mock — that is the point.</li>
+                <li>Turn off your network completely and take a full paper — that is the point.</li>
                 <li>Review every explanation, then retake with fresh questions.</li>
                 <li>Want live battles, leaderboards and WAEC mocks too? Start a <b>free 7-day trial</b> of the PrepNova app.</li>
             </ol>

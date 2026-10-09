@@ -14,6 +14,8 @@ import io
 import json
 from datetime import datetime
 
+import waec as waec_mod
+
 ENGLISH_SUBJECT = "Use of English"
 SUBJECT_CAP = 500          # max questions embedded per subject
 TEMPLATE_TOKEN = "__PN_DATA__"
@@ -23,7 +25,7 @@ TEMPLATE_TOKEN = "__PN_DATA__"
 # Question bank loading
 # ---------------------------------------------------------------------------
 
-def _load_bank(conn):
+def _load_jamb_bank(conn):
     """Return (subjects, passages) ready for JSON embedding.
 
     subjects: [{"n": "Use of English", "q": [[stem, a, b, c, d, ans, expl, pid], ...]}, ...]
@@ -66,11 +68,62 @@ def _load_bank(conn):
     return subjects, passages
 
 
+def _load_waec_bank(conn):
+    """Return (subjects, papers) for the WAEC simulator.
+
+    subjects: full banks per subject (WAEC banks are small; every question is
+              embedded so retakes sample fresh questions). English q entries
+              carry a 9th field — the topic name — so the Test of Orals paper
+              can draw only from orals questions (prefix match, like the live app).
+    papers:   waec.PAPERS mirrored as dicts for the JS side.
+    """
+    names = [r[0] for r in conn.execute(
+        "SELECT DISTINCT s.subject_name FROM subjects s "
+        "JOIN questions_v2 q ON q.subject_id = s.id "
+        "WHERE s.exam_type = 'WAEC' AND q.status = 'Active' "
+        "ORDER BY s.subject_name").fetchall()]
+    subjects = []
+    for name in names:
+        rows = conn.execute(
+            "SELECT q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, "
+            "q.correct_answer, COALESCE(q.explanation, ''), q.passage_id, COALESCE(t.topic_name, '') "
+            "FROM questions_v2 q JOIN subjects s ON s.id = q.subject_id "
+            "LEFT JOIN topics t ON t.id = q.topic_id "
+            "WHERE s.exam_type = 'WAEC' AND s.subject_name = ? AND q.status = 'Active' "
+            "ORDER BY q.id", (name,)).fetchall()
+        pack = []
+        for r in rows:
+            ans = (r[5] or "").strip().upper()
+            if ans not in ("A", "B", "C", "D"):
+                continue
+            pack.append([r[0], r[1], r[2], r[3], r[4], ans, r[6], r[7], r[8] or None])
+        if pack:
+            subjects.append({"n": name, "q": pack})
+    papers = []
+    for subj, plist in waec_mod.PAPERS.items():
+        if not any(s["n"] == subj for s in subjects):
+            continue
+        for label, count, minutes, note, topic in plist:
+            papers.append({"s": subj, "label": label, "count": count,
+                           "mins": minutes, "note": note, "topic": topic})
+    if not subjects or not papers:
+        raise RuntimeError("WAEC bank missing — cannot build offline WAEC pack")
+    return subjects, papers
+
+
 def build_offline_jamb_html(conn, site_url, buyer_name="", buyer_ref=""):
-    """Build the complete single-file simulator as a BytesIO (text/html)."""
-    subjects, passages = _load_bank(conn)
+    """Build the complete single-file JAMB simulator as a BytesIO (text/html)."""
+    subjects, passages = _load_jamb_bank(conn)
+    total = sum(len(s["q"]) for s in subjects)
     data = {
+        "exam": "JAMB",
         "title": "PrepNova Offline — JAMB CBT Simulator",
+        "hero_title": "The JAMB mock exam that lives in this file",
+        "hero_sub": "Downloaded once — now it works anywhere: bus, village, midnight, "
+                    "flight mode. Pick your subjects and practise under real exam "
+                    "conditions, with instant marking and explained answers.",
+        "chips": [f"{total:,} real questions", f"{len(subjects) - 1} subjects + English",
+                  "Scored over 400", "No network needed"],
         "built": datetime.utcnow().strftime("%d %B %Y"),
         "site": site_url,
         "buyer": {"name": (buyer_name or "PrepNova student").strip()[:60],
@@ -79,6 +132,36 @@ def build_offline_jamb_html(conn, site_url, buyer_name="", buyer_ref=""):
         "subjects": subjects,
         "passages": passages,
     }
+    return _render(data)
+
+
+def build_offline_waec_html(conn, site_url, buyer_name="", buyer_ref=""):
+    """Build the complete single-file WAEC simulator as a BytesIO (text/html)."""
+    subjects, papers = _load_waec_bank(conn)
+    total = sum(len(s["q"]) for s in subjects)
+    data = {
+        "exam": "WAEC",
+        "title": "PrepNova Offline — WAEC Exam Simulator",
+        "hero_title": "Every WAEC objective paper, in one file",
+        "hero_sub": "The official 2026 WASSCE formats — real question counts and real "
+                    "durations, English Paper 1 and the Test of Orals included — with "
+                    "instant marking, your A1–F9 grade and explained answers. "
+                    "No network needed, ever.",
+        "chips": [f"{total:,} real questions", f"{len(papers)} official papers",
+                  "Graded A1–F9", "No network needed"],
+        "built": datetime.utcnow().strftime("%d %B %Y"),
+        "site": site_url,
+        "buyer": {"name": (buyer_name or "PrepNova student").strip()[:60],
+                  "ref": (buyer_ref or "").strip()[:40]},
+        "subjects": subjects,
+        "passages": {},
+        "papers": papers,
+        "grades": [[band, cut, line] for band, cut, line in waec_mod.GRADES],
+    }
+    return _render(data)
+
+
+def _render(data):
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("</", "<\\/")          # never terminate the <script> block
     html = _TEMPLATE.replace(TEMPLATE_TOKEN, payload)
@@ -202,6 +285,19 @@ button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlig
 .expl b{color:var(--pri600)}
 .fchip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:.8rem;font-weight:700;color:var(--mut)}
 .fchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.paper-subj{font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 0 8px}
+.paper-subj:first-of-type{margin-top:6px}
+.paper-btn{display:block;width:100%;text-align:left;border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:8px}
+.paper-btn:hover{border-color:var(--pri);background:var(--pri50)}
+.pb-line1{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pb-label{font-weight:800;font-size:.95rem}
+.pb-meta{font-size:.78rem;font-weight:700;color:var(--pri600,#096640);white-space:nowrap}
+.pb-note{font-size:.78rem;color:var(--mut);margin-top:3px}
+.gchip{display:inline-block;font-weight:800;font-size:1.3rem;padding:4px 14px;border-radius:10px;margin-left:10px;vertical-align:middle}
+.gchip.sm{font-size:.72rem;padding:2px 9px;margin-left:0;border-radius:999px}
+.gchip.g-hi{background:#dcfce7;color:#166534}
+.gchip.g-mid{background:#fef3c7;color:#92400e}
+.gchip.g-low{background:#fee2e2;color:#991b1b}
 .calc-disp{background:var(--navy);color:#fff;border-radius:10px;padding:14px;text-align:right;font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:12px;min-height:56px;overflow:hidden}
 .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .calc-grid button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px 0;font-size:1.05rem;font-weight:600}
@@ -243,6 +339,14 @@ body{background:#fff}
 var PN = __PN_DATA__;
 var SUB = {};
 PN.subjects.forEach(function (s) { SUB[s.n] = s; });
+var IS_WAEC = PN.exam === "WAEC";
+var PAPERS = PN.papers || [];
+var GRADES = PN.grades || [];
+function gradeFor(pct) {
+  for (var i = 0; i < GRADES.length; i++) if (pct >= GRADES[i][1]) return { band: GRADES[i][0], line: GRADES[i][2] };
+  return { band: "F9", line: "" };
+}
+function gradeClass(band) { return (band === "D7" || band === "E8") ? "g-mid" : (band === "F9" ? "g-low" : "g-hi"); }
 var SHORT = { "Use of English": "English", "Christian Religious Studies": "CRS",
   "Islamic Religious Studies": "IRS", "Agricultural Science": "Agric", "Literature in English": "Literature" };
 function short(n) { return SHORT[n] || n; }
@@ -309,12 +413,14 @@ function renderHome() {
   var wrap = h("div", "wrap");
 
   var hero = h("div", "hero");
-  hero.appendChild(h("div", "h1", "The JAMB mock exam that lives in this file"));
-  hero.appendChild(h("p", null, "Downloaded once — now it works anywhere: bus, village, midnight, flight mode. " +
-    "Pick your subjects and practise under real exam conditions, with instant marking and explained answers."));
+  hero.appendChild(h("div", "h1", PN.hero_title));
+  hero.appendChild(h("p", null, PN.hero_sub));
   var chips = h("div", "chips");
-  [num(TOTAL_Q) + " real questions", (PN.subjects.length - 1) + " subjects + English", "Scored over 400", "No network needed"]
-    .forEach(function (t) { var c = h("span", "stat"); var parts = t.match(/^(\D*)(\d[\d,]*)(.*)$/); if (parts) { c.appendChild(document.createTextNode(parts[1])); c.appendChild(h("b", null, parts[2])); c.appendChild(document.createTextNode(parts[3])); } else c.textContent = t; chips.appendChild(c); });
+  PN.chips.forEach(function (t) {
+    var c = h("span", "stat"); var parts = t.match(/^([\d,]+)(.*)$/);
+    if (parts) { c.appendChild(h("b", null, parts[1])); c.appendChild(document.createTextNode(parts[2])); }
+    else c.textContent = t; chips.appendChild(c);
+  });
   hero.appendChild(chips);
   wrap.appendChild(hero);
 
@@ -345,7 +451,26 @@ function renderHome() {
 
   /* setup card */
   var card = h("div", "card");
-  card.appendChild(h("div", "h2", "Set up your exam"));
+  card.appendChild(h("div", "h2", IS_WAEC ? "Choose your paper" : "Set up your exam"));
+  if (IS_WAEC) {
+    var lastSubj = null;
+    PAPERS.forEach(function (pp, pi) {
+      if (pp.s !== lastSubj) {
+        lastSubj = pp.s;
+        card.appendChild(h("div", "paper-subj", pp.s));
+      }
+      var n = Math.min(pp.count, paperPool(pp).length);
+      var b = btn("paper-btn", null, (function (ix) { return function () { startPaper(ix); }; })(pi));
+      var l1 = h("div", "pb-line1");
+      l1.appendChild(h("span", "pb-label", pp.label));
+      l1.appendChild(h("span", "pb-meta", n + " questions · " + pp.mins + " min"));
+      b.appendChild(l1);
+      b.appendChild(h("div", "pb-note", pp.note));
+      card.appendChild(b);
+    });
+    card.appendChild(h("div", "small mut", "Every attempt draws fresh questions from the bank inside this file — retake as often as you like."));
+    wrap.appendChild(card);
+  } else {
   var mode = "full";
   var mg = h("div", "mode-grid");
   var mFull = h("div", "mode on"), mDrill = h("div", "mode");
@@ -397,6 +522,7 @@ function renderHome() {
   mDrill.addEventListener("click", function () { mode = "drill"; mDrill.className = "mode on"; mFull.className = "mode"; drillBox.style.display = ""; fullBox.style.display = "none"; });
   card.appendChild(fullBox); card.appendChild(drillBox);
   wrap.appendChild(card);
+  }
 
   /* history */
   var hist = [];
@@ -417,10 +543,11 @@ function renderHome() {
     var hr = h("div", "row"); hr.appendChild(ht); hr.appendChild(clear); hc.appendChild(hr);
     hist.slice().reverse().forEach(function (a) {
       var row = h("div", "hist");
-      row.appendChild(h("span", "tag " + (a.m === "full" ? "navy" : ""), a.m === "full" ? "Full mock" : "Drill"));
-      row.appendChild(h("span", "small mut", a.subs.map(short).join(" · ")));
+      row.appendChild(h("span", "tag " + (a.m === "full" ? "navy" : ""), a.m === "paper" ? "WAEC paper" : (a.m === "full" ? "Full mock" : "Drill")));
+      row.appendChild(h("span", "small mut", a.m === "paper" ? (a.paper || "") : a.subs.map(short).join(" · ")));
       var sc = h("span", "sc", a.m === "full" ? (a.j + "/400" + (a.auto ? " · time up" : "")) : (a.c + "/" + a.t));
       row.appendChild(sc);
+      if (a.g) row.appendChild(h("span", "gchip sm " + gradeClass(a.g), a.g));
       row.appendChild(h("span", "small mut", a.p + "% · " + escDate(a.d)));
       hc.appendChild(row);
     });
@@ -444,6 +571,29 @@ function renderHome() {
 }
 
 /* ---------- attempt lifecycle ---------- */
+function paperPool(pp) {
+  var qs = SUB[pp.s].q, out = [];
+  for (var i = 0; i < qs.length; i++) {
+    if (!pp.topic || (qs[i].length > 8 && qs[i][8] && String(qs[i][8]).indexOf(pp.topic) === 0)) out.push(i);
+  }
+  return out;
+}
+
+function startPaper(pi) {
+  var pp = PAPERS[pi];
+  var pool = paperPool(pp);
+  var idxs = shuffle(pool.slice(0));
+  var n = Math.min(pp.count, pool.length);
+  var qs = [];
+  for (var k = 0; k < n; k++) qs.push({ s: pp.s, i: idxs[k], sel: null, flag: false });
+  var multi = PAPERS.filter(function (x) { return x.s === pp.s; }).length > 1;
+  var name = multi ? ("WAEC " + pp.s + " — " + pp.label) : ("WAEC " + pp.s);
+  state = { mode: "paper", pi: pi, paperName: name, subs: [pp.s], qs: qs, idx: 0,
+            startedAt: Date.now(), endsAt: Date.now() + pp.mins * 60000 };
+  sSet(KEY_S, JSON.stringify(state));
+  sSet(KEY_L, JSON.stringify({ mode: "paper", pi: pi }));
+  renderExam();
+}
 
 function startAttempt(mode, subs) {
   var qs = [];
@@ -466,7 +616,8 @@ function saveState() { if (state) sSet(KEY_S, JSON.stringify(state)); }
 function renderExam() {
   inExam = true;
   appEl.textContent = "";
-  var title = state.mode === "full" ? "JAMB Mock — " + state.subs.map(short).join(" · ")
+  var title = state.mode === "paper" ? state.paperName
+            : state.mode === "full" ? "JAMB Mock — " + state.subs.map(short).join(" · ")
                                    : "Drill — " + short(state.subs[0]);
   appEl.appendChild(topbar(title, true, confirmSubmit));
   var wrap = h("div", "wrap");
@@ -666,9 +817,11 @@ function doSubmit(auto) {
             correct: totalC, total: state.qs.length, jamb: jamb,
             pct: Math.round(100 * totalC / state.qs.length),
             used: Math.round((Math.min(Date.now(), state.startedAt + 7200000) - state.startedAt) / 1000), auto: auto };
+  if (state.mode === "paper") { g.paper = state.paperName; g.grade = gradeFor(g.pct); }
   var hist = [];
   try { hist = JSON.parse(sGet(KEY_H) || "[]"); } catch (e) { hist = []; }
-  hist.push({ d: new Date().toISOString(), m: g.mode, subs: g.subs, j: g.jamb, p: g.pct, c: g.correct, t: g.total, auto: g.auto });
+  hist.push({ d: new Date().toISOString(), m: g.mode, subs: g.subs, paper: g.paper || null, g: g.grade ? g.grade.band : null,
+              j: g.jamb, p: g.pct, c: g.correct, t: g.total, auto: g.auto });
   if (hist.length > 20) hist = hist.slice(-20);
   sSet(KEY_H, JSON.stringify(hist));
   sDel(KEY_S);
@@ -693,6 +846,12 @@ function renderResults(g) {
     sc.appendChild(h("small", null, " / " + g.total));
   }
   card.appendChild(sc);
+  if (g.mode === "paper" && g.grade) {
+    var gc = h("span", "gchip " + gradeClass(g.grade.band), g.grade.band);
+    card.appendChild(gc);
+    card.appendChild(h("div", "small mut", g.grade.line));
+    card.appendChild(h("div", "small mut", "WAEC sets the official grade boundaries each session — this is guidance."));
+  }
   card.appendChild(h("div", "small mut", g.pct + "% correct · " + fmt(g.used) + " used" + (g.mode === "full" ? " · JAMB scales each subject to 100" : "")));
   var subs = Object.keys(g.per);
   subs.forEach(function (s) {
@@ -710,7 +869,9 @@ function renderResults(g) {
   var acts = h("div", "row"); acts.style.marginTop = "8px";
   var last = null;
   try { last = JSON.parse(sGet(KEY_L) || "null"); } catch (e) {}
-  if (last) acts.appendChild(btn("btn main", "Retake with fresh questions", function () { startAttempt(last.mode, last.subs); }));
+  if (last) acts.appendChild(btn("btn main", "Retake with fresh questions", function () {
+    if (last.mode === "paper") startPaper(last.pi); else startAttempt(last.mode, last.subs);
+  }));
   acts.appendChild(btn("btn gold", "Print / save as PDF", function () { window.print(); }));
   acts.appendChild(btn("btn ghost", "Home", goHome));
   card.appendChild(acts);
