@@ -6,7 +6,7 @@
 {% block content %}
 <div class="pn-page-head anim-rise">
     <div>
-        <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">Exam Novels</a><i class="bi bi-chevron-right"></i><span>Download</span></div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('shop') }}">Study shop</a><i class="bi bi-chevron-right"></i><span>Download</span></div>
         <h1>{{ '📴' if p['slug'] == 'offline-jamb-cbt' else '📘' }} Your {{ 'simulator' if p['slug'] == 'offline-jamb-cbt' else 'study pack' }} is ready!</h1>
         <p class="lead">Payment confirmed — thank you, {{ order['buyer_name'] }}. Download {{ p['title'] }} below.</p>
     </div>

@@ -835,6 +835,25 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   open/close/navigate (anchor + external link), both new product pages, 6 shop cards,
   css v=27 actually served, 0 console errors, 0 overflow.
 
+## "Exam Novels" renamed to "Study shop" (Oct 2026)
+
+The shop outgrew its name (11 products: 6 novel packs, 2 question packs, the ₦3,500 bundle,
+the offline simulator) and visitors hunting the store couldn't find "Exam novels". Chose
+**"Study shop"** over bare "Shop": communicates *exam material lives here* to students AND
+parents, works for every product type. Labels changed everywhere a user looks:
+landing desktop nav + mobile drawer (`_landing_nav.html`, icon bi-book → **bi-shop**),
+account dropdown + footer marquee (`base.html`), shop page title/og_title/breadcrumb/h1
+(now "🛍 The PrepNova Study Shop")/share text (`shop.html`), product + pdf_success
+breadcrumbs, landing footer column, subscribe-page cross-sell line, landing pricing
+cross-sell line. Kept deliberately: the landing novels-spotlight section heading
+"The 2026 Exam Novels, decoded" and its share text (that section genuinely is about the
+novels; novel keywords also keep their SEO weight in og:description). `shop_test`
+expectations updated (Study shop in nav/account menu/subscribe line, new h1).
+Verified: shop suite ALL PASS + regress green; 10-check browser visibility audit
+(landing nav @1366 geometry+elementFromPoint, mobile drawer link clickable @390,
+shop h1 + breadcrumb, account dropdown item, footer link, no overflow at 1366/390,
+zero console errors). No css/js version bump needed (template text only, not cached assets).
+
 ## Account-menu scroll fix (Oct 2026)
 
 The top-right account dropdown (17 items) could exceed the viewport: it hangs from the
