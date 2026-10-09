@@ -550,6 +550,10 @@ def init_db():
              "The Complete WAEC Literature Bundle",
              "All six WAEC 2026–2030 study packs in one download: So the Path Does Not Die, To Kill a Mockingbird, An Inspector Calls, The Marriage of Anansewa, Redemption Road and the African Poetry anthology — 300 practice questions with explained answers. Save ₦2,200.",
              3500.0),
+            ("offline-jamb-cbt",
+             "PrepNova Offline — JAMB CBT Simulator",
+             "The complete JAMB mock exam in one file. Download once and practise anywhere — no network, no data charges. English + any 3 of 13 subjects, real 120-minute timing, instant scores and explained answers on your phone or laptop.",
+             1500.0),
         ])
 
     cur.execute("""

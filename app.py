@@ -29,6 +29,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import exam_engine as engine
+import offline_cbt
 import pdf_store
 import post_utme as putme
 import waec as waecf
@@ -3292,6 +3293,15 @@ PRODUCT_DETAILS = {
         "African Poetry — complete anthology pack (6 poems, 50 questions)",
         "300 practice questions total with explained answer keys — save ₦2,200",
     ],
+    "offline-jamb-cbt": [
+        "The full JAMB CBT experience in one file — no app install, no network, no data charges",
+        "Compulsory Use of English + any 3 of 13 JAMB subjects — almost 7,000 questions inside",
+        "Real exam format: 180 questions, 120 minutes, scored over 400 exactly like JAMB",
+        "Fresh questions every attempt — take mock after mock and never repeat yourself",
+        "Instant offline marking: subject scores, JAMB score and a full explained review",
+        "Resume where you stopped, attempt history and an on-screen calculator — all offline",
+        "Works on any phone or laptop — just open the file in Chrome",
+    ],
 }
 
 # (badge text, bootstrap colour) shown on shop + product pages
@@ -3304,6 +3314,7 @@ PRODUCT_BADGES = {
     "redemption-road": ("WAEC 2026–2030 · set text", "success"),
     "waec-african-poetry": ("WAEC 2026–2030 · poetry anthology", "success"),
     "waec-literature-bundle": ("BEST VALUE · all 6 WAEC packs", "warning"),
+    "offline-jamb-cbt": ("WORKS OFFLINE · no data needed", "info"),
     "jamb-english-past-questions": ("question pack", "secondary"),
     "waec-english-past-questions": ("question pack", "secondary"),
 }
@@ -3336,8 +3347,16 @@ def product_page(slug):
     conn.close()
     if not product:
         abort(404)
+    sub_free = False
+    if slug == "offline-jamb-cbt" and session.get("user"):
+        try:
+            sub = get_subscription(session["user"])
+            sub_free = bool(sub["active"]) and not sub["is_trial"]
+        except Exception:
+            sub_free = False
     return render_template("product.html", p=product, details=PRODUCT_DETAILS.get(slug, []),
-                           badges=PRODUCT_BADGES, paystack_ready=bool(PAYSTACK_SECRET_KEY))
+                           badges=PRODUCT_BADGES, paystack_ready=bool(PAYSTACK_SECRET_KEY),
+                           sub_free=sub_free)
 
 
 @app.route("/shop_buy", methods=["POST"])
@@ -3538,11 +3557,48 @@ def pdf_download(code):
         buf = pdf_store.build_past_questions_pdf(conn, "WAEC", "%English%",
                                                  "WAEC English — Past-Style Question Pack",
                                                  "Practice questions compiled from the PrepNova question bank", 60, site)
+    elif slug == "offline-jamb-cbt":
+        buf = offline_cbt.build_offline_jamb_html(conn, site, order["buyer_name"], order["reference"])
     else:
         conn.close()
         abort(404)
     conn.close()
+    if slug == "offline-jamb-cbt":
+        # Self-contained HTML app: download once, then it runs with zero network.
+        return send_file(buf, as_attachment=True, download_name="PrepNova_Offline_JAMB_CBT.html",
+                         mimetype="text/html")
     return send_file(buf, as_attachment=True, download_name=f"PrepNova_{slug}.pdf", mimetype="application/pdf")
+
+
+@app.route("/offline_free", methods=["POST"])
+@login_required
+@rate_limit(limit=3, window_seconds=3600, scope="offline_free")
+def offline_free():
+    """The offline JAMB simulator is free for active (paid) subscribers — claim it here."""
+    sub = get_subscription(session["user"])
+    if not sub["active"] or sub["is_trial"]:
+        flash("The Offline Simulator is free with a paid PrepNova plan — choose a plan to claim it.", "warning")
+        return redirect(url_for("subscribe"))
+    conn = connect()
+    cur = conn.cursor()
+    product = cur.execute("SELECT * FROM pdf_products WHERE slug = 'offline-jamb-cbt' AND is_active = 1").fetchone()
+    if not product:
+        conn.close()
+        abort(404)
+    reference = f"PN-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    code = secrets.token_hex(10).upper()
+    cur.execute(
+        "INSERT INTO pdf_orders (reference, product_id, buyer_name, buyer_email, amount, payment_status, "
+        "download_code, paid_at) VALUES (?, ?, ?, ?, 0, 'PAID', ?, CURRENT_TIMESTAMP)",
+        (reference, product["id"], session.get("name") or session["user"], session["user"], code))
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, "
+        "payment_status, currency) VALUES (?, ?, ?, 0, 30, ?, 'SUCCESS', 'NGN')",
+        (session["user"], _pdf_plan_id(cur), f"Offline free — {product['title']}"[:120], reference))
+    conn.commit()
+    conn.close()
+    log.info("Offline simulator claimed free by subscriber %s (%s)", session["user"], reference)
+    return redirect(url_for("pdf_download", code=code))
 
 
 # ---------------------------------------------------------------------------

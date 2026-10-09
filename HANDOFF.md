@@ -835,6 +835,64 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   open/close/navigate (anchor + external link), both new product pages, 6 shop cards,
   css v=27 actually served, 0 console errors, 0 overflow.
 
+## Offline Mode — the JAMB CBT Simulator in one file (Oct 2026)
+
+The Q1 flagship. `offline_cbt.py` builds a **single self-contained HTML app** (~2.3 MB)
+sold through the existing PDF-shop machinery: product `offline-jamb-cbt`
+"PrepNova Offline — JAMB CBT Simulator", ₦1,500, badge `("WORKS OFFLINE · no data needed", "info")`,
+price-DESC sort puts it 2nd on /shop (right after the ₦3,500 bundle).
+
+**Inside the file:** the whole JAMB bank embedded as JSON — Use of English (500-question cap,
+131 comprehension passages) + 13 electives (≤500 each) ≈ 6,979 questions, each with 4 options +
+correct letter + explanation, plus a per-buyer watermark ("Licensed to NAME · REF").
+Zero external requests (verified no src/href to http) — download once, practise forever,
+works from `file://` on any phone/laptop browser. Every purchase gets a fresh random
+per-subject sample (`ORDER BY RANDOM() LIMIT 500`), so no two buyers' files are identical.
+
+**Engine (vanilla JS, no dependencies):** home screen (subject picker: English compulsory +
+exactly 3 electives; **Full JAMB mock** 180 Q / 120 min / scored /400 with the same
+100-per-subject scaling as the live app; **single-subject drill** 40 Q / 40 min, English 60/60),
+JAMB-style exam room (subject tabs, question palette with answered/flagged/current legend,
+countdown that survives close/reopen via `endsAt` in localStorage, flag for review, clear,
+keyboard A–D / ← → / F / X, on-screen calculator), submit-confirm modal with per-subject counts,
+results (score /400, per-subject bars colour-banded at 70/50, full review with
+all/wrong/skipped/flagged filters + explanations, retake-with-fresh-questions, print/PDF),
+attempt history (last 20) and resume. localStorage is wrapped in try/catch with an in-memory
+fallback (sandboxed iframes and private mode keep working).
+
+**Delivery:** identical PDF pipeline — PN-P- reference, 20-char download code (14 days /
+5 downloads), receipt email. `pdf_download` dispatches the slug to
+`offline_cbt.build_offline_jamb_html(conn, site, buyer_name, ref)` and serves
+`text/html` attachment `PrepNova_Offline_JAMB_CBT.html`. `pdf_success` and `product`
+templates switch their copy for this slug (simulator wording, Chrome instructions).
+
+**Free for PAID subscribers (retention perk):** `POST /offline_free` (login_required,
+rate-limited 3/hour) — requires `get_subscription()["active"] and not is_trial`, else redirect
+to /subscribe. Mints an amount-0 PAID pdf_order + payments ledger row, then straight to the
+download. The product page shows a green "Free for you — active subscriber" claim card above
+the buy form only for eligible (paid, non-trial) logged-in users.
+
+**Announcement bar** now promotes the simulator (was the Lekki pack): "…works without network ·
+one download, unlimited mocks" → /shop/offline-jamb-cbt, CTA "₦1,500 · free for subscribers".
+Landing/shop copy updated ("Read anywhere" stays true for both PDFs and the simulator).
+
+**Tests:** new `_work/offline_test.py` (38 checks: seed, card sort/badge, product page, guest
+purchase → callback → HTML download integrity incl. zero-external-refs, watermark, 14 subjects,
+≥6,000 questions, cap, trial-vs-paid gating, CSRF, rate limit, ledger) and
+`_work/offline_engine_test.py` (41 browser checks on file:// — full mock flow, live timer,
+palette states, calculator, resume-after-reload, drill mode, mobile 390 palette drawer, zero
+console errors). `shop_test` updated to 11 products + new bar. **Battery: 16 suites green.**
+Browser audit `_work/audit11.py` **24/24** (11 cards @1366+390, 0 overflow, announcement-bar
+visibility geometry+elementFromPoint, paid download through the browser then opened from disk
+and driven interactively, subscriber free claim through real register → login → claim).
+Screenshots in `_work/shots7/`.
+
+**Gotchas learned:** the login/register rate limiters trip quickly when auditing repeatedly
+from localhost — restart the audit server to clear the in-memory limiter; let `anim-rise`
+entrance animations settle (~900 ms) before measuring geometry; prefer Playwright's
+`scroll_into_view_if_needed()` + a separate measurement evaluate; always verify that a
+`str.replace` patch actually matched (one fix was silently skipped by a `grep &&` short-circuit).
+
 ## Full WAEC Literature lineup: 4 new products incl. the Bundle (Oct 2026)
 
 Shop now has 10 products. NEW: the-marriage-of-anansewa (N1,000), redemption-road (N1,000),
