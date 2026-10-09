@@ -611,6 +611,24 @@ def init_db():
     """)
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS family_purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT NOT NULL UNIQUE,
+            buyer_name TEXT NOT NULL,
+            buyer_email TEXT NOT NULL,
+            plan_name TEXT NOT NULL,
+            days INTEGER NOT NULL,
+            seats INTEGER NOT NULL DEFAULT 3,
+            amount REAL,
+            payment_status TEXT DEFAULT 'PENDING',
+            pins TEXT,
+            family_key TEXT UNIQUE,
+            paid_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,

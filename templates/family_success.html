@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Your family PINs are ready{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Family plan</span></div>
+        <h1>👨‍👩‍👧‍👦 Your family PINs are ready!</h1>
+        <p class="lead">Payment confirmed — thank you, {{ row['buyer_name'] }}. The {{ row['plan_name'] }} covers {{ row['seats'] }} children for {{ row['days'] }} days each. Give each child <b>one</b> PIN below.</p>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 anim-rise">
+            <h2 class="h5 mb-3">The {{ row['seats'] }} PINs <span class="small text-muted fw-normal">— each works once, on one child's account</span></h2>
+            {% for p in pins %}
+            <div class="d-flex align-items-center gap-2 border rounded-3 p-3 mb-3 flex-wrap">
+                <span class="pn-stat-icon tint-gold mb-0"><i class="bi bi-key-fill"></i></span>
+                <div class="pn-gift-code flex-grow-1" style="font-size:1.15rem; word-break:break-all; user-select:all;">{{ p }}</div>
+                <span class="small text-muted me-1">Child {{ loop.index }}</span>
+                <button class="btn btn-sm btn-outline-secondary copy-pin" data-pin="{{ p }}" type="button">Copy</button>
+            </div>
+            {% endfor %}
+            <div class="alert alert-success small mb-0"><i class="bi bi-envelope-check me-1"></i>A copy of these PINs {{ 'has' if row['seats'] == 1 else 'have' }} also been emailed to <b>{{ row['buyer_email'] }}</b>. Unredeemed PINs stay valid for {{ pin_days_valid }} days.</div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3">What each child does now</h2>
+            <ol class="ps-3 mb-0 small" style="line-height:2">
+                <li>Register free at <b>{{ request.url_root }}</b> (or log in if they already have an account).</li>
+                <li>Open <b>Subscribe → "I have an Access PIN"</b> and enter <b>their own PIN</b>.</li>
+                <li>Full access starts immediately — {{ row['days'] }} days of every mock exam, plus both Offline Simulators free.</li>
+                <li>Ask each child to send you their <b>Parent Link</b> (from their dashboard) so you can watch their progress.</li>
+            </ol>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3">🧾 Track your PINs any time</h2>
+            <p class="small text-muted">This private page shows which children have activated and which PINs are still waiting. Bookmark it:</p>
+            <div class="pn-gift-code" style="font-size:.8rem; word-break:break-all; user-select:all;">{{ status_url }}</div>
+            <a href="{{ status_url }}" class="btn btn-primary mt-3"><i class="bi bi-clipboard-data me-1"></i>Open my PIN tracker</a>
+            <p class="small text-muted mt-3 mb-0">Reference: <span class="mono">{{ row['reference'] }}</span> — quote it whenever you contact support.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("click", function (e) {
+    var b = e.target.closest(".copy-pin");
+    if (!b) return;
+    var pin = b.getAttribute("data-pin");
+    function done() { b.textContent = "Copied ✓"; b.classList.add("btn-success", "text-white"); b.classList.remove("btn-outline-secondary"); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(pin).then(done, done); }
+    else { done(); }
+});
+</script>
+{% endblock %}

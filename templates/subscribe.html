@@ -76,6 +76,17 @@
     {% endfor %}
 </div>
 
+<div class="card border-0 shadow-sm p-4 mt-4 anim-rise d2">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="pn-stat-icon tint-gold mb-0"><i class="bi bi-people-fill"></i></span>
+        <div class="flex-grow-1">
+            <b>Three children at home?</b>
+            <span class="small text-muted d-block">The Family Plan covers 3 separate accounts with one payment — from ₦2,500 a month, saving up to 25%. Each child gets their own PIN, and you track everything from one page.</span>
+        </div>
+        <a href="{{ url_for('family_page') }}" class="btn btn-accent"><i class="bi bi-people-fill me-1"></i>See the Family Plan</a>
+    </div>
+</div>
+
 <div class="row g-3 mt-4 anim-rise d3">
     <div class="col-md-4"><div class="pn-feature h-100"><span class="pn-feature-icon tint-green"><i class="bi bi-shield-lock"></i></span><h4>Secure payments</h4><p>Powered by Paystack. Pay with card, bank transfer or USSD — we never see your card details.</p></div></div>
     <div class="col-md-4"><div class="pn-feature h-100"><span class="pn-feature-icon tint-blue"><i class="bi bi-lightning-charge"></i></span><h4>Instant activation</h4><p>Your plan activates automatically the moment your payment is confirmed.</p></div></div>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Family plan — PIN tracker{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Family plan</span></div>
+        <h1>🧾 Your family plan tracker</h1>
+        <p class="lead">{{ row['plan_name'] }} — {{ row['seats'] }} children, {{ row['days'] }} days each. Bought by {{ row['buyer_name'] }}{% if row['paid_at'] %} · {{ row['paid_at'][:11] }}{% endif %}.</p>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 anim-rise">
+            <h2 class="h5 mb-3">PIN status</h2>
+            {% for p in pins %}
+            <div class="d-flex align-items-center gap-2 border rounded-3 p-3 mb-3 flex-wrap
+                        {% if p.redeemed_by %}border-success{% endif %}">
+                <span class="pn-stat-icon {{ 'tint-green' if p.redeemed_by else 'tint-blue' }} mb-0">
+                    <i class="bi {{ 'bi-person-check-fill' if p.redeemed_by else 'bi-hourglass-split' }}"></i>
+                </span>
+                <div class="flex-grow-1">
+                    <div class="pn-gift-code" style="font-size:1.05rem; word-break:break-all; user-select:all;">{{ p.code }}</div>
+                    <div class="small text-muted">
+                        {% if p.redeemed_by %}
+                            Activated by <b>{{ p.redeemed_by }}</b>{% if p.redeemed_at %} · {{ p.redeemed_at[:16] }}{% endif %} · runs {{ p.days }} days
+                        {% else %}
+                            Not used yet · gives {{ p.days }} days of full access{% if p.expires_at %} · valid until {{ p.expires_at[:11] }}{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="badge rounded-pill {{ 'bg-success' if p.redeemed_by else 'bg-secondary' }} bg-opacity-10 text-{{ 'success' if p.redeemed_by else 'secondary' }}-emphasis">
+                    {{ 'Activated ✓' if p.redeemed_by else 'Waiting' }}
+                </span>
+            </div>
+            {% endfor %}
+            <div class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Each PIN works once, on one account. A child who loses their PIN can contact support with your reference <span class="mono">{{ row['reference'] }}</span>.</div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3">Want to see how they are doing?</h2>
+            <p class="small mb-0">Ask each child to open their dashboard → <b>Parent link</b> and send you the link. It shows their recent scores, active days and subject strengths — read-only, no account needed.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

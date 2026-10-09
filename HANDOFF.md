@@ -1230,3 +1230,63 @@ No audio files, no server cost, works offline-of-our-servers on any device with 
 - **Next features in the agreed order:** Admission Chance Calculator + JAMB Subject Combination Checker
   (free, bring strangers in), Challenge a Friend, Spoken Test of Orals, School/Lesson-centre plan,
   offline mode.
+
+## Family Plan — one payment, three children PINs (Oct 2026, round 13)
+
+**The offer:** a parent pays once and gets **3 single-use Access PINs** — one per child, one
+payment, no parent account needed (guest checkout). Parent watches progress for free via the
+existing **Parent Link**. Each PIN gives that child the **full paid platform** (every CBT, both
+offline simulators free, novels etc.). Unredeemed PINs stay valid **180 days** (same rule as gifts).
+
+**Pricing (locked with user, "balanced" option):**
+
+| Plan | Family price | 3 × individual | You save |
+|---|---|---|---|
+| Monthly (30 days) | ₦2,500 | ₦3,000 | ₦500 (17%) |
+| Quarterly (90 days) | ₦6,000 | ₦7,500 | ₦1,500 (20%) |
+| Yearly (365 days) | ₦18,000 | ₦24,000 | ₦6,000 (25%) |
+
+Savings are computed from the **live DB plan prices** at render time (fallback
+`price × 1.2 × seats` if plans are missing), so editing plan prices on /admin updates /family too.
+
+**Code layout (all inside app.py between the gift and sponsor sections):**
+- `FAMILY_PLANS` tuple + `FAMILY_SEATS = 3` + `FAMILY_PIN_VALID_DAYS = 180`.
+- `_family_plan_id()` lazily creates/returns a **hidden** `subscription_plans` row
+  `Family plans (internal)` (`is_active=0`) — used only so family payments pass the
+  plan-name sanity check; it never renders on /subscribe.
+- `family_page` (GET /family): marketing page, savings math, plan radios, buyer form.
+- `family_start` (POST, CSRF + rate-limit **10/600s scope `family_start`**): guest checkout —
+  validates plan/name/email, inserts `family_purchases` PENDING + `payments` PENDING
+  (reference prefix **`PN-FAM-{unix}-{hex6}`**, plan_name `Family — Family Monthly/Quarterly/Yearly`),
+  redirects to Paystack.
+- `family_callback` (GET): Paystack return URL → `_fulfil_family`.
+- `_fulfil_family(ref)` — idempotent (PAID → "already"): verify status/currency/amount (mismatch →
+  `AMOUNT_MISMATCH`), mint 3 PINs via `generate_access_codes` (1-use, plan days, label
+  `Family plan (Monthly/Quarterly/Yearly)`, `created_by = FAMILY:{buyer_email}`), generate
+  `family_key = token_hex(10).upper()`, store PINs as JSON on the row, email the buyer a receipt
+  with the 3 PINs + tracker URL, mark payments SUCCESS. Returns `(ok, msg, row)`.
+- `family_status` (GET /family/status/&lt;key&gt;): the **PIN tracker** — per-PIN
+  Activated ✓ / Waiting badge, who redeemed + when, expiry, Parent Link pointer. Wrong/unknown key → 404.
+- Webhook dispatcher: `PN-FAM-` prefix → `_fulfil_family` (after `PN-G-` gift branch).
+- `db.py`: new `family_purchases` table (id, reference UNIQUE, plan_key, amount, buyer_name,
+  buyer_email, payment_status, pins JSON, family_key, created_at, paid_at).
+
+**Templates:** `family.html` (marketing; paystack_ready gate with WhatsApp fallback like gifts),
+`family_success.html` (3 pretty PN-XXXX-XXXX PINs + copy buttons, tracker link, reference; noindex),
+`family_status.html` (tracker; noindex). Touchpoints: subscribe page banner card
+("Three children at home?"), landing pricing chapter line, landing footer link.
+
+**Tests:** `_work/family_test.py` **40/40** (page copy, validation, CSRF, RL 429, PENDING rows,
+failed/underpaid paths, 3 single-use PINs minted with right labels/days, idempotent callback,
+webhook signature dispatch, two children redeem + reuse rejected + tracker states, subscribe
+banner, free simulator for redeemed child). `_work/audit13.py` **22/22** browser audit
+(/family @1366+390 geometry + elementFromPoint, full parent→callback→PINs→child-redeem journey
+in a real browser, tracker 3-waiting → 1-activated, landing/footer, zero console errors).
+Full battery: **19 suites green** (incl. gift/sponsor/agent siblings + regress).
+
+**Gotchas found this round:** the webhook URL is `/paystack/webhook` (slash) while the endpoint
+name is `paystack_webhook` — posting to the underscore URL gets eaten by the CSRF hook (400
+"session expired") before a 404; `/subscribe` requires login so banner tests must run logged in;
+`pg.goto()` needs absolute URLs (app_url() defaults to :5000 — parse the path and prepend BASE);
+the PIN form's submit button has no `type` attribute (select by text, not `[type="submit"]`);
+audit runs are stateful — restart the audit server for a clean run (PINs get consumed).

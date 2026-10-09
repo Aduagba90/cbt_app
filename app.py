@@ -2569,6 +2569,8 @@ def paystack_webhook():
         if reference:
             if reference.startswith("PN-G-"):
                 _fulfil_gift(reference, data)
+            elif reference.startswith("PN-FAM-"):
+                _fulfil_family(reference, data)
             elif reference.startswith("PN-SC-"):
                 _fulfil_sponsor(reference, data)
             elif reference.startswith("PN-A-"):
@@ -2752,6 +2754,239 @@ def gift_callback():
              f"to unlock {row['duration_days']} days of full mock exams.{tail}")
     return render_template("gift_success.html", row=row, code=pretty, expires=expires,
                            emailed=mail_configured(), share=share, site_url=app_url())
+
+
+# ---------------------------------------------------------------------------
+# Family plan (public — one parent payment, one Access PIN per child)
+# ---------------------------------------------------------------------------
+
+FAMILY_SEATS = 3                  # one PIN per child
+FAMILY_PIN_VALID_DAYS = 180       # unredeemed PINs stay valid this long (like gifts)
+FAMILY_PLANS = [                  # (key, plan name, days, price) — 3 children, saves 17-25%
+    ("monthly", "Family Monthly", 30, 2500.0),
+    ("quarterly", "Family Quarterly", 90, 6000.0),
+    ("yearly", "Family Yearly", 365, 18000.0),
+]
+
+
+def _family_plan_by_key(key):
+    for tpl in FAMILY_PLANS:
+        if tpl[0] == key:
+            return tpl
+    return None
+
+
+def _family_plan_id(cur):
+    """Hidden subscription_plans row for family orders (payments.plan_id is NOT NULL)."""
+    row = cur.execute("SELECT id FROM subscription_plans WHERE plan_name = 'Family plans (internal)'").fetchone()
+    if row:
+        return row["id"]
+    cur.execute("INSERT INTO subscription_plans (plan_name, price, duration_days, description, is_active) "
+                "VALUES ('Family plans (internal)', 0, 30, 'Internal row for Family plan orders', 0)")
+    return cur.execute("SELECT id FROM subscription_plans WHERE plan_name = 'Family plans (internal)'").fetchone()["id"]
+
+
+@app.route("/family")
+def family_page():
+    conn = connect()
+    individual = {}
+    for r in conn.execute("SELECT plan_name, price, duration_days FROM subscription_plans "
+                          "WHERE is_active = 1 AND plan_name IN ('Monthly','Quarterly','Yearly')").fetchall():
+        individual[r["duration_days"]] = r["price"]
+    conn.close()
+    plans = []
+    for key, name, days, price in FAMILY_PLANS:
+        separate = individual.get(days, 0) * FAMILY_SEATS
+        if separate <= 0:
+            separate = price * 1.2 * FAMILY_SEATS  # fallback if individual plans change
+        monthly = round(price / (days / 30.0))
+        plans.append({"key": key, "name": name, "days": days, "price": price,
+                      "separate": separate, "save": separate - price,
+                      "save_pct": round(100 * (separate - price) / separate) if separate else 0,
+                      "monthly": monthly})
+    return render_template("family.html", plans=plans, seats=FAMILY_SEATS,
+                           paystack_ready=bool(PAYSTACK_SECRET_KEY))
+
+
+@app.route("/family_start", methods=["POST"])
+@rate_limit(limit=10, window_seconds=600, scope="family_start")
+def family_start():
+    """Guest checkout for the family plan — parents don't need an account."""
+    if not PAYSTACK_SECRET_KEY:
+        flash("Online payment is not available right now. Please contact support on WhatsApp.", "danger")
+        return redirect(url_for("family_page"))
+    plan = _family_plan_by_key((request.form.get("plan") or "").strip()[:20])
+    buyer_name = re.sub(r"\s+", " ", request.form.get("buyer_name") or "").strip()[:60]
+    buyer_email = (request.form.get("buyer_email") or "").strip().lower()[:80]
+    if not plan:
+        flash("Please choose a family plan.", "danger")
+        return redirect(url_for("family_page"))
+    if len(buyer_name) < 2:
+        flash("Please enter your name.", "danger")
+        return redirect(url_for("family_page"))
+    if not valid_email(buyer_email):
+        flash("Please enter a valid email address — your children's PINs are sent there.", "danger")
+        return redirect(url_for("family_page"))
+    conn = connect()
+    cur = conn.cursor()
+    reference = f"PN-FAM-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    cur.execute(
+        "INSERT INTO family_purchases (reference, buyer_name, buyer_email, plan_name, days, seats, amount, payment_status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')",
+        (reference, buyer_name, buyer_email, plan[1], plan[2], FAMILY_SEATS, plan[3]))
+    cur.execute(
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
+        "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
+        (buyer_email, _family_plan_id(cur), f"Family — {plan[1]}"[:120], plan[3], plan[2], reference))
+    conn.commit()
+    conn.close()
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json={
+                "email": buyer_email,
+                "amount": int(round(plan[3] * 100)),
+                "currency": "NGN",
+                "reference": reference,
+                "callback_url": f"{app_url()}/family_callback",
+                "metadata": {"family": 1, "plan": plan[0], "seats": FAMILY_SEATS,
+                             "custom_fields": [{"display_name": "Plan", "variable_name": "plan",
+                                                "value": plan[1][:100]}]},
+            },
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30,
+        )
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack initialise failed (family plan)")
+        flash("We could not reach Paystack. Please check your connection and try again.", "danger")
+        return redirect(url_for("family_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        log.error("Paystack init error (family): %s", payload)
+        flash("Payment could not be started. Please try again or contact support.", "danger")
+        return redirect(url_for("family_page"))
+    return redirect(payload["data"]["authorization_url"])
+
+
+def _fulfil_family(reference, payment_data):
+    """Verify a family order, mint one PIN per child, mint the status key. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        row = cur.execute("SELECT * FROM family_purchases WHERE reference = ?", (reference,)).fetchone()
+        if not row:
+            return False, "Order not found.", None
+        if row["payment_status"] == "PAID":
+            return True, "already", row
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE family_purchases SET payment_status = 'FAILED' WHERE id = ?", (row["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'FAILED' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment was not successful.", None
+        paid_kobo = int(payment_data.get("amount") or 0)
+        expected_kobo = int(round(float(row["amount"]) * 100))
+        if paid_kobo < expected_kobo or (payment_data.get("currency") or "NGN") != "NGN":
+            log.warning("Paystack amount mismatch (family) %s: paid=%s expected=%s", reference, paid_kobo, expected_kobo)
+            cur.execute("UPDATE family_purchases SET payment_status = 'AMOUNT_MISMATCH' WHERE id = ?", (row["id"],))
+            cur.execute("UPDATE payments SET payment_status = 'AMOUNT_MISMATCH' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "Payment amount did not match your order. Please contact support.", None
+        expires = (datetime.now() + timedelta(days=FAMILY_PIN_VALID_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
+        label = "Family plan ({})".format(row["plan_name"].replace("Family ", ""))
+        codes = generate_access_codes(cur, int(row["seats"]), int(row["days"]), label,
+                                      max_uses=1, expires_at=expires,
+                                      created_by=f"FAMILY:{row['buyer_email']}")
+        if len(codes) != int(row["seats"]):
+            raise RuntimeError(f"only {len(codes)}/{row['seats']} family PINs minted")
+        family_key = secrets.token_hex(10).upper()
+        cur.execute(
+            """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = ?,
+                                  channel = ?, currency = ?, amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
+               WHERE transaction_reference = ?""",
+            (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200], payment_data.get("channel"),
+             payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
+        cur.execute("UPDATE family_purchases SET payment_status = 'PAID', pins = ?, family_key = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (json.dumps(codes), family_key, row["id"]))
+        conn.commit()
+        row = cur.execute("SELECT * FROM family_purchases WHERE id = ?", (row["id"],)).fetchone()
+        if mail_configured():
+            status_url = f"{app_url()}/family/status/{family_key}"
+            pin_lines = "\n".join(f"  {i + 1}. {c}" for i, c in enumerate(json.loads(row["pins"])))
+            try:
+                send_email("PrepNova CBT — your 3 family PINs are ready",
+                           row["buyer_email"],
+                           (f"Hello {row['buyer_name']},\n\nThank you for the {row['plan_name']} "
+                            f"({row['seats']} children, {row['days']} days each).\n\n"
+                            f"Your children's Access PINs (each works once, on one account):\n{pin_lines}\n\n"
+                            f"Each child: register free at {app_url()}, then Subscribe -> 'Have an Access PIN'.\n"
+                            f"Track redemptions any time: {status_url}\n\nReference: {reference}"),
+                           email_wrap("Your 3 family PINs are ready",
+                                      (f"Hello <b>{row['buyer_name']}</b>,<br><br>Thank you for the "
+                                       f"<b>{row['plan_name']}</b> — {row['seats']} children, "
+                                       f"{row['days']} days each.<br><br>"
+                                       f"Each child registers free at {app_url()} and enters their PIN under "
+                                       f"Subscribe &rarr; 'Have an Access PIN'.<br><br>"
+                                       f"<a href='{status_url}'>Track your PINs here</a>."),
+                                      "Open PrepNova", f"{app_url()}/family"))
+            except Exception:
+                log.exception("Family receipt email failed")
+        return True, "ok", row
+    finally:
+        conn.close()
+
+
+@app.route("/family_callback")
+def family_callback():
+    """Paystack returns the parent here — the PINs page."""
+    reference = (request.args.get("reference") or request.args.get("trxref") or "").strip()[:64]
+    if not reference or not PAYSTACK_SECRET_KEY:
+        flash("Payment reference missing.", "danger")
+        return redirect(url_for("family_page"))
+    try:
+        resp = requests.get(f"https://api.paystack.co/transaction/verify/{reference}",
+                            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}, timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("Paystack verify failed (family)")
+        flash("We could not verify your payment right now. If you were debited, your PINs will be emailed to you shortly.", "warning")
+        return redirect(url_for("family_page"))
+    if resp.status_code != 200 or not payload.get("status"):
+        flash("Payment verification failed. If you were debited, contact support with your reference.", "danger")
+        return redirect(url_for("family_page"))
+    ok, msg, row = _fulfil_family(reference, payload.get("data") or {})
+    if not ok:
+        flash(msg, "danger")
+        return redirect(url_for("family_page"))
+    return render_template("family_success.html", row=row,
+                           pins=[pretty_code(c) for c in json.loads(row["pins"] or "[]")],
+                           status_url=f"{app_url()}/family/status/{row['family_key']}",
+                           pin_days_valid=FAMILY_PIN_VALID_DAYS)
+
+
+@app.route("/family/status/<key>")
+def family_status(key):
+    """The parent's PIN tracker — who has redeemed, who hasn't (key is unguessable)."""
+    key = (key or "").strip().upper()[:40]
+    conn = connect()
+    row = conn.execute("SELECT * FROM family_purchases WHERE family_key = ? AND payment_status = 'PAID'",
+                       (key,)).fetchone()
+    if not row:
+        conn.close()
+        abort(404)
+    pins = json.loads(row["pins"] or "[]")
+    status = []
+    for code in pins:
+        ac = conn.execute("SELECT uses, max_uses, expires_at, days FROM access_codes WHERE code = ?", (code,)).fetchone()
+        redeemed_by, redeemed_at = None, None
+        if ac and ac["uses"] >= 1:
+            red = conn.execute("SELECT username, redeemed_at FROM access_code_redemptions WHERE code_id = "
+                               "(SELECT id FROM access_codes WHERE code = ?) ORDER BY id DESC LIMIT 1", (code,)).fetchone()
+            if red:
+                redeemed_by, redeemed_at = red["username"], red["redeemed_at"]
+        status.append({"code": pretty_code(code), "redeemed_by": redeemed_by, "redeemed_at": redeemed_at,
+                       "expires_at": ac["expires_at"] if ac else None, "days": ac["days"] if ac else row["days"]})
+    conn.close()
+    return render_template("family_status.html", row=row, pins=status)
 
 
 # ---------------------------------------------------------------------------

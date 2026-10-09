@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Family plan — 3 children, one payment{% endblock %}
+{% block og_title %}The PrepNova Family Plan — 3 children from ₦2,500/month{% endblock %}
+{% block og_description %}One parent payment covers three children writing JAMB, WAEC or Post-UTME. Each child gets their own account and Access PIN. Save up to 25% and track everything from one page.{% endblock %}
+{% block description %}The PrepNova Family Plan: one payment, three children, full CBT preparation for JAMB, WAEC and Post-UTME. Each child gets their own account. Save up to 25%.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Family plan</span></div>
+        <h1>👨‍👩‍👧‍👦 Family plan — one payment, three children</h1>
+        <p class="lead">Three children writing JAMB, WAEC or Post-UTME? Cover all of them with a single payment. Each child gets their own account, their own Access PIN and their own progress — you save up to 25% and watch everything from one page.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="POST" action="{{ url_for('family_start') }}" data-once class="card border-0 shadow-sm p-4 anim-rise">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <h2 class="h5 mb-3"><i class="bi bi-1-circle-fill text-primary me-1"></i> Choose a family plan</h2>
+            <div class="row g-3 mb-2">
+                {% for p in plans %}
+                <div class="col-md-4">
+                    <label class="pn-gift-plan border rounded-3 p-3 h-100 d-block">
+                        <div class="d-flex align-items-start gap-2">
+                            <input type="radio" name="plan" value="{{ p.key }}" class="mt-1" {% if loop.index == 1 %}checked{% endif %}>
+                            <div>
+                                <div class="fw-semibold">{{ p.name }}</div>
+                                <div class="text-primary fw-bold">{{ p.price|naira }}</div>
+                                <div class="small text-muted">{{ p.days }} days × {{ seats }} children</div>
+                                {% if p.save %}<div class="small text-success fw-semibold">save {{ p.save|naira }} ({{ p.save_pct }}%)</div>{% endif %}
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="small text-muted mb-4">Three separate subscriptions would cost {{ plans[0]['separate']|naira }} a month — the family plan covers all three children for less.</p>
+
+            <h2 class="h5 mb-3"><i class="bi bi-2-circle-fill text-primary me-1"></i> Who is buying?</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Your name</label>
+                    <input class="form-control" name="buyer_name" maxlength="60" required placeholder="e.g. Mrs. Adeyemi">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Your email</label>
+                    <input type="email" class="form-control" name="buyer_email" maxlength="80" required placeholder="you@example.com">
+                    <div class="form-text">The {{ seats }} PINs and your receipt are sent here.</div>
+                </div>
+            </div>
+
+            {% if paystack_ready %}
+            <button type="submit" class="btn btn-accent btn-lg w-100" data-loading="Preparing…"><i class="bi bi-lock-fill me-1"></i>Pay &amp; get my {{ seats }} PINs</button>
+            <p class="text-center small text-muted mt-2 mb-0">Card, transfer or USSD via Paystack · no account needed · PINs appear instantly after payment</p>
+            {% else %}
+            <div class="alert alert-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Online payment is being set up — contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>.</div>
+            {% endif %}
+        </form>
+
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
+            <h2 class="h5 mb-3">👨‍👩‍👧‍👦 How it works</h2>
+            <ol class="ps-3 mb-0 small" style="line-height:2">
+                <li><b>Pay once.</b> No PrepNova account needed — you are buying for your children, not yourself.</li>
+                <li><b>Receive {{ seats }} Access PINs</b> instantly on screen and by email. Each PIN works once, on one child's account.</li>
+                <li><b>Each child registers free</b> at PrepNova, goes to <b>Subscribe → "I have an Access PIN"</b> and enters their PIN. Their full access starts immediately.</li>
+                <li><b>Watch their progress free</b> — each child can send you a Parent Link from their dashboard, and your PIN tracker page shows who has activated and who hasn't.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 anim-rise d1">
+            <h2 class="h5 mb-3">Each child gets the full platform</h2>
+            <ul class="small mb-0" style="line-height:2">
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> Unlimited timed JAMB, WAEC &amp; Post-UTME mock exams</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> Unlimited practice questions with instant explanations</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> Their own results history, mistakes tracker and study plan</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> <b>Both Offline Simulators free</b> (JAMB + WAEC, ₦3,000 value)</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> Daily challenge, friend battles and leaderboards</li>
+            </ul>
+        </div>
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d2">
+            <h2 class="h5 mb-3">🧾 Why families choose this</h2>
+            <ul class="small mb-0" style="line-height:2">
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> <b>Separate accounts</b> — no sharing passwords, each child's results stay their own</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> <b>Up to 25% cheaper</b> than three separate subscriptions</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> <b>Fair for different timetables</b> — an unredeemed PIN stays valid for 180 days, so a child whose exams come later doesn't lose out</li>
+                <li><i class="bi bi-check-circle-fill text-success me-1"></i> <b>One receipt, one tracker page</b> — everything about the family plan in one place</li>
+            </ul>
+        </div>
+        <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d2">
+            <h2 class="h5 mb-3">Only one child?</h2>
+            <p class="small mb-0">A single subscription is better value for one student — <a href="{{ url_for('subscribe') }}">see the standard plans</a> or <a href="{{ url_for('gift_page') }}">gift a subscription</a> instead.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
