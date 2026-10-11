@@ -1441,8 +1441,31 @@ landed, see below); browser audit `_work/audit15.py` **27/27** (VISIBILITY proto
    Success page + email list both download links.
 
 **Deploy adds one step:** PythonAnywhere **Tasks tab → daily task** —
-`python3 /home/<you>/PrepNova-CBT/scripts/renewals_daily.py` (set it once after deploying).
-Everything else deploys as usual (`git push origin main`, then `python3 setup.py` on PA).
+`/home/prepnova/.virtualenvs/prepnova/bin/python3 /home/prepnova/cbt_app/scripts/renewals_daily.py`
+(venv python — Flask lives there; the script loads `~/.prepnova.env` itself, so it sees the
+live database and keys — smoke-tested against a fake HOME). Everything else as usual
+(`git push origin main`, then `python3 setup.py` on PA — its update mode is
+`git fetch + reset --hard origin/main`, so PA can never hit a merge conflict).
+CAUTION: free PA accounts created after 2026-01-15 have NO scheduled tasks; older free
+accounts have one daily task (2h max) but consoles/tasks are limited to whitelisted sites
+(api.paystack.co may be blocked — check the task log for "renewal job done: {...}"). If
+tasks are unavailable or Paystack is blocked, options: $5 Hacker plan, or a visitor-trigger
+fallback (unpitched idea: time-gated run_renewal_day call in before_request).
+
+**One-time push fix (round 15 deploy):** his push was rejected because GitHub held the
+round-14 recheck commit e5c265e, which the round-15 zip's history lacked (the sandbox lost
+that commit object at the turn boundary; all its file changes ARE inside round 15 — guard +
+HANDOFF text verified, partners_test 49/49). `git pull --rebase` was simulated on an exact
+copy of his zip repo: it CONFLICTS on HANDOFF.md (both sides edited the file tail), so the
+safe instruction was a one-time `git push --force origin main`. Sandbox .git was then
+restored FROM the zip (main = e23f50b + r15.1) so future zips descend from his GitHub and
+normal pushes resume from round 16.
+
+**Sandbox git caveat (lesson, twice now):** commit objects created late in a turn can
+vanish at the turn boundary while the worktree survives (happened to e5c265e AND e23f50b).
+At turn start run `git log --oneline -1` + `git status` — if HEAD is behind but the files
+are present, restore .git from the newest zip (`unzip PrepNova-CBT.zip 'cbt_app/.git/*'`)
+or re-commit. The in-turn zip is always the authoritative deliverable.
 
 **Bugs found & fixed while testing (real ones):** bundle parent originally shared child-1's
 download code → UNIQUE crash (parent now NULL); the bundle success-page query had a

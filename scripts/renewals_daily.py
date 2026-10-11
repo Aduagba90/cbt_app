@@ -8,14 +8,38 @@ Does four things (all idempotent — safe to run more than once a day):
   4. Sends win-back emails with a 20% code ~7 days after a plan expires.
 
 Setup on PythonAnywhere: Tasks tab -> Set a scheduled task ->
-    python3 /home/<your-username>/PrepNova-CBT/scripts/renewals_daily.py
-(adjust the path to wherever the repo lives; run it from the repo root or set
- PYTHONPATH). On other hosts: any daily cron entry works.
+    /home/<your-username>/.virtualenvs/prepnova/bin/python3 /home/<your-username>/cbt_app/scripts/renewals_daily.py
+The venv python is required (Flask etc. live there). The script loads
+~/.prepnova.env itself, so it sees the same database and keys as the website.
+On other hosts: any daily cron entry works (it also falls back to a repo .env).
 """
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+
+def _load_env():
+    """Load ~/.prepnova.env (PythonAnywhere — same file the website's WSGI start
+    file loads) or a repo .env. Values already in the environment win."""
+    candidates = [os.path.expanduser("~/.prepnova.env"), os.path.join(REPO, ".env")]
+    for path in candidates:
+        try:
+            with open(path) as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
+                        os.environ.setdefault(key.strip(), value.strip())
+        except OSError:
+            continue
+        if os.path.exists(path):
+            return
+
+
+_load_env()
+os.chdir(REPO)
 
 from app import run_renewal_day  # noqa: E402
 from db import connect  # noqa: E402
