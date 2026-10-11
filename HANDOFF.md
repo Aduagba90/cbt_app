@@ -1531,8 +1531,19 @@ redirects to /login; Playwright auto-dismisses confirm dialogs → register the 
 BEFORE clicking data-confirm buttons). Repod db updated: questions_v2 = 13,067
 (12,970 + 97 NECO).
 
-**Part 2 (next turns):** batches 052+ — English ~100 general + 60 Test of Orals (topic field
-must start with "Test of Orals" for the orals paper filter), Biology/Chemistry/Physics/
-Economics/Government ~90-100 each (paper is 60 → aim ≥ 1.5× for sampling variety).
-Then consider: NECO offline-simulator shop product (like the WAEC one), announcement-bar
-mention, dashboard touchpoints.
+**Part 2 progress (2026-10-11, same day):** batch 052 shipped — NECO English, 169 items
+(106 general across the same Lexis/Structure topic taxonomy the WAEC bank uses + 63 Test of
+Orals: vowels 16, consonants 10, rhymes 8, stress 12, intonation 7, homophones 5, letters 5).
+Both English papers live: Paper III 80Q/60min, Paper IV 60Q/45min (orals filter verified
+60/60 from Test of Orals topics). neco_test now **49/49**; battery 21 suites + regress green
+(non-browser set run this session). Authoring notes: orals stems are template-heavy so the
+near-dup scanner reports many false positives (Jaccard on 4+ letter words can't distinguish
+"pronounced /uː/" from "pronounced /ð/"); judge orals warnings by TESTED CONTENT — three real
+collisions were found and reworded ('ou'/uː → now tests 'ui', /ɜː/-bird → now tests schwa /ə/,
+'good at mathematics' → 'interested in poultry farming'). Duplicate-stem gate is exact-text:
+vary stress-question stems ("Which of these words is stressed on..." vs "In which word is the
+stress placed on..."). Repo db now 266 NECO questions (13,236 v2 total).
+
+**Still remaining (part 3):** Biology, Chemistry, Physics, Economics, Government batches
+(~90-100 each; paper is 60). Then consider: NECO offline-simulator shop product, announcement
+bar, dashboard touchpoints.
