@@ -2448,10 +2448,20 @@ def initialize_payment(plan_id):
         conn.close()
         abort(404)
     reference = f"PN-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    amount = float(plan["price"])
+    promo_code = (request.form.get("promo_code") or "").strip().upper()[:24]
+    if promo_code:
+        promo, pmsg = _validate_promo(cur, promo_code, plan["price"], "plans")
+        if not promo:
+            conn.close()
+            flash(pmsg, "danger")
+            return redirect(url_for("subscribe_plan", plan_id=plan_id))
+        amount = max(100.0, round(plan["price"] - _promo_discount(promo, plan["price"]), 2))
+    renew_intent = 1 if request.form.get("auto_renew") == "on" else 0
     cur.execute(
-        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', ?)",
-        (session["user"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference,
-         (request.cookies.get("pn_ref") or "").strip().upper()[:16]),
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code, promo_code, renew_intent) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', ?, ?, ?)",
+        (session["user"], plan["id"], plan["plan_name"], amount, plan["duration_days"], reference,
+         (request.cookies.get("pn_ref") or "").strip().upper()[:16], promo_code or None, renew_intent),
     )
     conn.commit()
     conn.close()
@@ -2460,7 +2470,7 @@ def initialize_payment(plan_id):
             "https://api.paystack.co/transaction/initialize",
             json={
                 "email": session["user"],
-                "amount": int(round(float(plan["price"]) * 100)),
+                "amount": int(round(amount * 100)),
                 "currency": "NGN",
                 "reference": reference,
                 "callback_url": f"{app_url()}/payment_callback",
@@ -2517,7 +2527,10 @@ def _process_paystack_payment(reference, payment_data):
         start, end = activate_subscription(cur, record["username"], record["plan_id"], record["plan_name"], record["duration_days"],
                                             record["amount"], "NGN", reference)
         student = cur.execute("SELECT name FROM users WHERE email = ?", (record["username"],)).fetchone()
-        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
+        _paid = cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone()
+        _maybe_credit_partner(cur, _paid)
+        _maybe_enable_auto_renew(cur, _paid, payment_data)
+        _record_promo_use(cur, _paid)
         conn.commit()
         name = student["name"] if student else "Student"
         body = (f"Hello {name},\n\nYour payment of {fmt_naira(record['amount'])} for the {record['plan_name']} plan was successful.\n\n"
@@ -2580,6 +2593,8 @@ def paystack_webhook():
                 _fulfil_agent(reference, data)
             elif reference.startswith("PN-P-"):
                 _fulfil_pdf(reference, data)
+            elif reference.startswith("PN-RN-"):
+                _fulfil_renewal(reference, data)
             else:
                 _process_paystack_payment(reference, data)
     return jsonify({"ok": True})
@@ -2911,7 +2926,9 @@ def _fulfil_family(reference, payment_data):
              payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
         cur.execute("UPDATE family_purchases SET payment_status = 'PAID', pins = ?, family_key = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (json.dumps(codes), family_key, row["id"]))
-        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
+        _fam_pay = cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone()
+        _maybe_credit_partner(cur, _fam_pay)
+        _record_promo_use(cur, _fam_pay)
         conn.commit()
         row = cur.execute("SELECT * FROM family_purchases WHERE id = ?", (row["id"],)).fetchone()
         if mail_configured():
@@ -3493,6 +3510,11 @@ def _maybe_credit_partner(cur, payment):
             (payment["id"], buyer, buyer_phone, buyer_phone)).fetchone()["n"]
         if earlier:
             return  # loyal customer, not a first purchase — renewals belong to the house
+        already = cur.execute(
+            "SELECT 1 FROM partner_commissions WHERE lower(buyer) = lower(?) LIMIT 1", (buyer,)).fetchone()
+        if already:
+            return  # this customer already earned SOMEONE their first-purchase commission
+                     # (guards against two checkouts completing out of order)
         amount = float(payment["amount"] or 0)
         if amount <= 0:
             return
@@ -3747,6 +3769,335 @@ def partner_payout_request():
 
 
 # ---------------------------------------------------------------------------
+# Renewal engine: promo codes, auto-renewal, reminders (round 15)
+# ---------------------------------------------------------------------------
+
+def _validate_promo(cur, code, amount, scope="all"):
+    """Return (promo_row|None, error_message). scope: 'plans' | 'shop' | 'all'."""
+    code = (code or "").strip().upper()[:24]
+    if not code:
+        return None, ""
+    promo = cur.execute("SELECT * FROM promo_codes WHERE code = ?", (code,)).fetchone()
+    if not promo or not promo["active"]:
+        return None, "That promo code doesn't exist."
+    if promo["expires_at"] and str(promo["expires_at"]) < datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+        return None, "That promo code has expired."
+    if promo["max_uses"] and int(promo["uses"] or 0) >= int(promo["max_uses"]):
+        return None, "That promo code has been fully used."
+    if promo["applies_to"] not in ("all", scope):
+        return None, "That promo code doesn't apply to this purchase."
+    if float(amount or 0) < float(promo["min_amount"] or 0):
+        return None, f"That code needs a minimum purchase of {fmt_naira(promo['min_amount'])}."
+    if amount - _promo_discount(promo, amount) < 100:
+        return None, "That discount is too large for this purchase."
+    return promo, ""
+
+
+def _promo_discount(promo, amount):
+    """Naira amount saved by applying this promo to `amount`."""
+    amount = float(amount or 0)
+    value = float(promo["value"] or 0)
+    if promo["kind"] == "percent":
+        return round(amount * min(value, 100) / 100.0, 2)
+    return round(min(value, amount), 2)
+
+
+def _record_promo_use(cur, payment):
+    """Count one use of the payment's promo code (called on the PENDING->SUCCESS transition)."""
+    try:
+        keys = payment.keys() if hasattr(payment, "keys") else []
+        code = ((payment["promo_code"] if "promo_code" in keys else "") or "").strip().upper()
+        if code:
+            cur.execute("UPDATE promo_codes SET uses = uses + 1 WHERE code = ?", (code,))
+    except Exception:
+        log.exception("promo use tracking failed")
+
+
+@app.route("/promo/check")
+@rate_limit(limit=30, window_seconds=600, scope="promo_check", methods=("GET",))
+def promo_check():
+    """AJAX preview for the coupon field: does this code work on this amount?"""
+    code = (request.args.get("code") or "").strip().upper()[:24]
+    try:
+        amount = float(request.args.get("amount") or 0)
+    except ValueError:
+        amount = 0.0
+    scope = request.args.get("scope") or "all"
+    if not code:
+        return jsonify({"ok": False, "message": ""})
+    conn = connect()
+    promo, msg = _validate_promo(conn.cursor(), code, amount, scope)
+    conn.close()
+    if not promo:
+        return jsonify({"ok": False, "message": msg})
+    discount = _promo_discount(promo, amount)
+    return jsonify({"ok": True, "discount": discount, "total": round(amount - discount, 2),
+                    "message": f"{fmt_naira(discount)} off — you pay {fmt_naira(amount - discount)}"})
+
+
+def _maybe_enable_auto_renew(cur, payment_record, payment_data):
+    """If the buyer ticked 'Renew automatically' and Paystack returned a reusable card
+    authorization, save it and switch auto-renewal on. Never raises."""
+    try:
+        keys = payment_record.keys() if hasattr(payment_record, "keys") else []
+        if "renew_intent" not in keys or not payment_record["renew_intent"]:
+            return
+        auth = payment_data.get("authorization") or {}
+        if not auth.get("reusable") or not auth.get("authorization_code"):
+            return
+        username = payment_record["username"]
+        cur.execute("DELETE FROM saved_cards WHERE authorization_code = ?", (auth.get("authorization_code"),))
+        cur.execute("UPDATE saved_cards SET active = 0 WHERE username = ?", (username,))
+        cur.execute(
+            """INSERT INTO saved_cards (username, authorization_code, card_type, last4, exp_month, exp_year, bank, reusable)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1)""",
+            (username, auth.get("authorization_code"), str(auth.get("card_type"))[:40],
+             str(auth.get("last4"))[:4], str(auth.get("exp_month"))[:2], str(auth.get("exp_year"))[:4],
+             str(auth.get("bank"))[:60]))
+        cur.execute("UPDATE subscriptions SET auto_renew = 1, auto_renew_retries = 0 WHERE username = ?",
+                    (username,))
+        log.info("auto-renewal enabled for %s (card %s %s)", username, auth.get("bank"), auth.get("last4"))
+    except Exception:
+        log.exception("auto-renew capture failed")
+
+
+@app.route("/auto_renew_toggle", methods=["POST"])
+@login_required
+def auto_renew_toggle():
+    action = (request.form.get("action") or "").strip()
+    conn = connect()
+    cur = conn.cursor()
+    if action == "off":
+        cur.execute("UPDATE subscriptions SET auto_renew = 0 WHERE username = ?", (session["user"],))
+        conn.commit()
+        conn.close()
+        flash("Auto-renewal turned off. Your plan still runs until it expires.", "info")
+        return redirect(url_for("dashboard"))
+    card = cur.execute("SELECT * FROM saved_cards WHERE username = ? AND active = 1 ORDER BY id DESC",
+                       (session["user"],)).fetchone()
+    if not card:
+        conn.close()
+        flash("We don't have a saved card for you yet — pay for your next plan with a card and tick "
+              "'Renew automatically'.", "warning")
+        return redirect(url_for("dashboard"))
+    cur.execute("UPDATE subscriptions SET auto_renew = 1, auto_renew_retries = 0 WHERE username = ?",
+                (session["user"],))
+    conn.commit()
+    conn.close()
+    flash("Auto-renewal back on — your card will be charged the day before expiry.", "success")
+    return redirect(url_for("dashboard"))
+
+
+def _fulfil_renewal(reference, payment_data):
+    """Mark an auto-renewal payment SUCCESS and extend the subscription. Idempotent."""
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        rec = cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone()
+        if not rec:
+            return False, "not found"
+        if rec["payment_status"] == "SUCCESS":
+            return True, "already"
+        if payment_data.get("status") != "success":
+            cur.execute("UPDATE payments SET payment_status = 'FAILED', gateway_response = ? WHERE transaction_reference = ?",
+                        (str(payment_data.get("gateway_response"))[:200], reference))
+            conn.commit()
+            return False, "renewal charge failed"
+        paid_kobo = int(payment_data.get("amount") or 0)
+        if paid_kobo < int(round(float(rec["amount"]) * 100)):
+            cur.execute("UPDATE payments SET payment_status = 'AMOUNT_MISMATCH' WHERE transaction_reference = ?", (reference,))
+            conn.commit()
+            return False, "amount mismatch"
+        cur.execute(
+            """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = 'saved card',
+                                  channel = 'card', currency = 'NGN', amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
+               WHERE transaction_reference = ?""",
+            (payment_data.get("reference"), str(payment_data.get("gateway_response"))[:200],
+             paid_kobo / 100.0, reference))
+        start, end = activate_subscription(cur, rec["username"], rec["plan_id"], rec["plan_name"],
+                                           rec["duration_days"], rec["amount"], "NGN", reference)
+        cur.execute("UPDATE subscriptions SET auto_renew = 1, auto_renew_retries = 0, reminder3_for = NULL, winback_for = NULL WHERE username = ?",
+                    (rec["username"],))
+        cur.execute("UPDATE saved_cards SET last_used_at = CURRENT_TIMESTAMP WHERE username = ? AND active = 1",
+                    (rec["username"],))
+        conn.commit()
+        student = cur.execute("SELECT name FROM users WHERE email = ?", (rec["username"],)).fetchone()
+        name = student["name"] if student else "Student"
+        try:
+            send_email("PrepNova CBT — your plan renewed automatically",
+                       rec["username"],
+                       (f"Hello {name},\n\nYour {rec['plan_name']} plan was renewed automatically for {fmt_naira(rec['amount'])}.\n"
+                        f"Reference: {reference}\nNew expiry: {end:%d %B %Y}\n\n"
+                        f"Manage auto-renewal any time from your dashboard.\n\nPrepNova Team"),
+                       email_wrap("Your plan renewed automatically ✅",
+                                  f"Hello <b>{name}</b>,<br><br>Your <b>{rec['plan_name']}</b> plan has been renewed "
+                                  f"for <b>{fmt_naira(rec['amount'])}</b>. New expiry: <b>{end:%d %B %Y}</b>.",
+                                  "Open my dashboard", f"{app_url()}/dashboard"))
+        except Exception:
+            log.exception("renewal receipt email failed")
+        log.info("auto-renewal succeeded for %s (%s)", rec["username"], reference)
+        return True, "ok"
+    finally:
+        conn.close()
+
+
+def _charge_saved_card(authorization_code, email, amount_kobo, reference):
+    """Charge a saved Paystack authorization. Returns (ok, data|message)."""
+    try:
+        resp = requests.post(
+            "https://api.paystack.co/transaction/charge_authorization",
+            json={"email": email, "amount": int(amount_kobo), "authorization_code": authorization_code,
+                  "reference": reference},
+            headers={"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"},
+            timeout=30)
+        payload = resp.json()
+    except (requests.RequestException, ValueError):
+        log.exception("charge_authorization call failed")
+        return False, "network error"
+    if resp.status_code == 200 and payload.get("status") and (payload.get("data") or {}).get("status") == "success":
+        return True, payload["data"]
+    log.warning("renewal charge declined: %s", payload)
+    return False, "declined"
+
+
+def run_renewal_day(conn, now=None, charge_fn=None):
+    """The daily renewal job — safe to run multiple times per day.
+    1) T-3 renewal reminders (auto-renew off)  2) T-1 pre-charge notices (auto-renew on)
+    3) auto-renewal charges the day before expiry  4) win-back emails ~7 days after expiry.
+    Returns a stats dict. charge_fn lets tests mock the Paystack charge."""
+    now = now or datetime.now()
+    cur = conn.cursor()
+    stats = {"reminders": 0, "notices": 0, "renewed": 0, "declined": 0, "winbacks": 0}
+    fmt = "%Y-%m-%d %H:%M:%S"
+    subs = cur.execute("SELECT * FROM subscriptions WHERE is_active = 1 AND end_date IS NOT NULL").fetchall()
+    for s in subs:
+        try:
+            end = datetime.strptime(s["end_date"], fmt)
+        except (ValueError, TypeError):
+            continue
+        days_left = (end - now).total_seconds() / 86400.0
+        username = s["username"]
+        if s["payment_status"] == "FREE_TRIAL":
+            continue
+        # ---- auto-renew charge (day before expiry, keeps continuous access)
+        if s["auto_renew"] and 0 < days_left <= 1:
+            card = cur.execute("SELECT * FROM saved_cards WHERE username = ? AND active = 1 AND reusable = 1 ORDER BY id DESC",
+                               (username,)).fetchone()
+            if not card:
+                continue
+            plan = cur.execute("SELECT * FROM subscription_plans WHERE id = ?", (s["plan_id"],)).fetchone()
+            if not plan:
+                continue
+            reference = f"PN-RN-{int(time.time())}-{secrets.token_hex(6).upper()}"
+            cur.execute(
+                "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, payment_method) "
+                "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', 'saved card')",
+                (username, plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference))
+            conn.commit()
+            charge = charge_fn or _charge_saved_card
+            ok, data = charge(card["authorization_code"], username, int(round(float(plan["price"]) * 100)), reference)
+            if ok:
+                _fulfil_renewal(reference, data)
+                stats["renewed"] += 1
+            else:
+                cur.execute("UPDATE payments SET payment_status = 'FAILED', gateway_response = ? WHERE transaction_reference = ?",
+                            (str(data)[:200], reference))
+                retries = int(s["auto_renew_retries"] or 0) + 1
+                if retries >= 2:
+                    cur.execute("UPDATE subscriptions SET auto_renew = 0, auto_renew_retries = ? WHERE username = ?",
+                                (retries, username))
+                    try:
+                        send_email("PrepNova CBT — we couldn't renew you automatically",
+                                   username,
+                                   ("Hello,\n\nWe tried to charge your saved card to renew your plan but it was declined twice.\n"
+                                    f"Your access ends {end:%d %B %Y}. Renew manually here: {app_url()}/subscribe\n\n"
+                                    "PrepNova Team"),
+                                   email_wrap("Auto-renewal stopped",
+                                              "We couldn't charge your saved card, so auto-renewal is now off. "
+                                              f"Your access ends <b>{end:%d %B %Y}</b> — renew manually to keep practising.",
+                                              "Renew now", f"{app_url()}/subscribe"))
+                    except Exception:
+                        log.exception("renewal-stop email failed")
+                else:
+                    cur.execute("UPDATE subscriptions SET auto_renew_retries = ? WHERE username = ?", (retries, username))
+                conn.commit()
+                stats["declined"] += 1
+            continue
+        # ---- reminders / pre-charge notices
+        if 0 < days_left <= 3 and s["reminder3_for"] != s["end_date"]:
+            if s["auto_renew"]:
+                card = cur.execute("SELECT * FROM saved_cards WHERE username = ? AND active = 1 ORDER BY id DESC",
+                                   (username,)).fetchone()
+                _plan = cur.execute("SELECT price FROM subscription_plans WHERE id = ?", (s["plan_id"],)).fetchone()
+                _price = fmt_naira(_plan["price"]) if _plan else ""
+                if card:
+                    try:
+                        send_email("PrepNova CBT — your plan renews tomorrow",
+                                   username,
+                                   (f"Hello,\n\nYour {s['plan_name']} plan renews tomorrow — {_price} will be charged to your "
+                                    f"{card['bank'] or 'card'} card ••{card['last4']} automatically.\n"
+                                    f"Don't want that? Turn it off in your dashboard: {app_url()}/dashboard\n\nPrepNova Team"),
+                                   email_wrap("Your plan renews tomorrow",
+                                              f"Your <b>{s['plan_name']}</b> plan renews tomorrow — your "
+                                              f"{card['bank'] or 'card'} card ••{card['last4']} will be charged automatically.",
+                                              "Manage auto-renewal", f"{app_url()}/dashboard"))
+                    except Exception:
+                        log.exception("pre-charge notice failed")
+                    stats["notices"] += 1
+            else:
+                try:
+                    send_email("PrepNova CBT — your plan expires soon",
+                               username,
+                               (f"Hello,\n\nYour {s['plan_name']} plan ends {end:%d %B %Y}.\n"
+                                f"Keep your streak and your access — renew in one minute: {app_url()}/subscribe\n\nPrepNova Team"),
+                               email_wrap("Your plan expires soon ⏳",
+                                          f"Your <b>{s['plan_name']}</b> plan ends <b>{end:%d %B %Y}</b>. "
+                                          "Renew now and keep every feature — no days lost.",
+                                          "Renew my plan", f"{app_url()}/subscribe"))
+                except Exception:
+                    log.exception("expiry reminder failed")
+                stats["reminders"] += 1
+            cur.execute("UPDATE subscriptions SET reminder3_for = ? WHERE username = ?", (s["end_date"], username))
+            conn.commit()
+    # ---- win-backs: latest subscription per user, expired 6-10 days ago
+    expired = cur.execute(
+        """SELECT s.* FROM subscriptions s
+           JOIN (SELECT username, MAX(id) AS mid FROM subscriptions GROUP BY username) x ON x.mid = s.id
+           WHERE s.end_date IS NOT NULL AND s.winback_for IS NOT s.end_date
+             AND s.end_date < ? AND s.end_date >= ?""",
+        (now.strftime(fmt), (now - timedelta(days=10)).strftime(fmt))).fetchall()
+    for s in expired:
+        try:
+            end = datetime.strptime(s["end_date"], fmt)
+        except (ValueError, TypeError):
+            continue
+        if not (timedelta(days=6) <= now - end <= timedelta(days=10)):
+            continue
+        code = "COMEBACK-" + "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(4))
+        cur.execute(
+            """INSERT INTO promo_codes (code, kind, value, max_uses, expires_at, applies_to, note)
+               VALUES (?, 'percent', 20, 1, datetime('now', '+30 days'), 'all', ?)""",
+            (code, f"win-back {s['username']}"))
+        cur.execute("UPDATE subscriptions SET winback_for = ? WHERE id = ?", (s["end_date"], s["id"]))
+        conn.commit()
+        try:
+            send_email("PrepNova — we miss you (20% off inside)",
+                       s["username"],
+                       (f"Hello,\n\nYour PrepNova access ended {end:%d %B %Y}. "
+                        f"Here's 20% off your next plan if you come back this month:\n\nCode: {code}\n\n"
+                        f"Use it at checkout: {app_url()}/subscribe\n\nPrepNova Team"),
+                       email_wrap("We miss you — 20% off 🎁",
+                                  "Your access ended, but your progress is waiting. Here's <b>20% off</b> "
+                                  f"your next plan: <code>{code}</code>",
+                                  "Claim my discount", f"{app_url()}/subscribe"))
+        except Exception:
+            log.exception("win-back email failed")
+        stats["winbacks"] += 1
+    return stats
+
+
+
+# ---------------------------------------------------------------------------
 # PDF Study-Pack Shop (public — instant-download packs, guest checkout)
 # ---------------------------------------------------------------------------
 
@@ -3930,15 +4281,24 @@ def shop_buy():
         flash("That pack is not available.", "danger")
         return redirect(url_for("shop"))
     reference = f"PN-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    amount = float(product["price"])
+    promo_code = (request.form.get("promo_code") or "").strip().upper()[:24]
+    if promo_code:
+        promo, pmsg = _validate_promo(cur, promo_code, product["price"], "shop")
+        if not promo:
+            conn.close()
+            flash(pmsg, "danger")
+            return redirect(request.referrer or url_for("shop"))
+        amount = max(100.0, round(product["price"] - _promo_discount(promo, product["price"]), 2))
     cur.execute(
         "INSERT INTO pdf_orders (reference, product_id, buyer_name, buyer_email, amount, payment_status) "
         "VALUES (?, ?, ?, ?, ?, 'PENDING')",
-        (reference, product["id"], buyer_name, buyer_email, product["price"]))
+        (reference, product["id"], buyer_name, buyer_email, amount))
     cur.execute(
-        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code) "
-        "VALUES (?, ?, ?, ?, 30, ?, 'PENDING', 'NGN', ?)",
-        (buyer_email, _pdf_plan_id(cur), f"PDF — {product['title']}"[:120], product["price"], reference,
-         (request.cookies.get("pn_ref") or "").strip().upper()[:16]))
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code, promo_code) "
+        "VALUES (?, ?, ?, ?, 30, ?, 'PENDING', 'NGN', ?, ?)",
+        (buyer_email, _pdf_plan_id(cur), f"PDF — {product['title']}"[:120], amount, reference,
+         (request.cookies.get("pn_ref") or "").strip().upper()[:16], promo_code or None))
     conn.commit()
     conn.close()
     try:
@@ -3946,7 +4306,7 @@ def shop_buy():
             "https://api.paystack.co/transaction/initialize",
             json={
                 "email": buyer_email,
-                "amount": int(round(float(product["price"]) * 100)),
+                "amount": int(round(amount * 100)),
                 "currency": "NGN",
                 "reference": reference,
                 "callback_url": f"{app_url()}/pdf_callback",
@@ -3993,6 +4353,20 @@ def _fulfil_pdf(reference, payment_data):
             conn.commit()
             return False, "Payment amount did not match your order. Please contact support.", None
         code = secrets.token_hex(10).upper()
+        product = cur.execute("SELECT * FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
+        bundle_items = []  # [(title, download_code)]
+        if product and product["bundle_items"]:
+            for slug in [x.strip() for x in product["bundle_items"].split(",") if x.strip()]:
+                item = cur.execute("SELECT * FROM pdf_products WHERE slug = ? AND is_active = 1", (slug,)).fetchone()
+                if item:
+                    icode = secrets.token_hex(10).upper()
+                    cur.execute(
+                        "INSERT INTO pdf_orders (reference, product_id, buyer_name, buyer_email, amount, payment_status, download_code, paid_at) "
+                        "VALUES (?, ?, ?, ?, 0, 'PAID', ?, CURRENT_TIMESTAMP)",
+                        (f"{reference}-{item['id']}", item["id"], order["buyer_name"], order["buyer_email"], icode))
+                    bundle_items.append((item["title"], icode))
+            if bundle_items:
+                code = None  # bundle parent: children carry the real codes
         cur.execute(
             """UPDATE payments SET payment_status = 'SUCCESS', paystack_reference = ?, gateway_response = ?, payment_method = ?,
                                   channel = ?, currency = ?, amount_verified = ?, verified_at = CURRENT_TIMESTAMP, paid_at = CURRENT_TIMESTAMP
@@ -4001,25 +4375,42 @@ def _fulfil_pdf(reference, payment_data):
              payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
         cur.execute("UPDATE pdf_orders SET payment_status = 'PAID', download_code = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (code, order["id"]))
-        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
+        _pdf_pay = cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone()
+        _maybe_credit_partner(cur, _pdf_pay)
+        _record_promo_use(cur, _pdf_pay)
         conn.commit()
         order = cur.execute("SELECT * FROM pdf_orders WHERE id = ?", (order["id"],)).fetchone()
         if mail_configured():
-            product = cur.execute("SELECT title FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
-            try:
-                send_email("PrepNova CBT — your study pack is ready",
-                           order["buyer_email"],
-                           (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}.\n\n"
-                            f"Download link (valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n"
-                            f"{app_url()}/pdf_download/{order['download_code']}\n\nReference: {reference}"),
-                           email_wrap("Your study pack is ready",
-                                      (f"Hello <b>{order['buyer_name']}</b>,<br><br>Thank you for buying "
-                                       f"<b>{product['title']}</b>.<br><br>"
-                                       f"<a href='{app_url()}/pdf_download/{order['download_code']}'>Download it here</a> "
-                                       f"(valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads)."),
-                                      "Open PrepNova", f"{app_url()}/shop"))
-            except Exception:
-                log.exception("PDF receipt email failed")
+            if bundle_items:
+                link_lines = "\n".join(f"  {t}: {app_url()}/pdf_download/{c}" for t, c in bundle_items)
+                html_links = "<br>".join(f"<a href='{app_url()}/pdf_download/{c}'>{t}</a>" for t, c in bundle_items)
+                try:
+                    send_email("PrepNova CBT — your study bundle is ready",
+                               order["buyer_email"],
+                               (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}. "
+                                f"Your download links (each valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n\n"
+                                f"{link_lines}\n\nReference: {reference}"),
+                               email_wrap("Your study bundle is ready",
+                                          f"Hello <b>{order['buyer_name']}</b>,<br><br>Thank you for buying "
+                                          f"<b>{product['title']}</b>.<br><br>{html_links}",
+                                          "Open PrepNova", f"{app_url()}/shop"))
+                except Exception:
+                    log.exception("PDF bundle receipt email failed")
+            else:
+                try:
+                    send_email("PrepNova CBT — your study pack is ready",
+                               order["buyer_email"],
+                               (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}.\n\n"
+                                f"Download link (valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n"
+                                f"{app_url()}/pdf_download/{order['download_code']}\n\nReference: {reference}"),
+                               email_wrap("Your study pack is ready",
+                                          (f"Hello <b>{order['buyer_name']}</b>,<br><br>Thank you for buying "
+                                           f"<b>{product['title']}</b>.<br><br>"
+                                           f"<a href='{app_url()}/pdf_download/{order['download_code']}'>Download it here</a> "
+                                           f"(valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads)."),
+                                          "Open PrepNova", f"{app_url()}/shop"))
+                except Exception:
+                    log.exception("PDF receipt email failed")
         return True, "ok", order
     finally:
         conn.close()
@@ -4049,9 +4440,14 @@ def pdf_callback():
         return redirect(url_for("shop"))
     conn = connect()
     product = conn.execute("SELECT * FROM pdf_products WHERE id = ?", (order["product_id"],)).fetchone()
+    extra_downloads = conn.execute(
+        """SELECT o.download_code, p.title FROM pdf_orders o JOIN pdf_products p ON p.id = o.product_id
+           WHERE o.reference LIKE ? AND o.payment_status = 'PAID' ORDER BY o.id""",
+        (reference + "-%",)).fetchall()
     conn.close()
     return render_template("pdf_success.html", order=order, p=product,
                            download_url=f"{app_url()}/pdf_download/{order['download_code']}",
+                           extra_downloads=extra_downloads,
                            max_downloads=PDF_MAX_DOWNLOADS, link_days=PDF_LINK_DAYS)
 
 

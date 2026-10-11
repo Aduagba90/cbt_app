@@ -1382,6 +1382,18 @@ earnings, admin queue + mark-paid flow, landing band visibility, zero console er
 Full battery: **20 suites green** (partners_test added; dropdown_test needs its port-8160
 companion `_work/dd_server.py` — now persistent in _work).
 
+**Post-build recheck (same day):** fresh-eyes review found a real hole — a buyer completing
+two checkouts out of order (two tabs, double payment) could earn the partner TWO
+"first-purchase" commissions (the earlier-id check missed the newer SUCCESS). Fixed with a
+global guard in `_maybe_credit_partner`: skip if `partner_commissions` already holds ANY row
+for that buyer — **one commission per customer, ever**. Regression test added (Chidi
+double-checkout scenario) → suite now **49/49**. Security probes re-run clean: anonymous +
+student blocked from all `/admin/partner*` actions (redirect to admin_login), payout POST
+without CSRF rejected, browser audit 26/26 again. Accepted limitations (documented): guest
+self-buy via a second email can't be auto-caught (guest checkout has no phone; same-email
+self-buys ARE blocked; terms prohibit it + admin can ban), click counter can be inflated by
+refreshes (cosmetic — no money attached), attribution window = 30-day cookie.
+
 **Gotchas found this round:** the route collision above; `send_email` had to be imported in
 admin_routes; validation errors were collected but never rendered (alert block added to
 partner_apply.html); `normalise_phone()` returns None for bad input; shop_buy expects `slug`
@@ -1389,4 +1401,62 @@ partner_apply.html); `normalise_phone()` returns None for bad input; shop_buy ex
 `get_cookie()` returns a Cookie OBJECT (compare `.value`); audit statefulness — restart the
 audit server for a clean browser run (two lessons now: family PINs and partner payouts);
 `/tmp` is wiped between turns (keep companion scripts in `_work/`); flashes render as
-`data-pn-flash` toast spans (they ARE in the HTML for string checks).
+`data-pn-flash` toast spans (they ARE in the HTML for string checks); **battery scripts must
+clean each suite's OWN scratch path** — many suites hardcode `/tmp/<xx>.db` (ag, fb, ct, fam,
+f1, f2, gf, off, waec, or, part, shp, sp) and ignore the DATABASE_PATH you pass, so a second
+battery run in one session sees stale state and "fails" (feat1 audit count, feat2 countdown
+card). Clean with `rm -f /tmp/*.db*` between runs.
+
+---
+
+## Round 15 — renewal money machine (auto-renew, coupons, reminders, duo bundle)
+
+**Commit:** see git log (this commit). **Suites:** new `_work/renewal_test.py` **46/46**;
+battery **23 suites + regress green** (offline_engine now 41 — a real mobile-overflow fix
+landed, see below); browser audit `_work/audit15.py` **27/27** (VISIBILITY protocol).
+
+**What shipped (Tier A):**
+1. **Auto-renewal.** Checkout has an unticked "Renew automatically" box (honest opt-in —
+   deliberately NOT pre-ticked). Paystack reusable authorizations are captured on payment
+   success (`payments.renew_intent` → `saved_cards`, one active card per user, older cards
+   deactivated) and `subscriptions.auto_renew=1`. The dashboard shows "Auto-renewal ON ·
+   bank ••last4" with a turn-off toggle (turn-on only works if a card is saved). The daily
+   job charges the saved card when 0 < days_left ≤ 1 (refs `PN-RN-{ts}-{hex}`); success →
+   `_fulfil_renewal` (idempotent, extends via `activate_subscription`, receipt email,
+   retries reset); decline → `auto_renew_retries+1`; 2 declines → auto_renew=0 + "stopped"
+   email. Webhook also fulfils `PN-RN-` refs (job-crash safety). FREE_TRIAL subs are skipped.
+2. **Reminders + win-back.** T-3 email (sentiment-keyed `reminder3_for=end_date`, once per
+   end_date): pre-charge notice if auto-renew+card, else renew nudge. 6–10 days after expiry:
+   win-back email + single-use `COMEBACK-XXXX` 20%-off 30-day code (`winback_for` sentinel).
+   `run_renewal_day(conn, now, charge_fn)` is idempotent and fully mockable (charge_fn).
+3. **Coupons.** `promo_codes` (percent/amount, min spend, max uses, expiry, scope
+   all/plans/shop). `/promo/check` AJAX (rate-limited 30/10min). Discount floor: total never
+   below ₦100. Uses counted ONLY on payment SUCCESS (all three fulfilment paths:
+   `_process_paystack_payment`, `_fulfil_family`, `_fulfil_pdf`). Checkout JS: only a code
+   that passed the last Apply rides in the hidden `promoField` (invalid apply clears it).
+   Admin: `/admin/promos` (revenue per code, create form, toggle), admin-bar "Promos" link.
+4. **Duo bundle.** `offline-duo-bundle` ₦2,500 (JAMB+WAEC simulators, save ₦500). Fulfilment
+   mints one child `pdf_orders` row per item (`{ref}-{item_id}`, amount 0, PAID, own code);
+   parent gets `download_code = NULL` (children carry the codes — download_code is UNIQUE).
+   Success page + email list both download links.
+
+**Deploy adds one step:** PythonAnywhere **Tasks tab → daily task** —
+`python3 /home/<you>/PrepNova-CBT/scripts/renewals_daily.py` (set it once after deploying).
+Everything else deploys as usual (`git push origin main`, then `python3 setup.py` on PA).
+
+**Bugs found & fixed while testing (real ones):** bundle parent originally shared child-1's
+download code → UNIQUE crash (parent now NULL); the bundle success-page query had a
+double-dash LIKE pattern (`ref--%`) that matched nothing; `send_email` crashed outside an
+app context (daily script) — now guarded with `has_app_context()`; offline simulator
+topbar title overflowed 390px phones with wide system fonts — title now ellipsizes and
+`.pn-top` clips (offline_engine suite went 40→41). Test-side lessons: mock amounts are in
+KOBO (₦800 = 80000); flashes HTML-escape apostrophes (`don't` → `don&#39;t` — assert
+apostrophe-free substrings); `register_login` helpers must GET /logout first (register
+redirects when logged in); `pkill -f <script>` kills your own bash if the pattern appears
+in the command line — use start_process/stop_process for audit servers.
+
+**Security probes (round 15): 8/8.** anon + student → 302 from `/admin/promos`,
+`/admin/promo_new`, `/admin/promo_action/*`; promo_new POST without CSRF rejected;
+`/promo/check` returns JSON only (no template leak); rate limit active.
+
+**Queue:** R16 = NECO question bank (before November); R17 = NCEE + JAMB 2027 early-bird.

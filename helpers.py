@@ -10,7 +10,7 @@ import secrets
 import threading
 from datetime import datetime, timedelta
 
-from flask import current_app, request
+from flask import current_app, request, has_app_context
 
 from db import connect
 
@@ -454,10 +454,18 @@ def get_subscription(username, cur=None):
         conn = connect()
         cur = conn.cursor()
     row = cur.execute(
-        "SELECT plan_name, start_date, end_date, is_active, payment_status FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1",
+        "SELECT plan_name, start_date, end_date, is_active, payment_status, auto_renew FROM subscriptions WHERE username = ? ORDER BY id DESC LIMIT 1",
         (username,),
     ).fetchone()
-    info = {"plan": "None", "status": "Inactive", "end_date": None, "days_left": 0, "active": False, "is_trial": False, "progress": 0}
+    info = {"plan": "None", "status": "Inactive", "end_date": None, "days_left": 0, "active": False, "is_trial": False, "progress": 0,
+            "auto_renew": False, "card_last4": None, "card_bank": None}
+    if row:
+        info["auto_renew"] = bool(row["auto_renew"])
+        if row["auto_renew"]:
+            card = cur.execute("SELECT last4, bank FROM saved_cards WHERE username = ? AND active = 1 ORDER BY id DESC LIMIT 1",
+                               (username,)).fetchone()
+            if card:
+                info["card_last4"], info["card_bank"] = card["last4"], card["bank"]
     if row:
         info["plan"] = row["plan_name"] or "None"
         info["is_trial"] = (row["payment_status"] == "FREE_TRIAL")
@@ -515,6 +523,9 @@ def record_practice_use(username, cur):
 # ---------------------------------------------------------------------------
 
 def send_email(subject, recipient, body, html=None):
+    if not has_app_context():
+        log.warning("Outside app context; skipping e-mail to %s (%s)", recipient, subject)
+        return False
     app = current_app._get_current_object()
     if not app.config.get("MAIL_USERNAME") or not app.config.get("MAIL_PASSWORD"):
         log.warning("Mail not configured; skipping e-mail to %s (%s)", recipient, subject)

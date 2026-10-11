@@ -5948,3 +5948,83 @@ def partner_payout_action(pay_id):
         flash("Unknown payout action.", "danger")
     conn.close()
     return redirect(url_for("admin_bp.manage_partners"))
+
+
+# ----------------------------------------------------------------------------
+# Promo codes (round 15 — coupons / seasonal sales / win-backs)
+# ----------------------------------------------------------------------------
+
+@admin_bp.route("/admin/promos")
+def manage_promos():
+    conn = connect()
+    cur = conn.cursor()
+    promos = cur.execute(
+        """SELECT p.*,
+                  (SELECT COALESCE(SUM(pay.amount), 0) FROM payments pay
+                    WHERE pay.promo_code = p.code AND pay.payment_status = 'SUCCESS') AS revenue
+           FROM promo_codes p ORDER BY p.id DESC LIMIT 300""").fetchall()
+    conn.close()
+    return render_template("admin_promos.html", promos=promos)
+
+
+@admin_bp.route("/admin/promo_new", methods=["POST"])
+def promo_new():
+    code = "".join(ch for ch in (request.form.get("code") or "").upper() if ch.isalnum() or ch == "-")[:24]
+    if not code:
+        code = "PROMO-" + "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(4))
+    kind = "percent" if request.form.get("kind") == "percent" else "amount"
+    try:
+        value = float(request.form.get("value") or 0)
+    except ValueError:
+        value = 0
+    if value <= 0 or (kind == "percent" and value > 90):
+        flash("Enter a sensible discount (percent up to 90, or a naira amount).", "danger")
+        return redirect(url_for("admin_bp.manage_promos"))
+    try:
+        min_amount = float(request.form.get("min_amount") or 0)
+    except ValueError:
+        min_amount = 0
+    try:
+        max_uses = int(request.form.get("max_uses") or 0)
+    except ValueError:
+        max_uses = 0
+    try:
+        days = int(request.form.get("expires_days") or 0)
+    except ValueError:
+        days = 0
+    applies_to = request.form.get("applies_to") if request.form.get("applies_to") in ("all", "plans", "shop") else "all"
+    expires = f"datetime('now', '+{days} days')" if days > 0 else "NULL"
+    note = (request.form.get("note") or "")[:200]
+    conn = connect()
+    cur = conn.cursor()
+    if cur.execute("SELECT 1 FROM promo_codes WHERE code = ?", (code,)).fetchone():
+        conn.close()
+        flash("That code already exists.", "danger")
+        return redirect(url_for("admin_bp.manage_promos"))
+    cur.execute(
+        f"""INSERT INTO promo_codes (code, kind, value, min_amount, max_uses, expires_at, applies_to, note)
+            VALUES (?, ?, ?, ?, ?, {expires}, ?, ?)""",
+        (code, kind, value, min_amount, max_uses, applies_to, note))
+    conn.commit()
+    conn.close()
+    _audit("promo_new", f"{code} {kind} {value}")
+    flash(f"Promo code {code} created.", "success")
+    return redirect(url_for("admin_bp.manage_promos"))
+
+
+@admin_bp.route("/admin/promo_action/<int:pid>", methods=["POST"])
+def promo_action(pid):
+    action = (request.form.get("action") or "").strip()
+    conn = connect()
+    cur = conn.cursor()
+    promo = cur.execute("SELECT * FROM promo_codes WHERE id = ?", (pid,)).fetchone()
+    if not promo:
+        conn.close()
+        abort(404)
+    if action == "toggle":
+        cur.execute("UPDATE promo_codes SET active = ? WHERE id = ?", (0 if promo["active"] else 1, pid))
+        conn.commit()
+        _audit("promo_toggle", f"{promo['code']} -> {'on' if not promo['active'] else 'off'}")
+        flash(f"{promo['code']} is now {'active' if not promo['active'] else 'disabled'}.", "info")
+    conn.close()
+    return redirect(url_for("admin_bp.manage_promos"))

@@ -22,14 +22,58 @@
                 <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Current plan ends</span><b>{{ sub.end_date|nicedate }}</b></div>
                 <div class="small text-muted py-2">Your new plan will start when the current one ends — no days lost.</div>
                 {% endif %}
-                <div class="d-flex justify-content-between align-items-center pt-3"><span class="fw-bold">Total</span><span class="h3 mb-0 fw-bold text-primary">{{ plan['price']|naira }}</span></div>
+                <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Promo code</span>
+                    <span>
+                        <input name="promo_code" id="promoCode" class="form-control form-control-sm d-inline-block text-uppercase" style="width:130px" placeholder="CODE" maxlength="24" autocomplete="off">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="promoBtn">Apply</button>
+                        <div class="small mt-1" id="promoMsg"></div>
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-3"><span class="fw-bold">Total</span><span class="h3 mb-0 fw-bold text-primary" id="totalPrice">{{ plan['price']|naira }}</span></div>
             </div>
             <div class="card-footer bg-transparent">
                 {% if paystack_ready %}
-                <form method="POST" action="{{ url_for('initialize_payment', plan_id=plan['id']) }}" data-once>
+                <form method="POST" action="{{ url_for('initialize_payment', plan_id=plan['id']) }}" data-once id="payForm">
                     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
-                    <button class="btn btn-accent btn-lg w-100 fw-bold" data-loading="Connecting to Paystack…"><i class="bi bi-lock-fill me-1"></i> Pay {{ plan['price']|naira }} securely</button>
+                    <input type="hidden" name="promo_code" id="promoField" value="">
+                    <div class="form-check text-start mb-3">
+                        <input class="form-check-input" type="checkbox" name="auto_renew" id="autoRenew">
+                        <label class="form-check-label small" for="autoRenew">
+                            <i class="bi bi-arrow-repeat text-primary"></i> <b>Renew automatically</b> when this plan ends — no gaps, cancel anytime from my dashboard.
+                            <span class="d-block text-muted">Uses this card. We email you before every charge.</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-accent btn-lg w-100 fw-bold" data-loading="Connecting to Paystack…"><i class="bi bi-lock-fill me-1"></i> <span id="payBtnLabel">Pay {{ plan['price']|naira }} securely</span></button>
                 </form>
+                <script>
+                (function () {
+                    var btn = document.getElementById('promoBtn'), code = document.getElementById('promoCode'),
+                        msg = document.getElementById('promoMsg'), total = document.getElementById('totalPrice'),
+                        pay = document.getElementById('payBtnLabel'), base = {{ plan['price'] }}, okCode = '';
+                    btn.addEventListener('click', function () {
+                        var c = code.value.trim();
+                        if (!c) { okCode = ''; document.getElementById('promoField').value = ''; msg.textContent = ''; total.textContent = fmtNaira(base); pay.textContent = 'Pay ' + fmtNaira(base) + ' securely'; return; }
+                        fetch('/promo/check?code=' + encodeURIComponent(c) + '&amount=' + base + '&scope=plans')
+                            .then(function (r) { return r.json(); })
+                            .then(function (d) {
+                                if (d.ok) {
+                                    okCode = c;
+                                    msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> ' + d.message + '</span>';
+                                    total.textContent = fmtNaira(d.total); pay.textContent = 'Pay ' + fmtNaira(d.total) + ' securely';
+                                } else {
+                                    okCode = '';
+                                    msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> ' + (d.message || 'Code not valid') + '</span>';
+                                    total.textContent = fmtNaira(base); pay.textContent = 'Pay ' + fmtNaira(base) + ' securely';
+                                }
+                                document.getElementById('promoField').value = okCode;
+                            });
+                    });
+                    document.getElementById('payForm').addEventListener('submit', function () {
+                        document.getElementById('promoField').value = okCode;
+                    });
+                    function fmtNaira(n) { return '₦' + Number(n).toLocaleString('en-NG', { maximumFractionDigits: 0 }); }
+                })();
+                </script>
                 {% else %}
                 <button class="btn btn-secondary btn-lg w-100" disabled>Online payment not configured</button>
                 <div class="small text-muted mt-2 text-center">Contact support on <a href="https://wa.me/{{ support_whatsapp }}" target="_blank" rel="noopener">WhatsApp</a> to activate manually.</div>

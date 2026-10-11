@@ -476,9 +476,16 @@ def init_db():
             is_active INTEGER DEFAULT 1,
             amount_paid REAL DEFAULT 0,
             currency TEXT DEFAULT 'NGN',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            auto_renew INTEGER DEFAULT 0,
+            auto_renew_retries INTEGER DEFAULT 0,
+            reminder3_for TEXT,
+            winback_for TEXT
         )
     """)
+    for col, ddl in [("auto_renew", "INTEGER DEFAULT 0"), ("auto_renew_retries", "INTEGER DEFAULT 0"),
+                     ("reminder3_for", "TEXT"), ("winback_for", "TEXT")]:
+        _add_column(cur, "subscriptions", col, ddl)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(username)")
 
     cur.execute("""
@@ -489,9 +496,11 @@ def init_db():
             blurb TEXT,
             price REAL NOT NULL,
             is_active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            bundle_items TEXT
         )
     """)
+    _add_column(cur, "pdf_products", "bundle_items", "TEXT")
     cur.execute("""
         CREATE TABLE IF NOT EXISTS pdf_orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -559,6 +568,13 @@ def init_db():
              "Every WAEC objective paper in one file — English Paper 1 and the Test of Orals, Mathematics, Biology, Chemistry, Physics, Economics and Government. Official 2026 WASSCE formats and timing, instant marking with your A1–F9 grade, and explained answers. No network, no data charges.",
              1500.0),
         ])
+    cur.execute("""INSERT OR IGNORE INTO pdf_products (slug, title, blurb, price, bundle_items)
+                   VALUES (?, ?, ?, ?, ?)""",
+                ("offline-duo-bundle",
+                 "PrepNova Offline — JAMB + WAEC Simulator Bundle",
+                 "Both offline simulators in one purchase: the full JAMB mock (6,979 questions, 14 subjects, real 120-minute timing) AND every WAEC objective paper (1,260 questions, official 2026 WASSCE formats, A1–F9 grading). Buy together and save ₦500 — two download links, one payment.",
+                 2500.0,
+                 "offline-jamb-cbt,offline-waec-cbt"))
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS agent_orders (
@@ -649,9 +665,45 @@ def init_db():
     """)
     for col, ddl in [("paystack_reference", "TEXT"), ("gateway_response", "TEXT"),
                      ("currency", "TEXT DEFAULT 'NGN'"), ("verified_at", "TIMESTAMP"),
-                     ("amount_verified", "REAL"), ("channel", "TEXT"), ("ref_code", "TEXT")]:
+                     ("amount_verified", "REAL"), ("channel", "TEXT"), ("ref_code", "TEXT"),
+                     ("promo_code", "TEXT"), ("renew_intent", "INTEGER DEFAULT 0")]:
         _add_column(cur, "payments", col, ddl)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(transaction_reference)")
+
+    # ------------------------------------------------- renewal engine (round 15)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS saved_cards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            authorization_code TEXT NOT NULL UNIQUE,
+            card_type TEXT,
+            last4 TEXT,
+            exp_month TEXT,
+            exp_year TEXT,
+            bank TEXT,
+            reusable INTEGER DEFAULT 1,
+            active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_used_at TIMESTAMP
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_saved_cards_user ON saved_cards(username)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS promo_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            kind TEXT NOT NULL DEFAULT 'percent',
+            value REAL NOT NULL,
+            min_amount REAL DEFAULT 0,
+            max_uses INTEGER DEFAULT 0,
+            uses INTEGER DEFAULT 0,
+            expires_at TIMESTAMP,
+            applies_to TEXT DEFAULT 'all',
+            active INTEGER DEFAULT 1,
+            note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
 
     # --------------------------------------------------- sales partners (round 14)
     cur.execute("""

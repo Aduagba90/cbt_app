@@ -186,9 +186,9 @@ _TEMPLATE = r"""<!DOCTYPE html>
 html{-webkit-text-size-adjust:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh}
 button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.pn-top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:40;box-shadow:0 2px 10px rgba(15,31,61,.25)}
+.pn-top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:40;box-shadow:0 2px 10px rgba(15,31,61,.25);overflow:hidden}
 .pn-logo{width:38px;height:38px;border-radius:10px;background:var(--pri);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
-.pn-top .t{font-weight:700;font-size:1rem;line-height:1.2}
+.pn-top .t{font-weight:700;font-size:1rem;line-height:1.2;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pn-top .s{font-size:.75rem;opacity:.75}
 .pill{display:inline-flex;align-items:center;gap:5px;background:rgba(242,183,5,.16);border:1px solid rgba(242,183,5,.55);color:#ffd75e;font-size:.68rem;font-weight:700;letter-spacing:.4px;padding:3px 9px;border-radius:999px;white-space:nowrap}
 .pn-top .timer{margin-left:auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);padding:6px 12px;border-radius:10px;font-weight:700;font-variant-numeric:tabular-nums;font-size:1rem}

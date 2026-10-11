@@ -52,8 +52,16 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="slug" value="{{ p['slug'] }}">
             <div class="text-center mb-3">
-                <span class="fs-2 fw-bold text-primary">{{ p['price']|naira }}</span>
+                <span class="fs-2 fw-bold text-primary" id="totalPrice">{{ p['price']|naira }}</span>
                 <div class="small text-muted">one-time payment · instant download</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small mb-1">Promo code (optional)</label>
+                <div class="d-flex gap-2">
+                    <input class="form-control form-control-sm text-uppercase" name="promo_code" id="promoCode" placeholder="CODE" maxlength="24" autocomplete="off" style="max-width:140px">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="promoBtn">Apply</button>
+                </div>
+                <div class="small mt-1" id="promoMsg"></div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Your name</label>
@@ -74,4 +82,25 @@
         </form>
     </div>
 </div>
+<script>
+(function () {
+    var btn = document.getElementById('promoBtn'), code = document.getElementById('promoCode'),
+        msg = document.getElementById('promoMsg'), total = document.getElementById('totalPrice'), base = {{ p['price'] }};
+    btn.addEventListener('click', function () {
+        var c = code.value.trim();
+        if (!c) { msg.textContent = ''; return; }
+        fetch('/promo/check?code=' + encodeURIComponent(c) + '&amount=' + base + '&scope=shop')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) {
+                    msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> ' + d.message + '</span>';
+                    total.textContent = '₦' + Number(d.total).toLocaleString('en-NG', {maximumFractionDigits: 0});
+                } else {
+                    msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> ' + (d.message || 'Code not valid') + '</span>';
+                    total.textContent = '₦' + Number(base).toLocaleString('en-NG', {maximumFractionDigits: 0});
+                }
+            });
+    });
+})();
+</script>
 {% endblock %}

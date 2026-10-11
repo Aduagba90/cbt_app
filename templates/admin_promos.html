@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Promo codes — Admin</title>
+    <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <style>body{background:#f4f6f9}.card{border:0;box-shadow:0 .1rem .4rem rgba(15,31,61,.08)}</style>
+</head>
+<body>
+{% include "_admin_bar.html" %}
+<div class="container mt-4">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }}">{{ message }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-tags"></i> Promo codes</h2>
+        <span class="badge text-bg-primary fs-6">{{ promos|length }} codes</span>
+    </div>
+
+    <div class="card mb-4"><div class="card-body">
+        <h5><i class="bi bi-plus-circle text-primary"></i> Create a code</h5>
+        <form method="POST" action="/admin/promo_new" class="row g-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-2"><label class="form-label small mb-1">Code</label>
+                <input class="form-control form-control-sm text-uppercase" name="code" maxlength="24" placeholder="auto if empty"></div>
+            <div class="col-md-2"><label class="form-label small mb-1">Type</label>
+                <select class="form-select form-select-sm" name="kind"><option value="percent">% off</option><option value="amount">₦ off</option></select></div>
+            <div class="col-md-2"><label class="form-label small mb-1">Value</label>
+                <input class="form-control form-control-sm" name="value" type="number" step="any" min="1" required placeholder="e.g. 20"></div>
+            <div class="col-md-2"><label class="form-label small mb-1">Min spend (₦)</label>
+                <input class="form-control form-control-sm" name="min_amount" type="number" step="any" min="0" value="0"></div>
+            <div class="col-md-2"><label class="form-label small mb-1">Max uses (0 = ∞)</label>
+                <input class="form-control form-control-sm" name="max_uses" type="number" min="0" value="0"></div>
+            <div class="col-md-2"><label class="form-label small mb-1">Expires (days, 0 = never)</label>
+                <input class="form-control form-control-sm" name="expires_days" type="number" min="0" value="30"></div>
+            <div class="col-md-3"><label class="form-label small mb-1">Applies to</label>
+                <select class="form-select form-select-sm" name="applies_to">
+                    <option value="all">Everything</option><option value="plans">Subscriptions only</option><option value="shop">Study shop only</option>
+                </select></div>
+            <div class="col-md-5"><label class="form-label small mb-1">Note (for your records)</label>
+                <input class="form-control form-control-sm" name="note" maxlength="200" placeholder="e.g. TikTok influencer @ada — October"></div>
+            <div class="col-md-4 d-grid"><button class="btn btn-primary btn-sm">Create code</button></div>
+        </form>
+        <p class="small text-muted mb-0 mt-2"><i class="bi bi-info-circle me-1"></i>Win-back codes (COMEBACK-XXXX) are created automatically 7 days after a plan expires. Codes can never bring a total below ₦100.</p>
+    </div></div>
+
+    <div class="card mb-4"><div class="card-body">
+        <h5>All codes</h5>
+        {% if promos %}
+        <div class="table-responsive"><table class="table table-sm table-striped align-middle">
+            <thead><tr><th>Code</th><th>Discount</th><th>Applies to</th><th>Min spend</th><th class="text-end">Uses</th><th class="text-end">Revenue w/ code</th><th>Expires</th><th>Status</th><th>Note</th><th></th></tr></thead>
+            <tbody>{% for p in promos %}
+                <tr class="{{ '' if p['active'] else 'table-secondary' }}">
+                    <td><code class="text-uppercase">{{ p['code'] }}</code></td>
+                    <td>{% if p['kind'] == 'percent' %}{{ p['value']|round|int }}% off{% else %}₦{{ "{:,.0f}".format(p['value']) }} off{% endif %}</td>
+                    <td class="small">{{ p['applies_to'] }}</td>
+                    <td class="text-end small">₦{{ "{:,.0f}".format(p['min_amount'] or 0) }}</td>
+                    <td class="text-end">{{ p['uses'] }}{{ ' / ' ~ p['max_uses'] if p['max_uses'] else '' }}</td>
+                    <td class="text-end fw-semibold">₦{{ "{:,.0f}".format(p['revenue'] or 0) }}</td>
+                    <td class="small text-nowrap">{{ p['expires_at'][:10] if p['expires_at'] else 'never' }}</td>
+                    <td><span class="badge text-bg-{{ 'success' if p['active'] else 'secondary' }}">{{ 'active' if p['active'] else 'disabled' }}</span></td>
+                    <td class="small text-muted">{{ (p['note'] or '')[:40] }}</td>
+                    <td>
+                        <form method="POST" action="/admin/promo_action/{{ p['id'] }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="toggle">
+                            <button class="btn btn-sm btn-outline-{{ 'danger' if p['active'] else 'success' }}">{{ 'Disable' if p['active'] else 'Enable' }}</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="text-muted small mb-0">No codes yet — create one above.</p>{% endif %}
+    </div></div>
+</div>
+</body>
+</html>

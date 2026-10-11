@@ -58,6 +58,20 @@
                 <div class="d-flex justify-content-between small mt-3 mb-1" style="color:rgba(255,255,255,.75)"><span>{{ sub.days_left }} day{{ '' if sub.days_left == 1 else 's' }} left</span><span>Expires {{ fmt_date(sub.end_date) }}</span></div>
                 <div class="progress"><div class="progress-bar" style="width:{{ sub.progress }}%"></div></div>
                 {% if sub.days_left <= 7 %}<div class="small mt-2" style="color:#fde68a"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ 'Your free trial' if sub.is_trial else 'Your plan' }} ends soon.</div>{% endif %}
+                {% if sub.active and not sub.is_trial %}
+                {% if sub.auto_renew %}
+                <div class="small mt-2 d-flex align-items-center justify-content-between gap-2 flex-wrap" style="color:#a7f3d0">
+                    <span><i class="bi bi-arrow-repeat me-1"></i>Auto-renewal ON{% if sub.card_last4 %} — {{ sub.card_bank or 'card' }} ••{{ sub.card_last4 }}{% endif %}</span>
+                    <form method="POST" action="{{ url_for('auto_renew_toggle') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="off">
+                        <button class="btn btn-sm btn-outline-light py-0 px-2" style="font-size:.72rem">Turn off</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="small mt-2" style="color:rgba(255,255,255,.6)"><i class="bi bi-arrow-repeat me-1"></i>Auto-renewal off — tick "Renew automatically" at checkout to never lose access.</div>
+                {% endif %}
+                {% endif %}
             {% else %}
                 <p class="small mt-3 mb-2" style="color:rgba(255,255,255,.8)">Your access has expired. Subscribe to continue writing full mock exams.</p>
             {% endif %}
