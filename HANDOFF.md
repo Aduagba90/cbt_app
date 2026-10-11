@@ -1284,9 +1284,29 @@ banner, free simulator for redeemed child). `_work/audit13.py` **22/22** browser
 in a real browser, tracker 3-waiting → 1-activated, landing/footer, zero console errors).
 Full battery: **19 suites green** (incl. gift/sponsor/agent siblings + regress).
 
+**Landing follow-up (user-approved):** the small family line in the pricing chapter was upgraded
+to a full **`.pn-family-card`** banner (green-bordered card: icon, "Three children writing
+exams?" title, benefit line, price pills Monthly ₦2,500 / Quarterly ₦6,000 / Yearly ₦18,000 +
+gold "save up to ₦6,000 a year" pill, CTA button; stacks to a column under 576px). CSS version
+bumped **v28 → v29** in base.html. 19-check browser audit passed (geometry + elementFromPoint
+at 1366 & 390, click-through to /family, copy strings, zero console errors) — screenshots in
+`_work/shots9/family_card_*.png`.
+
 **Gotchas found this round:** the webhook URL is `/paystack/webhook` (slash) while the endpoint
 name is `paystack_webhook` — posting to the underscore URL gets eaten by the CSRF hook (400
 "session expired") before a 404; `/subscribe` requires login so banner tests must run logged in;
 `pg.goto()` needs absolute URLs (app_url() defaults to :5000 — parse the path and prepend BASE);
 the PIN form's submit button has no `type` attribute (select by text, not `[type="submit"]`);
-audit runs are stateful — restart the audit server for a clean run (PINs get consumed).
+audit runs are stateful — restart the audit server for a clean run (PINs get consumed);
+elementFromPoint must be called AFTER scrolling the element into the viewport.
+
+**⚠️ CRITICAL battery protocol (learned the hard way):** ALWAYS run every suite with
+`DATABASE_PATH=/tmp/<name>.db` exported — several suites (putme, resetpw, waec, tools, parent,
+offline_test, dropdown, family) rely on the runner to set it and will otherwise write test
+users straight into the REAL `database.db`. The round-13 commit 0a152ae shipped a polluted db
+this way (4 example.com test users, +430KB); it was restored from 4b6890a in the follow-up
+commit — the LIVE site was never affected (its data lives in ~/prepnova-data/database.db,
+seeded from the repo only on first boot). Companion scripts: `offline_engine_test.py` /
+`offline_waec_engine_test.py` need `/tmp/demo_offline.html` + `/tmp/demo_waec.html` built first
+(builders return **BytesIO** — write with 'wb' + `.getvalue()`); `dropdown_test.py` needs a
+server on **port 8160** with user dd@example.com / Passw0rd123 seeded.

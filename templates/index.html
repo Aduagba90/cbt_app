@@ -355,8 +355,20 @@
             </div>
             {% endfor %}
         </div>
+        <div class="mt-4 mx-auto reveal" style="max-width:780px">
+            <a href="{{ url_for('family_page') }}" class="pn-family-card">
+                <div class="pn-family-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="pn-family-body">
+                    <div class="pn-family-title">Three children writing exams? <span class="pn-gift-tag">Family Plan</span></div>
+                    <div class="pn-family-text">One payment gives each child their own PIN — every class, every mock, both offline simulators. Mum or Dad watches their progress free.</div>
+                    <div class="pn-family-meta">
+                        <span>Monthly ₦2,500</span><span>Quarterly ₦6,000</span><span>Yearly ₦18,000</span><span class="pn-family-save">save up to ₦6,000 a year</span>
+                    </div>
+                </div>
+                <span class="btn btn-primary pn-family-cta">See the Family Plan <i class="bi bi-arrow-right"></i></span>
+            </a>
+        </div>
         <p class="text-center small text-muted mt-4 reveal"><i class="bi bi-lock-fill me-1"></i> Payments are processed by Paystack. We never see or store your card details.</p>
-            <p class="text-center small mt-2 reveal"><i class="bi bi-people-fill me-1"></i> Three children writing exams? <a href="{{ url_for('family_page') }}"><b>The Family Plan</b></a> covers all three with one payment — from ₦2,500 a month.</p>
             <p class="text-center small mt-2 reveal"><i class="bi bi-book me-1"></i> Also available in the <a href="{{ url_for('shop') }}">Study shop</a> — The Lekki Headmaster (JAMB 2026) &amp; So the Path Does Not Die (WAEC 2026–2030), ₦1,000 each.</p>
             
             <div class="mt-4 mx-auto reveal" style="max-width:640px">
