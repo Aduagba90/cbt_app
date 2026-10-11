@@ -33,6 +33,7 @@ import offline_cbt
 import pdf_store
 import post_utme as putme
 import waec as waecf
+import neco as necof
 from admin_routes import admin_bp
 from admission_tools import tools_bp
 from battle import battle_bp
@@ -41,7 +42,7 @@ import centre as centre_mod
 from db import connect, init_db
 import study
 from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
-                     TRIAL_DAYS, WAEC_ENABLED, MIN_BANK_FOR_V2, app_url, available_subjects, email_wrap,
+                     TRIAL_DAYS, WAEC_ENABLED, NECO_ENABLED, MIN_BANK_FOR_V2, app_url, available_subjects, email_wrap,
                      fetch_question_ids,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
@@ -190,6 +191,34 @@ def _waec_names():
     return _WAEC_CACHE["names"]
 
 
+_NECO_CACHE = {"t": 0, "ready": False, "n": 0, "names": []}
+
+
+def _neco_ready():
+    """True once NECO mocks can run: switch not forced off and at least one subject has a
+    usable bank (cached 60 s)."""
+    if not NECO_ENABLED:
+        return False
+    now = time.time()
+    if now - _NECO_CACHE["t"] > 60:
+        try:
+            names = sorted(available_subjects("NECO"))
+        except Exception:
+            names = []
+        _NECO_CACHE.update(t=now, ready=len(names) > 0, n=len(names), names=names)
+    return _NECO_CACHE["ready"]
+
+
+def _neco_count():
+    _neco_ready()
+    return _NECO_CACHE["n"]
+
+
+def _neco_names():
+    _neco_ready()
+    return _NECO_CACHE["names"]
+
+
 def _post_utme_ready():
     """True once Post-UTME mocks can run: at least one active university format and a JAMB bank to
     draw from (cached 60 s)."""
@@ -238,6 +267,9 @@ def inject_globals():
         "waec_enabled": _waec_ready(),
         "waec_subject_count": _waec_count(),
         "waec_subject_names": _waec_names(),
+        "neco_enabled": _neco_ready(),
+        "neco_subject_count": _neco_count(),
+        "neco_subject_names": _neco_names(),
         "post_utme_ready": _post_utme_ready(),
         "post_utme_count": _post_utme_count(),
         "current_year": datetime.now().year,
@@ -1258,6 +1290,54 @@ def start_waec(subject):
     return redirect(url_for("exam_room", attempt_id=attempt_id))
 
 
+# ----------------------------------------------------------------------- NECO
+
+@app.route("/neco_subjects")
+@login_required
+def neco_subjects():
+    if not _neco_ready():
+        return render_template("neco_subjects.html", subjects=[], coming_soon=True)
+    avail = available_subjects("NECO")
+    conn = connect()
+    cur = conn.cursor()
+    subjects = []
+    for name in sorted(avail):
+        papers = []
+        for label, count, minutes, note, topic in necof.papers_for(name):
+            if topic:
+                source, _ = resolve_source(cur, "NECO", name)
+                n = len(fetch_question_ids(cur, source, "NECO", name, topics=[topic])) if source else 0
+                if n < MIN_BANK_FOR_V2:
+                    continue
+            papers.append({"label": label, "count": count, "minutes": minutes, "note": note, "bank": n if topic else avail[name]})
+        if papers:
+            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers})
+    conn.close()
+    return render_template("neco_subjects.html", subjects=subjects)
+
+
+@app.route("/start_neco/<subject>", methods=["POST"])
+@login_required
+def start_neco(subject):
+    if not _neco_ready():
+        flash("NECO mock exams are coming soon — genuine NECO questions are being added. JAMB and WAEC mocks are fully available.", "info")
+        return redirect(url_for("exam_types"))
+    if subject not in available_subjects("NECO"):
+        abort(404)
+    if (r := _require_subscription()):
+        return r
+    if request.form.get("discard") != "1" and engine.get_open_attempt(session["user"]):
+        flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
+        return redirect(url_for("exam_types"))
+    try:
+        attempt_id = engine.create_neco_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
+                                                paper=request.form.get("paper"))
+    except engine.ExamError as e:
+        flash(str(e), "danger")
+        return redirect(url_for("neco_subjects"))
+    return redirect(url_for("exam_room", attempt_id=attempt_id))
+
+
 # ----------------------------------------------------------------- Post-UTME
 
 def _post_utme_university(cur, name):
@@ -1523,22 +1603,26 @@ def abandon_exam():
 def practice():
     jamb = sorted(available_subjects("JAMB").items())
     waec = sorted(available_subjects("WAEC").items()) if _waec_ready() else []
+    neco = sorted(available_subjects("NECO").items()) if _neco_ready() else []
     putme_subjects = sorted(available_subjects("POST-UTME").items())
     conn = connect()
     allowed, remaining = practice_allowance(session["user"], conn.cursor())
     conn.commit()
     conn.close()
-    return render_template("practice.html", jamb=jamb, waec=waec, putme=putme_subjects, remaining=remaining, free_quota=FREE_PRACTICE_PER_DAY)
+    return render_template("practice.html", jamb=jamb, waec=waec, neco=neco, putme=putme_subjects, remaining=remaining, free_quota=FREE_PRACTICE_PER_DAY)
 
 
 @app.route("/practice/<exam_type>/<subject>", methods=["GET", "POST"])
 @login_required
 def practice_question(exam_type, subject):
     exam_type = exam_type.upper()
-    if exam_type not in ("JAMB", "WAEC", "POST-UTME"):
+    if exam_type not in ("JAMB", "WAEC", "NECO", "POST-UTME"):
         abort(404)
     if exam_type == "WAEC" and not _waec_ready():
         flash("WAEC practice is coming soon — genuine WAEC questions are being added. Try a JAMB subject meanwhile.", "info")
+        return redirect(url_for("practice"))
+    if exam_type == "NECO" and not _neco_ready():
+        flash("NECO practice is coming soon — genuine NECO questions are being added. Try a JAMB or WAEC subject meanwhile.", "info")
         return redirect(url_for("practice"))
     conn = connect()
     cur = conn.cursor()
@@ -1795,7 +1879,7 @@ def result_details(result_id):
     attempt = data["attempt"]
     allowed_pace = (attempt["duration_seconds"] // max(1, r["total"])) if (attempt and attempt["duration_seconds"] and r["total"]) else None
     pace = pace_info(r["duration"], r["total"], r["exam_type"], allowed=allowed_pace)
-    waec_grade = waecf.grade(pct) if r["exam_type"] == "WAEC" else None
+    ssce_grade = (waecf.grade(pct) or necof.grade(pct)) if r["exam_type"] in ("WAEC", "NECO") else None
     conn = connect()
     projection = jamb_projection(conn.cursor(), session["user"]) if r["exam_type"] == "JAMB" else None
     target = conn.execute("SELECT target_score FROM users WHERE email = ?", (session["user"],)).fetchone()
@@ -1806,7 +1890,8 @@ def result_details(result_id):
     topics = engine.topic_report(result_id, session["user"])
     return render_template("result_details.html", r=r, subjects=data["subjects"], attempt=attempt, verdict=verdict, tone=tone,
                            just_finished=request.args.get("done") == "1", share=share, share_url=share_url,
-                           pace=pace, projection=projection, target=target, topics=topics, waec_grade=waec_grade)
+                           pace=pace, projection=projection, target=target, topics=topics,
+                           ssce_grade=ssce_grade, ssce_exam=r["exam_type"])
 
 
 @app.route("/review_answers/<int:result_id>")

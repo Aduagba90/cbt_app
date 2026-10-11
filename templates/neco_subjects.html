@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}NECO / SSCE — choose a paper{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>NECO / SSCE</span></div>
+        <h1>Choose a NECO paper</h1>
+        <p class="lead">Genuine NECO SSCE objective papers — the same question count and the same clock as the actual exam, with full corrections afterwards. Writing WAEC as well? <a href="{{ url_for('waec_subjects') }}">WAEC papers are here</a>.</p>
+    </div>
+</div>
+
+{% if coming_soon %}
+<div class="pn-empty card anim-rise">
+    <span class="ico"><i class="bi bi-hourglass-split"></i></span>
+    <span class="badge bg-secondary mb-2">Coming soon</span>
+    <h3>NECO questions are being added</h3>
+    <p>We are uploading genuine NECO-standard questions with full explanations. NECO mocks will open automatically once the bank is ready — your subscription covers them at no extra cost.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('waec_subjects') }}" class="btn btn-primary btn-sm"><i class="bi bi-journal-text me-1"></i> Take a WAEC mock instead</a>
+        <a href="{{ url_for('practice') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-lightning-charge me-1"></i> Practice mode</a>
+    </div>
+</div>
+{% else %}
+<div class="row g-3">
+    {% for s in subjects %}
+    <div class="col-12 col-lg-6">
+        <div class="card h-100 anim-rise d{{ loop.index0 % 4 }}">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="pn-stat-icon tint-purple"><i class="bi {{ s.icon }}"></i></span>
+                    <div>
+                        <h3 class="mb-0">{{ s.name }}</h3>
+                        <small class="text-muted">{{ s.count }} questions in the bank</small>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for p in s.papers %}
+                    <form method="POST" action="{{ url_for('start_neco', subject=s.name) }}" data-once class="mb-0">
+                        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                        <input type="hidden" name="paper" value="{{ p.label }}">
+                        <button type="submit" class="pn-subject-link w-100 text-start" data-confirm="Start the NECO {{ s.name }} {{ p.label }} now? The {{ p.minutes }}-minute timer begins immediately." data-loading="Preparing…">
+                            <span>{{ p.label }}<small>{{ p.count }} questions · {{ p.minutes }} minutes — {{ p.note }}</small></span>
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="card mt-4 anim-rise">
+    <div class="card-body small text-muted mb-0">
+        <i class="bi bi-info-circle me-1"></i>NECO SSCE Internal runs June–July; the external (GCE) sitting follows in November/December. Papers here follow the 2026 NECO formats — including English Paper III (80 objective questions) and Paper IV (Test of Orals).
+    </div>
+</div>
+{% endif %}
+{% endblock %}

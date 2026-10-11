@@ -51,6 +51,22 @@
         </div>
     </div>
     <div class="col-md-6 col-lg-4">
+        <div class="pn-tile anim-rise d2 {% if not neco_enabled %}pn-tile-soon{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <span class="pn-tile-icon tint-purple"><i class="bi bi-journal-check"></i></span>
+                {% if neco_enabled %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Coming soon</span>{% endif %}
+            </div>
+            <h3>NECO / SSCE</h3>
+            <p>Genuine NECO objective papers — the real question count and clock, from English Paper III to Test of Orals. Fresh questions, not recycled WAEC items.</p>
+            <div class="d-flex flex-wrap gap-1 mb-3"><span class="pn-subject-chip"><i class="bi bi-stopwatch"></i> 45–105 min</span><span class="pn-subject-chip"><i class="bi bi-list-ol"></i> 60–80 questions</span><span class="pn-subject-chip"><i class="bi bi-book"></i> {{ neco_subject_count or 'More' }} subjects</span></div>
+            {% if neco_enabled %}
+            <a href="{{ url_for('neco_subjects') }}" class="btn btn-primary w-100" style="background:#6d28d9;border-color:#6d28d9">Choose paper <i class="bi bi-arrow-right ms-1"></i></a>
+            {% else %}
+            <button class="btn btn-outline-secondary w-100 mt-auto" disabled><i class="bi bi-hourglass-split me-1"></i> Questions being added</button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
         <div class="pn-tile anim-rise d2 {% if not post_utme_ready %}pn-tile-soon{% endif %}">
             <div class="d-flex justify-content-between align-items-start">
                 <span class="pn-tile-icon tint-gold"><i class="bi bi-building"></i></span>

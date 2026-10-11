@@ -293,35 +293,48 @@ def create_jamb_attempt(username, course, ip=None, ua=None, subjects=None):
     )
 
 
-def create_waec_attempt(username, subject, ip=None, ua=None, paper=None):
-    """One WAEC objective paper: the real question count and duration for that subject.
+def _create_ssce_paper_attempt(exam, username, subject, ip=None, ua=None, paper=None):
+    """One SSCE objective paper (WAEC or NECO): the real question count and duration.
 
-    paper: optional paper label — English has two objective papers (Paper 1 Lexis &
-    Structure, and Paper 3 Test of Orals); everything else has a single paper.
+    paper: optional paper label — English has two objective papers (objective/lexis
+    and Test of Orals); everything else has a single paper.
     """
-    from waec import get_paper, papers_for
+    if exam == "WAEC":
+        from waec import get_paper, papers_for
+    else:
+        from neco import get_paper, papers_for
     papers = papers_for(subject)
     chosen = get_paper(subject, paper) if paper else (papers[0] if papers else None)
     if not chosen:
-        raise ExamError(f"No WAEC questions are available yet for {subject}. Please try another subject or check back soon.")
+        raise ExamError(f"No {exam} questions are available yet for {subject}. Please try another subject or check back soon.")
     label, count, minutes, note, topic_filter = chosen
-    name = f"WAEC {subject}" if len(papers) == 1 else f"WAEC {subject} — {label}"
+    name = f"{exam} {subject}" if len(papers) == 1 else f"{exam} {subject} — {label}"
     conn = connect()
     cur = conn.cursor()
     try:
-        source, _ = resolve_source(cur, "WAEC", subject)
+        source, _ = resolve_source(cur, exam, subject)
         if not source:
-            raise ExamError(f"No WAEC questions are available yet for {subject}. Please try another subject or check back soon.")
-        ids = fetch_question_ids(cur, source, "WAEC", subject,
+            raise ExamError(f"No {exam} questions are available yet for {subject}. Please try another subject or check back soon.")
+        ids = fetch_question_ids(cur, source, exam, subject,
                                  topics=[topic_filter] if (topic_filter and source == "questions_v2") else None)
         if len(ids) < MIN_BANK_FOR_V2:
             raise ExamError(f"Not enough questions are available yet for {name}. Please try another subject or check back soon.")
         seen = _seen_questions(cur, username, source)
-        plan = [(subject, source, _arrange(cur, source, ids, count, seen, exam_type="WAEC", subject=subject))]
+        plan = [(subject, source, _arrange(cur, source, ids, count, seen, exam_type=exam, subject=subject))]
         conn.commit()
     finally:
         conn.close()
-    return create_attempt(username, "WAEC", name, [subject], duration_min=minutes, plan=plan, ip=ip, ua=ua)
+    return create_attempt(username, exam, name, [subject], duration_min=minutes, plan=plan, ip=ip, ua=ua)
+
+
+def create_waec_attempt(username, subject, ip=None, ua=None, paper=None):
+    """One WAEC objective paper: the real question count and duration for that subject."""
+    return _create_ssce_paper_attempt("WAEC", username, subject, ip=ip, ua=ua, paper=paper)
+
+
+def create_neco_attempt(username, subject, ip=None, ua=None, paper=None):
+    """One NECO objective paper: the real question count and duration for that subject."""
+    return _create_ssce_paper_attempt("NECO", username, subject, ip=ip, ua=ua, paper=paper)
 
 
 def create_live_attempt(username, live_id, subjects, ip=None, ua=None):

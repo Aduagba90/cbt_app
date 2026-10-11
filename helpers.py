@@ -242,6 +242,7 @@ WAEC_DURATION_MIN = 60
 # and the real gate is the bank itself — no questions, no mock. Set it to 0 in .env to
 # force WAEC closed even when questions exist (e.g. while fixing a bad batch).
 WAEC_ENABLED = (os.getenv("WAEC_ENABLED") or "1").strip().lower() not in ("0", "false", "no")
+NECO_ENABLED = (os.getenv("NECO_ENABLED") or "1").strip().lower() not in ("0", "false", "no")
 
 
 def waec_ready():

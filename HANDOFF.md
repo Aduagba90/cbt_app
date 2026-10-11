@@ -1483,3 +1483,56 @@ in the command line — use start_process/stop_process for audit servers.
 `/promo/check` returns JSON only (no template leak); rate limit active.
 
 **Queue:** R16 = NECO question bank (before November); R17 = NCEE + JAMB 2027 early-bird.
+
+---
+
+## Round 16 — NECO question bank (PART 1 of 2: engine + Mathematics live; 6 subjects remaining)
+
+**Status:** infrastructure complete and fully tested; NECO Mathematics (97 questions) is the
+first live subject. English (incl. Test of Orals), Biology, Chemistry, Physics, Economics and
+Government still need content batches — DO NOT deploy expecting the full NECO offer yet
+(partial deploy is safe: only subjects with a bank ≥ MIN_BANK_FOR_V2 show).
+
+**Formats (researched 2026-10-11, sources: smartjamb/myschoolgist 2026 NECO timetables,
+masterneco, open-exam-prep):** English Paper III Objective 80Q/60min (NECO cut it to 80 from
+2026) + Paper IV Test of Orals 60Q/45min; Mathematics Paper III 60Q/105min; Biology/Chemistry/
+Physics Paper III 60Q/75min; Economics/Government Paper III 60Q/60min. Grades A1–F9 on the
+same boundaries WAEC uses. All in `neco.py` (mirrors `waec.py` API: papers_for/get_paper/grade).
+
+**How it plugs in (all generic machinery, no WAEC code paths touched):**
+- `exam_engine.create_neco_attempt` → shared `_create_ssce_paper_attempt("NECO"|"WAEC", ...)`
+  (create_waec_attempt is now a thin wrapper — waec_test regression-verified).
+- Routes `/neco_subjects` + `/start_neco/<subject>`, `_neco_ready/_neco_count/_neco_names`
+  (60 s cache) + context vars `neco_enabled/neco_subject_count/neco_subject_names`,
+  `NECO_ENABLED` env kill-switch in helpers (default on; the bank is the real gate).
+- `db.py` seeds exam_types row 'NECO' + 7 subject rows (guarded by app_settings key
+  `neco_subjects_2026_10`). `content_loader.apply_pending` imports any
+  `content/batch_*.json` with `exam_type: "NECO"` — content travels with deploys, no
+  manual import needed on PA.
+- Result page: `ssce_grade`/`ssce_exam` (was `waec_grade`) — chip reads
+  "NECO grade guidance" / "WAEC grade guidance".
+- UI: NECO tile on /exam_types (4th card), NECO tab on /practice + whitelist entry,
+  `neco_subjects.html` (purple theme), WAEC page cross-links NECO, landing page NECO
+  card + headline + title.
+
+**Content pipeline (batch 051 = the template):** `scripts/build_neco_batch51.py` →
+`content/batch_051_neco_mathematics.json`, 97 items across 18 topics. Every numeric answer
+carries a `verify` expression the builder machine-checks (base conversions verified via
+`int(''.join(str((n//b**k)%b) ...))` generator trick). Gates that bit during authoring:
+9 short explanations rejected; 2 near-duplicates of JAMB items reworded (4-red-6-blue balls →
+6-red-8-blue beads; two-coins-two-heads → at least one head). Answer letters balanced
+25/24/24/24 by `_balance`.
+
+**Tests:** `_work/neco_test.py` **37/37** (seed, gating, 60Q/105min paper, A1 and C6 grade
+bands, 404s, practice tab, WAEC refactor regression); full battery **23 suites + regress
+green**; browser audit `_work/audit16.py` **14/14** (VISIBILITY protocol, mobile no-overflow,
+zero console errors; audit server `_work/audit16_server.py` — register then LOGIN, register
+redirects to /login; Playwright auto-dismisses confirm dialogs → register the dialog handler
+BEFORE clicking data-confirm buttons). Repod db updated: questions_v2 = 13,067
+(12,970 + 97 NECO).
+
+**Part 2 (next turns):** batches 052+ — English ~100 general + 60 Test of Orals (topic field
+must start with "Test of Orals" for the orals paper filter), Biology/Chemistry/Physics/
+Economics/Government ~90-100 each (paper is 60 → aim ≥ 1.5× for sampling variety).
+Then consider: NECO offline-simulator shop product (like the WAEC one), announcement-bar
+mention, dashboard touchpoints.

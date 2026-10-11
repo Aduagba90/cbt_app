@@ -6,7 +6,7 @@
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('exam_types') }}">Mock exams</a><i class="bi bi-chevron-right"></i><span>WAEC / SSCE</span></div>
         <h1>Choose a WAEC paper</h1>
-        <p class="lead">Real WASSCE objective papers — the same question count and the same clock as the actual exam, with full corrections afterwards. Writing NECO SSCE? The question style is the same, so this preparation works for both.</p>
+        <p class="lead">Real WASSCE objective papers — the same question count and the same clock as the actual exam, with full corrections afterwards.{% if neco_enabled %} Writing NECO SSCE too? <a href="{{ url_for('neco_subjects') }}">Take the NECO papers</a> — fresh questions, same subscription.{% endif %}</p>
     </div>
 </div>
 

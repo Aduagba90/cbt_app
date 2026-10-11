@@ -169,7 +169,7 @@ def init_db():
     """)
     cur.executemany(
         "INSERT OR IGNORE INTO exam_types (exam_name, exam_code, status) VALUES (?, ?, 'Active')",
-        [("JAMB", "JAMB"), ("WAEC", "WAEC"), ("POST-UTME", "PUTME")],
+        [("JAMB", "JAMB"), ("WAEC", "WAEC"), ("POST-UTME", "PUTME"), ("NECO", "NECO")],
     )
 
     cur.execute("""
@@ -1058,6 +1058,24 @@ def init_db():
             cur.execute("INSERT INTO app_settings (key, value) VALUES ('waec_subjects_2026_09', '1')")
         except Exception as exc:  # never stop the site from starting
             print(f"[waec] subject setup skipped: {exc}")
+
+    # NECO bank subjects (Round 16, Oct 2026). Rows are harmless while empty: a subject
+    # only shows up for students once its questions_v2 bank reaches MIN_BANK_FOR_V2.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'neco_subjects_2026_10'").fetchone():
+        try:
+            for name, code in (("English", "ENG"), ("Mathematics", "MTH"), ("Biology", "BIO"),
+                               ("Chemistry", "CHM"), ("Physics", "PHY"), ("Economics", "ECO"),
+                               ("Government", "GOV")):
+                cur.execute(
+                    """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                       SELECT 'NECO', ?, ?, 'Active', e.id FROM exam_types e
+                       WHERE e.exam_name = 'NECO'
+                         AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
+                    (name, code, name),
+                )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('neco_subjects_2026_10', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[neco] subject setup skipped: {exc}")
 
     if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_active_2026_09'").fetchone():
         try:
