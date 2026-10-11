@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Partners — Admin</title>
+    <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <style>body{background:#f4f6f9}.card{border:0;box-shadow:0 .1rem .4rem rgba(15,31,61,.08)}</style>
+</head>
+<body>
+{% include "_admin_bar.html" %}
+<div class="container mt-4">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }}">{{ message }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-handshake"></i> Sales Partners</h2>
+        <span class="badge text-bg-primary fs-6">{{ partners|length }} partners · {{ pending|length }} pending</span>
+    </div>
+
+    {% if detail %}
+    <div class="card mb-4"><div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h4 class="mb-1">{{ detail['name'] }} <span class="badge text-bg-secondary">{{ detail['status'] }}</span></h4>
+                <div class="text-muted small">{{ detail['user_email'] }} · {{ detail['phone'] }} · {{ detail['bank_name'] }} {{ detail['account_number'] }} ({{ detail['account_name'] }}) · promo: {{ detail['promo_plan'] }} · {{ detail['clicks'] or 0 }} clicks</div>
+            </div>
+            <a href="/admin/partners" class="btn btn-sm btn-secondary">← All partners</a>
+        </div>
+        <h6 class="mt-3">Commissions</h6>
+        {% if detail_comms %}
+        <div class="table-responsive"><table class="table table-sm table-striped align-middle">
+            <thead><tr><th>Date</th><th>Buyer</th><th>Product</th><th class="text-end">Sale</th><th class="text-end">Commission</th><th>Status</th></tr></thead>
+            <tbody>{% for c in detail_comms %}
+                <tr><td class="text-nowrap">{{ c['created_at'][:16] if c['created_at'] }}</td><td>{{ c['buyer'] }}</td>
+                <td class="small text-muted">{{ c['product'] }}</td><td class="text-end">₦{{ "{:,.0f}".format(c['sale_amount'] or 0) }}</td>
+                <td class="text-end fw-semibold">₦{{ "{:,.0f}".format(c['commission'] or 0) }}</td><td><span class="badge text-bg-{{ 'success' if c['status'] in ('AVAILABLE','PAID') else ('warning' if c['status'] == 'CLEARING' else ('info' if c['status'] == 'REQUESTED' else 'dark')) }}">{{ c['status'] }}</span></td></tr>
+            {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="text-muted small mb-0">No commissions yet.</p>{% endif %}
+    </div></div>
+    {% endif %}
+
+    {% if pending %}
+    <div class="card mb-4"><div class="card-body">
+        <h5><i class="bi bi-hourglass-split text-warning"></i> Pending applications ({{ pending|length }})</h5>
+        <div class="table-responsive"><table class="table table-sm align-middle">
+            <thead><tr><th>Name</th><th>Contact</th><th>Bank details</th><th>Plan</th><th>Applied</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>{% for p in pending %}
+                <tr>
+                    <td><b>{{ p['name'] }}</b></td>
+                    <td class="small">{{ p['user_email'] }}<br>{{ p['phone'] }}</td>
+                    <td class="small">{{ p['bank_name'] }} · {{ p['account_number'] }}<br>{{ p['account_name'] }}</td>
+                    <td class="small">{{ p['promo_plan'] }}</td>
+                    <td class="small text-nowrap">{{ p['created_at'][:10] if p['created_at'] }}</td>
+                    <td class="text-end text-nowrap">
+                        <form method="POST" action="/admin/partner_action/{{ p['id'] }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="approve">
+                            <button class="btn btn-sm btn-success" onclick="return confirm('Approve {{ p['name'] }}? Their partner link is generated and emailed.')">Approve</button>
+                        </form>
+                        <form method="POST" action="/admin/partner_action/{{ p['id'] }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="reject">
+                            <button class="btn btn-sm btn-outline-secondary">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}</tbody>
+        </table></div>
+        <p class="small text-muted mb-0"><i class="bi bi-telephone me-1"></i>Best practice: give the applicant a quick call or WhatsApp before approving — you control who represents PrepNova.</p>
+    </div></div>
+    {% endif %}
+
+    <div class="card mb-4"><div class="card-body">
+        <h5><i class="bi bi-cash-coin text-success"></i> Payout queue</h5>
+        {% if payouts %}
+        <div class="table-responsive"><table class="table table-sm align-middle">
+            <thead><tr><th>Partner</th><th class="text-end">Amount</th><th>Bank</th><th>Requested</th><th>Status</th><th style="min-width:280px">Action</th></tr></thead>
+            <tbody>{% for p in payouts %}
+                <tr class="{{ 'table-warning' if p['status'] == 'REQUESTED' }}">
+                    <td><b>{{ p['partner_name'] }}</b><br><span class="small text-muted">{{ p['user_email'] }}</span></td>
+                    <td class="text-end fw-semibold">₦{{ "{:,.0f}".format(p['amount'] or 0) }}</td>
+                    <td class="small">{{ p['bank_name'] }}<br>{{ p['account_number'] }} · {{ p['account_name'] }}</td>
+                    <td class="small text-nowrap">{{ p['requested_at'][:16] if p['requested_at'] }}</td>
+                    <td><span class="badge text-bg-{{ 'info' if p['status'] == 'REQUESTED' else ('success' if p['status'] == 'PAID' else 'secondary') }}">{{ p['status'] }}</span>
+                        {% if p['reference'] %}<span class="small text-muted d-block">{{ p['reference'] }}</span>{% endif %}</td>
+                    <td>
+                        {% if p['status'] == 'REQUESTED' %}
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form method="POST" action="/admin/partner_payout_action/{{ p['id'] }}" class="d-flex gap-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="paid">
+                                <input class="form-control form-control-sm" name="reference" placeholder="Transfer ref (optional)" style="max-width:170px">
+                                <button class="btn btn-sm btn-success" onclick="return confirm('Confirm you have SENT the money to {{ p['account_name'] }} ({{ p['bank_name'] }} {{ p['account_number'] }})?')">Mark paid</button>
+                            </form>
+                            <form method="POST" action="/admin/partner_payout_action/{{ p['id'] }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="reject">
+                                <button class="btn btn-sm btn-outline-danger">Reject</button>
+                            </form>
+                        </div>
+                        {% else %}<span class="text-muted small">processed</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="text-muted small mb-0">No payout requests yet.</p>{% endif %}
+        <p class="small text-muted mb-0 mt-2"><i class="bi bi-shield-exclamation me-1"></i>You send the money manually from your bank app, then mark it paid here. Rejecting returns the money to the partner's balance.</p>
+    </div></div>
+
+    <div class="card mb-4"><div class="card-body">
+        <h5><i class="bi bi-people"></i> All partners</h5>
+        {% if partners %}
+        <div class="table-responsive"><table class="table table-sm table-striped align-middle">
+            <thead><tr><th>Name</th><th>Status</th><th>Ref code</th><th class="text-end">Clicks</th><th class="text-end">Sales</th><th class="text-end">Earned</th><th class="text-end">Outstanding payout</th><th>Joined</th><th></th></tr></thead>
+            <tbody>{% for p in partners %}
+                <tr>
+                    <td><b>{{ p['name'] }}</b><br><span class="small text-muted">{{ p['user_email'] }}</span></td>
+                    <td><span class="badge text-bg-{{ 'success' if p['status'] == 'ACTIVE' else ('warning' if p['status'] == 'PENDING' else 'secondary') }}">{{ p['status'] }}</span></td>
+                    <td><code>{{ p['ref_code'] or '—' }}</code></td>
+                    <td class="text-end">{{ p['clicks'] or 0 }}</td>
+                    <td class="text-end">{{ p['sales'] or 0 }}</td>
+                    <td class="text-end fw-semibold">₦{{ "{:,.0f}".format(p['earned'] or 0) }}</td>
+                    <td class="text-end {{ 'text-danger fw-semibold' if p['outstanding'] }}">₦{{ "{:,.0f}".format(p['outstanding'] or 0) }}</td>
+                    <td class="small text-nowrap">{{ p['created_at'][:10] if p['created_at'] }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="/admin/partners?id={{ p['id'] }}" class="btn btn-sm btn-outline-primary">View</a>
+                        {% if p['status'] == 'ACTIVE' %}
+                        <form method="POST" action="/admin/partner_action/{{ p['id'] }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="ban">
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Ban {{ p['name'] }}? Unpaid commissions are cancelled.')">Ban</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="text-muted small mb-0">No partners yet — share the <a href="/partners" target="_blank">/partners page</a> to recruit the first ones.</p>{% endif %}
+    </div></div>
+</div>
+</body>
+</html>

@@ -32,6 +32,7 @@
       {% set ep = (request.endpoint or '').split('.')[-1] %}
       <a href="{{ url_for('admin_bp.admin') }}" class="{{ 'active' if ep == 'admin' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
       <a href="{{ url_for('admin_bp.manage_students') }}" class="{{ 'active' if ep in ['manage_students','view_student','delete_student'] }}"><i class="bi bi-people"></i> Students</a>
+      <a href="{{ url_for('admin_bp.manage_partners') }}" class="{{ 'active' if 'partner' in ep }}"><i class="bi bi-handshake"></i> Partners</a>
       <a href="{{ url_for('admin_bp.question_bank_v2') }}" class="{{ 'active' if ep in ['question_bank_v2','manage_questions_v2','admin_questions_v2','edit_question_v2','view_question_v2'] }}"><i class="bi bi-collection"></i> Question bank</a>
       <a href="{{ url_for('admin_bp.import_questions_v2') }}" class="{{ 'active' if ep in ['import_questions_v2','question_import_history','question_import_details','upload_questions'] }}"><i class="bi bi-upload"></i> Import</a>
       <a href="{{ url_for('admin_bp.manage_subjects') }}" class="{{ 'active' if ep in ['manage_subjects','add_subject','edit_subject'] }}"><i class="bi bi-journal-bookmark"></i> Subjects</a>

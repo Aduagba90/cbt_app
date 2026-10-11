@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Partner application — PrepNova{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('partners_page') }}">Partners</a><i class="bi bi-chevron-right"></i><span>Apply</span></div>
+        <h1>📝 Partner application</h1>
+        <p class="lead">Two minutes, zero naira. We confirm on WhatsApp or a quick call — usually within 48 hours — and your partner dashboard unlocks right here.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('partner_apply') }}" data-once class="card border-0 shadow-sm p-4 anim-rise">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% if errors %}
+            <div class="alert alert-danger">
+                <b>Please fix the following:</b>
+                <ul class="mb-0 mt-1">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+
+            <h2 class="h5 mb-3"><i class="bi bi-1-circle-fill text-primary me-1"></i> About you</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Full name</label>
+                    <input class="form-control" name="name" maxlength="80" required value="{{ form.name }}" placeholder="e.g. Emeka Okonkwo">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" maxlength="254" required value="{{ form.email }}" placeholder="you@example.com" {% if logged_in %}readonly{% endif %}>
+                    {% if logged_in %}<div class="form-text">Linked to your PrepNova account.</div>{% else %}<div class="form-text">We send your partner link and updates here.</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone (WhatsApp)</label>
+                    <input class="form-control" name="phone" maxlength="15" required value="{{ form.phone }}" placeholder="08012345678">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">How will you promote PrepNova?</label>
+                    <select class="form-select" name="promo_plan">
+                        {% for p in promo_plans %}
+                        <option value="{{ p }}" {% if form.promo_plan == p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <h2 class="h5 mb-3"><i class="bi bi-2-circle-fill text-primary me-1"></i> Where we pay your commission</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Bank name</label>
+                    <input class="form-control" name="bank_name" maxlength="80" required value="{{ form.bank_name }}" placeholder="e.g. Opay">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Account number</label>
+                    <input class="form-control" name="account_number" maxlength="12" inputmode="numeric" required value="{{ form.account_number }}" placeholder="10 digits">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Account name</label>
+                    <input class="form-control" name="account_name" maxlength="100" required value="{{ form.account_name }}" placeholder="As it is on your bank profile">
+                </div>
+                <div class="col-12"><div class="form-text">Double-check the account details — payouts go exactly here. You can correct them later by contacting support.</div></div>
+            </div>
+
+            {% if not logged_in %}
+            <h2 class="h5 mb-3"><i class="bi bi-3-circle-fill text-primary me-1"></i> Create your login (optional but recommended)</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Choose a password</label>
+                    <input type="password" class="form-control" name="password" maxlength="80" placeholder="8+ characters, letters and numbers">
+                    <div class="form-text">Creates your free PrepNova account (7-day free trial included) so you can track earnings. Already have one? <a href="{{ url_for('login') }}">Log in first</a>, then apply.</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" name="agree" id="agree">
+                <label class="form-check-label small" for="agree">
+                    I have read and accept the <a href="{{ url_for('partner_terms') }}" target="_blank" rel="noopener">Partner terms</a>. I understand I am an <b>independent sales partner, not an employee</b>, and my earnings depend on my sales.
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100" data-loading="Sending…"><i class="bi bi-send-fill me-1"></i>Submit my application</button>
+            <p class="text-center small text-muted mt-2 mb-0"><i class="bi bi-shield-check me-1"></i>Free forever · we never charge partners · no card needed</p>
+        </form>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 anim-rise h-100">
+            <h2 class="h6 text-uppercase text-muted">What happens next</h2>
+            <ol class="mt-3 mb-0 ps-3 vstack gap-2 small">
+                <li>We review your application (usually within 48 hours) and may call your number to say hello.</li>
+                <li>You get an <b>email with your personal partner link</b>.</li>
+                <li>Share the link. Every first purchase through it earns you <b>30%</b>.</li>
+                <li>From ₦5,000, request a payout — money lands in your bank weekly.</li>
+            </ol>
+            <hr>
+            <p class="small text-muted mb-0"><i class="bi bi-patch-check-fill text-success me-1"></i>Over 2 million candidates write JAMB every year. Somebody in your contacts is preparing for an exam right now — you only need to reach them.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

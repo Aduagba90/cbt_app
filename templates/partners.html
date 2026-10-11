@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Become a PrepNova Partner — earn 30% on every sale{% endblock %}
+{% block og_title %}PrepNova Partners — earn real commission, free to join{% endblock %}
+{% block og_description %}Share your personal PrepNova link on WhatsApp, TikTok or campus and earn 30% of every first purchase. Free to join, weekly payouts, no capital needed.{% endblock %}
+{% block description %}Join the PrepNova Partner programme free: share your link, earn 30% commission on every customer's first purchase, cash out from ₦5,000. Open to students, agents and hustlers across Nigeria.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Partners</span></div>
+        <h1>🤝 PrepNova Partners — earn by sharing, free to join</h1>
+        <p class="lead">Get your personal PrepNova link. Share it on WhatsApp, TikTok, your class group or campus. When somebody buys through your link, <b>you earn {{ commission }}% of their first purchase</b>. No capital needed. No fees. Ever.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 p-4 anim-rise">
+            <div class="fs-2 text-primary"><i class="bi bi-1-circle-fill"></i></div>
+            <h2 class="h5 mt-2">Apply free (2 minutes)</h2>
+            <p class="mb-0 text-muted">Fill the form — name, phone, bank details for your payments. We confirm on WhatsApp or a quick call, usually within 48 hours.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 p-4 anim-rise">
+            <div class="fs-2 text-primary"><i class="bi bi-2-circle-fill"></i></div>
+            <h2 class="h5 mt-2">Share your link anywhere</h2>
+            <p class="mb-0 text-muted">WhatsApp status, class groups, TikTok, church, campus. Anyone who buys through your link is credited to you automatically — no code typing.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 p-4 anim-rise">
+            <div class="fs-2 text-primary"><i class="bi bi-3-circle-fill"></i></div>
+            <h2 class="h5 mt-2">Get paid every week</h2>
+            <p class="mb-0 text-muted">Watch your earnings grow in your dashboard, then request a payout to your bank account from {{ payout_min|naira }}. We send money weekly.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 p-lg-5 mb-4 anim-rise" id="calculator">
+    <h2 class="h4 mb-1">💵 What can you earn? (honest maths, no hype)</h2>
+    <p class="text-muted">Commission is {{ commission }}% of each customer's <b>first purchase</b>. Here is exactly what that means:</p>
+    <div class="row g-3 align-items-end mb-3">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">What your contact buys</label>
+            <select class="form-select form-select-lg" id="calcProduct">
+                {% for p in calc %}
+                <option value="{{ p.price }}" {% if loop.index == 4 %}selected{% endif %}>{{ p.name }} — ₦{{ "{:,.0f}".format(p.price) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">How many people buy</label>
+            <input type="number" class="form-control form-control-lg" id="calcQty" value="10" min="1" max="500">
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 rounded-3" style="background:rgba(11,122,75,.08)">
+                <div class="small text-muted mb-1">You earn</div>
+                <div class="fw-bold fs-3 text-primary" id="calcResult">₦0</div>
+                <div class="small text-muted" id="calcBreak"></div>
+            </div>
+        </div>
+    </div>
+    <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i> These are real product prices, not projections. What you earn depends on how many people actually buy — we promise effort pays, not registration.</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100 p-4 p-lg-5 anim-rise">
+            <h2 class="h4 mb-3">📋 The rules — simple and honest</h2>
+            <ul class="list-unstyled mb-0 vstack gap-2">
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i><b>Free to join, forever.</b> We will never charge you a registration or activation fee.</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>You earn <b>{{ commission }}% of each customer's first purchase</b> — subscriptions, family plans and study-shop products.</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Earnings appear in your dashboard immediately and <b>clear for payout after 14 days</b> (so refunds are covered).</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Request a payout from <b>{{ payout_min|naira }}</b> — paid to your bank account, weekly.</li>
+                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Buying through your own link does not earn commission (yes, people try 🙂).</li>
+                <li><i class="bi bi-x-circle-fill text-danger me-2"></i><b>You are an independent partner, not an employee.</b> Nothing is guaranteed — your earnings depend on your sales. No recruiting bonuses, no "daily login" money — commissions come only from real product sales.</li>
+            </ul>
+            <a href="{{ url_for('partner_terms') }}" class="btn btn-link px-0 mt-3">Read the full Partner terms <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        {% if leaders %}
+        <div class="card border-0 shadow-sm h-100 p-4 p-lg-5 anim-rise">
+            <h2 class="h4 mb-3">🏆 Top partners this season</h2>
+            {% for l in leaders %}
+            <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                <div><span class="badge bg-primary me-2">#{{ l.rank }}</span><b>{{ l.name }}</b></div>
+                <div class="text-success fw-semibold">{{ l.earned|naira }} earned</div>
+            </div>
+            {% endfor %}
+            <p class="small text-muted mt-3 mb-0"><i class="bi bi-shield-check me-1"></i> Names shortened for privacy. This could be you — apply today.</p>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm h-100 p-4 p-lg-5 anim-rise text-center">
+            <div class="fs-1">🚀</div>
+            <h2 class="h4 mt-2">The leaderboard is empty</h2>
+            <p class="text-muted">The first partners will top this table — and it will be on this public page for everyone to see. Early birds win.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 p-lg-5 mb-4 anim-rise" style="background:linear-gradient(135deg,#0f1f3d,#193a6b);color:#fff">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <h2 class="h3 mb-2" style="color:#fff">Ready to start earning?</h2>
+            <p class="mb-0" style="color:rgba(255,255,255,.85)">Applications take 2 minutes. You need: your phone, your bank account details, and the willingness to share a link. That's all.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <a href="{{ url_for('partner_apply') }}" class="btn btn-accent btn-lg">Apply free now <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 p-lg-5 anim-rise">
+    <h2 class="h5 mb-2">💼 Have small capital already? Be a stocked agent instead</h2>
+    <p class="text-muted mb-0">Partners earn commission with zero capital. <b>Agents</b> buy PrepNova Access PINs at 40% off and resell at full price, keeping the margin instantly — better if you can invest a little and sell face-to-face. <a href="{{ url_for('agent_page') }}">See the agent page <i class="bi bi-arrow-right"></i></a></p>
+</div>
+
+<script>
+(function () {
+    var sel = document.getElementById('calcProduct'), qty = document.getElementById('calcQty'),
+        out = document.getElementById('calcResult'), brk = document.getElementById('calcBreak');
+    function fmt(n) { return '₦' + n.toLocaleString('en-NG', { maximumFractionDigits: 0 }); }
+    function upd() {
+        var price = parseFloat(sel.value) || 0, n = Math.max(1, Math.min(500, parseInt(qty.value) || 1));
+        var per = price * 0.30, total = per * n;
+        out.textContent = fmt(total);
+        brk.textContent = fmt(per) + ' per sale × ' + n + ' sale' + (n > 1 ? 's' : '');
+    }
+    sel.addEventListener('change', upd); qty.addEventListener('input', upd); upd();
+})();
+</script>
+{% endblock %}

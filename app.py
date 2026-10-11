@@ -641,6 +641,7 @@ def register():
         else:
             ref_code = ""
             session.pop("ref_code", None)
+    errors = []
     if request.method == "POST":
         form["name"] = " ".join((request.form.get("name") or "").split())[:80]
         form["email"] = (request.form.get("email") or "").strip().lower()[:254]
@@ -2448,8 +2449,9 @@ def initialize_payment(plan_id):
         abort(404)
     reference = f"PN-{int(time.time())}-{secrets.token_hex(6).upper()}"
     cur.execute(
-        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
-        (session["user"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference),
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', ?)",
+        (session["user"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference,
+         (request.cookies.get("pn_ref") or "").strip().upper()[:16]),
     )
     conn.commit()
     conn.close()
@@ -2515,6 +2517,7 @@ def _process_paystack_payment(reference, payment_data):
         start, end = activate_subscription(cur, record["username"], record["plan_id"], record["plan_name"], record["duration_days"],
                                             record["amount"], "NGN", reference)
         student = cur.execute("SELECT name FROM users WHERE email = ?", (record["username"],)).fetchone()
+        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
         conn.commit()
         name = student["name"] if student else "Student"
         body = (f"Hello {name},\n\nYour payment of {fmt_naira(record['amount'])} for the {record['plan_name']} plan was successful.\n\n"
@@ -2835,9 +2838,10 @@ def family_start():
         "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')",
         (reference, buyer_name, buyer_email, plan[1], plan[2], FAMILY_SEATS, plan[3]))
     cur.execute(
-        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
-        "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
-        (buyer_email, _family_plan_id(cur), f"Family — {plan[1]}"[:120], plan[3], plan[2], reference))
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code) "
+        "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', ?)",
+        (buyer_email, _family_plan_id(cur), f"Family — {plan[1]}"[:120], plan[3], plan[2], reference,
+         (request.cookies.get("pn_ref") or "").strip().upper()[:16]))
     conn.commit()
     conn.close()
     try:
@@ -2907,6 +2911,7 @@ def _fulfil_family(reference, payment_data):
              payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
         cur.execute("UPDATE family_purchases SET payment_status = 'PAID', pins = ?, family_key = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (json.dumps(codes), family_key, row["id"]))
+        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
         conn.commit()
         row = cur.execute("SELECT * FROM family_purchases WHERE id = ?", (row["id"],)).fetchone()
         if mail_configured():
@@ -3444,6 +3449,304 @@ def agent_callback():
 
 
 # ---------------------------------------------------------------------------
+# Sales Partners (free to join — earn 30% of a customer's first purchase)
+# ---------------------------------------------------------------------------
+
+PARTNER_COMMISSION = 0.30        # partners earn 30% of a customer's FIRST purchase
+PARTNER_CLEAR_DAYS = 14          # commission clears 14 days after the sale (refund window)
+PARTNER_PAYOUT_MIN = 5000        # minimum payout request (₦)
+PARTNER_COOKIE_DAYS = 30         # how long a referral link is remembered in the visitor's browser
+PARTNER_PROMO_PLANS = ("WhatsApp status & groups", "Campus / school", "Lesson centre or church",
+                       "TikTok / Instagram", "Other")
+
+
+def _partner_by_ref(cur, ref):
+    """Active partner (joined to their user account) for a referral code, or None."""
+    return cur.execute(
+        """SELECT p.*, u.referral_code FROM partners p JOIN users u ON u.email = p.user_email
+           WHERE u.referral_code = ? AND p.status = 'ACTIVE'""",
+        ((ref or "").strip().upper(),)).fetchone()
+
+
+def _maybe_credit_partner(cur, payment):
+    """After a payment is marked SUCCESS: credit the partner 30% if this is the buyer's
+    FIRST purchase, the sale came through the partner's link, and it is not a self-buy.
+    Never raises — a commission problem must never break fulfilment."""
+    try:
+        keys = payment.keys() if hasattr(payment, "keys") else []
+        ref = ((payment["ref_code"] if "ref_code" in keys else "") or "").strip().upper()
+        if not ref:
+            return
+        partner = _partner_by_ref(cur, ref)
+        if not partner:
+            return
+        buyer = (payment["username"] or "").strip().lower()
+        buyer_user = cur.execute("SELECT phone FROM users WHERE lower(email) = ?", (buyer,)).fetchone()
+        buyer_phone = (buyer_user["phone"] if buyer_user else "") or ""
+        if buyer == partner["user_email"].lower() or (buyer_phone and buyer_phone == partner["phone"]):
+            return  # partner buying through their own link — no commission
+        earlier = cur.execute(
+            """SELECT COUNT(*) AS n FROM payments pay
+               LEFT JOIN users us ON lower(us.email) = lower(pay.username)
+               WHERE pay.payment_status = 'SUCCESS' AND pay.id < ?
+                 AND (lower(pay.username) = ? OR (? != '' AND us.phone = ?))""",
+            (payment["id"], buyer, buyer_phone, buyer_phone)).fetchone()["n"]
+        if earlier:
+            return  # loyal customer, not a first purchase — renewals belong to the house
+        amount = float(payment["amount"] or 0)
+        if amount <= 0:
+            return
+        commission = round(amount * PARTNER_COMMISSION, 2)
+        cur.execute(
+            """INSERT INTO partner_commissions (partner_id, payment_id, buyer, product, sale_amount, commission, status, clears_at)
+               VALUES (?, ?, ?, ?, ?, ?, 'CLEARING', datetime('now', ?))""",
+            (partner["id"], payment["id"], buyer, (payment["plan_name"] or "")[:120], amount,
+             commission, f"+{PARTNER_CLEAR_DAYS} days"))
+        log.info("partner commission: partner %s earns %.2f on %s (ref %s)",
+                 partner["id"], commission, payment["transaction_reference"], ref)
+    except Exception:
+        log.exception("partner credit failed for payment %s", payment["id"] if payment else "?")
+
+
+def _partner_financials(cur, partner_id):
+    """Move matured commissions CLEARING -> AVAILABLE and return the partner's money summary."""
+    cur.execute(
+        """UPDATE partner_commissions SET status = 'AVAILABLE'
+           WHERE partner_id = ? AND status = 'CLEARING' AND clears_at <= datetime('now')""",
+        (partner_id,))
+    return cur.execute(
+        """SELECT
+             COALESCE(SUM(CASE WHEN status = 'CLEARING' THEN commission END), 0) AS clearing,
+             COALESCE(SUM(CASE WHEN status = 'AVAILABLE' THEN commission END), 0) AS available,
+             COALESCE(SUM(CASE WHEN status = 'REQUESTED' THEN commission END), 0) AS requested,
+             COALESCE(SUM(CASE WHEN status = 'PAID' THEN commission END), 0) AS paid,
+             COUNT(*) AS sales
+           FROM partner_commissions WHERE partner_id = ?""",
+        (partner_id,)).fetchone()
+
+
+@app.before_request
+def _partner_ref_capture():
+    """Any link carrying ?ref=CODE (marketing page, product page, landing) remembers the
+    partner for 30 days and counts a click for them."""
+    ref = (request.args.get("ref") or "").strip().upper()[:16]
+    if not ref or request.path.startswith("/static/"):
+        return
+    try:
+        conn = connect()
+        row = _partner_by_ref(conn.cursor(), ref)
+        if row:
+            if (session.get("user") or "").lower() != row["user_email"].lower():
+                conn.execute("UPDATE partners SET clicks = clicks + 1 WHERE id = ?", (row["id"],))
+                conn.commit()
+            g.pn_ref = ref
+        conn.close()
+    except Exception:
+        pass
+
+
+@app.after_request
+def _partner_ref_cookie(response):
+    ref = getattr(g, "pn_ref", None)
+    if ref:
+        response.set_cookie("pn_ref", ref, max_age=PARTNER_COOKIE_DAYS * 86400,
+                            httponly=True, samesite="Lax")
+    return response
+
+
+@app.route("/partners")
+def partners_page():
+    conn = connect()
+    plans = conn.execute(
+        "SELECT plan_name, price FROM subscription_plans WHERE is_active = 1 ORDER BY duration_days").fetchall()
+    products = conn.execute(
+        "SELECT title, price FROM pdf_products WHERE is_active = 1 ORDER BY price DESC LIMIT 8").fetchall()
+    top = conn.execute(
+        """SELECT p.name, COALESCE(SUM(pc.commission), 0) AS earned
+           FROM partners p JOIN partner_commissions pc ON pc.partner_id = p.id
+           WHERE pc.status IN ('AVAILABLE', 'REQUESTED', 'PAID')
+           GROUP BY p.id ORDER BY earned DESC LIMIT 5""").fetchall()
+    conn.close()
+    calc = ([{"name": f"{p['plan_name']} plan", "price": p["price"]} for p in plans]
+            + [{"name": p["title"], "price": p["price"]} for p in products])
+    leaders = []
+    for i, t in enumerate(top, 1):
+        parts = (t["name"] or "").split()
+        shown = parts[0] if parts else "Partner"
+        if len(parts) > 1:
+            shown += " " + parts[-1][0] + "."
+        leaders.append({"rank": i, "name": shown, "earned": t["earned"]})
+    return render_template("partners.html", calc=calc, leaders=leaders,
+                           commission=int(PARTNER_COMMISSION * 100), payout_min=PARTNER_PAYOUT_MIN)
+
+
+@app.route("/partner/terms")
+def partner_terms():
+    return render_template("partner_terms.html")
+
+
+@app.route("/partner/apply", methods=["GET", "POST"])
+@rate_limit(limit=5, window_seconds=600, scope="partner_apply")
+def partner_apply():
+    user = session.get("user")
+    if user:
+        conn = connect()
+        existing = conn.execute("SELECT status FROM partners WHERE user_email = ?", (user,)).fetchone()
+        conn.close()
+        if existing:
+            return redirect(url_for("partner_dashboard"))
+    form = {"name": "", "email": "", "phone": "", "whatsapp": "", "bank_name": "",
+            "account_number": "", "account_name": "", "promo_plan": PARTNER_PROMO_PLANS[0]}
+    if user:
+        conn = connect()
+        row = conn.execute("SELECT name, email, phone FROM users WHERE email = ?", (user,)).fetchone()
+        conn.close()
+        if row:
+            form.update({"name": row["name"] or "", "email": row["email"], "phone": row["phone"] or ""})
+    errors = []
+    if request.method == "POST":
+        form["name"] = " ".join((request.form.get("name") or "").split())[:80]
+        form["email"] = (request.form.get("email") or "").strip().lower()[:254]
+        form["phone"] = normalise_phone(request.form.get("phone") or "") or ""
+        form["bank_name"] = " ".join((request.form.get("bank_name") or "").split())[:80]
+        form["account_number"] = "".join(ch for ch in (request.form.get("account_number") or "") if ch.isdigit())[:12]
+        form["account_name"] = " ".join((request.form.get("account_name") or "").split())[:100]
+        form["promo_plan"] = (request.form.get("promo_plan") or "")[:60]
+        password = request.form.get("password") or ""
+        errors = []
+        if len(form["name"]) < 3:
+            errors.append("Enter your full name.")
+        if not valid_email(form["email"]):
+            errors.append("Enter a valid email address.")
+        if len(form["phone"]) < 11:
+            errors.append("Enter a valid Nigerian phone number (11 digits).")
+        if not form["bank_name"]:
+            errors.append("Enter your bank name.")
+        if len(form["account_number"]) != 10:
+            errors.append("Account number must be exactly 10 digits.")
+        if len(form["account_name"]) < 3:
+            errors.append("Enter the account name exactly as it appears on your bank profile.")
+        if request.form.get("agree") != "on":
+            errors.append("Please accept the Partner terms to continue.")
+        conn = connect()
+        cur = conn.cursor()
+        if not errors:
+            dupe = cur.execute("SELECT 1 FROM partners WHERE user_email = ? OR phone = ?",
+                               (form["email"], form["phone"])).fetchone()
+            if dupe:
+                errors.append("An application with this email or phone number already exists — we will be in touch shortly.")
+        if not errors and not user:
+            exists = cur.execute("SELECT 1 FROM users WHERE email = ?", (form["email"],)).fetchone()
+            if exists:
+                errors.append("You already have a PrepNova account with this email. Log in first, then apply — "
+                              "your application will be linked to your account.")
+        if not errors and not user:
+            if password_problems(password):
+                errors.append("Choose a stronger password (8+ characters, letters and numbers).")
+        if not errors:
+            try:
+                if not user:
+                    now = datetime.now()
+                    cur.execute(
+                        "INSERT INTO users (name, email, phone, password, date_joined, status, is_active, email_verified) "
+                        "VALUES (?, ?, ?, ?, ?, 'ACTIVE', 1, 0)",
+                        (form["name"], form["email"], form["phone"], generate_password_hash(password),
+                         now.strftime("%Y-%m-%d %H:%M:%S")))
+                    cur.execute(
+                        """INSERT INTO subscriptions (username, plan_id, plan_name, start_date, end_date,
+                           payment_reference, payment_status, is_active, amount_paid, currency)
+                           VALUES (?, 0, 'Free Trial', ?, ?, NULL, 'FREE_TRIAL', 1, 0, 'NGN')""",
+                        (form["email"], now.strftime("%Y-%m-%d %H:%M:%S"),
+                         (now + timedelta(days=TRIAL_DAYS)).strftime("%Y-%m-%d %H:%M:%S")))
+                    if mail_configured():
+                        _send_verification(cur, form["email"], form["name"])
+                    else:
+                        cur.execute("UPDATE users SET email_verified = 1 WHERE email = ?", (form["email"],))
+                cur.execute(
+                    """INSERT INTO partners (user_email, name, phone, bank_name, account_number, account_name, promo_plan, status)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')""",
+                    (form["email"], form["name"], form["phone"], form["bank_name"],
+                     form["account_number"], form["account_name"], form["promo_plan"]))
+                conn.commit()
+                log.info("partner application: %s (%s)", form["email"], form["promo_plan"])
+                flash("Application received! We'll confirm your partner account on WhatsApp or a quick call, "
+                      "usually within 48 hours. Then your link and dashboard unlock here.", "success")
+                conn.close()
+                return redirect(url_for("partner_dashboard"))
+            except Exception:
+                conn.rollback()
+                conn.close()
+                log.exception("partner application failed")
+                errors.append("Something went wrong saving your application. Please try again.")
+        conn.close()
+    return render_template("partner_apply.html", form=form, promo_plans=PARTNER_PROMO_PLANS,
+                           logged_in=bool(user), errors=errors)
+
+
+@app.route("/partner")
+@login_required
+def partner_dashboard():
+    conn = connect()
+    cur = conn.cursor()
+    partner = cur.execute("SELECT * FROM partners WHERE user_email = ?", (session["user"],)).fetchone()
+    if not partner:
+        conn.close()
+        return render_template("partner_dashboard.html", partner=None)
+    commissions = payouts = None
+    code = link = fin = None
+    if partner["status"] == "ACTIVE":
+        code = ensure_referral_code(cur, partner["user_email"])
+        conn.commit()
+        link = f"{app_url()}/?ref={code}"
+        fin = _partner_financials(cur, partner["id"])
+        conn.commit()
+        commissions = cur.execute(
+            "SELECT * FROM partner_commissions WHERE partner_id = ? ORDER BY id DESC LIMIT 50",
+            (partner["id"],)).fetchall()
+        payouts = cur.execute(
+            "SELECT * FROM partner_payouts WHERE partner_id = ? ORDER BY id DESC LIMIT 20",
+            (partner["id"],)).fetchall()
+    conn.close()
+    return render_template("partner_dashboard.html", partner=partner, code=code, link=link,
+                           fin=fin, commissions=commissions, payouts=payouts,
+                           payout_min=PARTNER_PAYOUT_MIN, clear_days=PARTNER_CLEAR_DAYS,
+                           commission_pct=int(PARTNER_COMMISSION * 100), mask_email=mask_email)
+
+
+@app.route("/partner/payout_request", methods=["POST"])
+@login_required
+@rate_limit(limit=3, window_seconds=600, scope="partner_payout")
+def partner_payout_request():
+    conn = connect()
+    cur = conn.cursor()
+    partner = cur.execute("SELECT * FROM partners WHERE user_email = ? AND status = 'ACTIVE'",
+                          (session["user"],)).fetchone()
+    if not partner:
+        conn.close()
+        flash("Your partner account is not active yet.", "warning")
+        return redirect(url_for("partner_dashboard"))
+    fin = _partner_financials(cur, partner["id"])
+    available = round(float(fin["available"] or 0), 2)
+    if available < PARTNER_PAYOUT_MIN:
+        conn.close()
+        flash(f"You need at least {fmt_naira(PARTNER_PAYOUT_MIN)} available to request a payout. "
+              f"You have {fmt_naira(available)}.", "warning")
+        return redirect(url_for("partner_dashboard"))
+    cur.execute("INSERT INTO partner_payouts (partner_id, amount, status) VALUES (?, ?, 'REQUESTED')",
+                (partner["id"], available))
+    payout_id = cur.lastrowid
+    cur.execute("UPDATE partner_commissions SET status = 'REQUESTED', payout_id = ? "
+                "WHERE partner_id = ? AND status = 'AVAILABLE'", (payout_id, partner["id"]))
+    conn.commit()
+    conn.close()
+    log.info("payout requested: partner %s amount %.2f", partner["id"], available)
+    flash(f"Payout of {fmt_naira(available)} requested — we send payments every week. You'll get an email when it lands.",
+          "success")
+    return redirect(url_for("partner_dashboard"))
+
+
+
+# ---------------------------------------------------------------------------
 # PDF Study-Pack Shop (public — instant-download packs, guest checkout)
 # ---------------------------------------------------------------------------
 
@@ -3632,9 +3935,10 @@ def shop_buy():
         "VALUES (?, ?, ?, ?, ?, 'PENDING')",
         (reference, product["id"], buyer_name, buyer_email, product["price"]))
     cur.execute(
-        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) "
-        "VALUES (?, ?, ?, ?, 30, ?, 'PENDING', 'NGN')",
-        (buyer_email, _pdf_plan_id(cur), f"PDF — {product['title']}"[:120], product["price"], reference))
+        "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, ref_code) "
+        "VALUES (?, ?, ?, ?, 30, ?, 'PENDING', 'NGN', ?)",
+        (buyer_email, _pdf_plan_id(cur), f"PDF — {product['title']}"[:120], product["price"], reference,
+         (request.cookies.get("pn_ref") or "").strip().upper()[:16]))
     conn.commit()
     conn.close()
     try:
@@ -3697,6 +4001,7 @@ def _fulfil_pdf(reference, payment_data):
              payment_data.get("channel"), payment_data.get("currency"), paid_kobo / 100.0, reference))
         cur.execute("UPDATE pdf_orders SET payment_status = 'PAID', download_code = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (code, order["id"]))
+        _maybe_credit_partner(cur, cur.execute("SELECT * FROM payments WHERE transaction_reference = ?", (reference,)).fetchone())
         conn.commit()
         order = cur.execute("SELECT * FROM pdf_orders WHERE id = ?", (order["id"],)).fetchone()
         if mail_configured():

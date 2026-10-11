@@ -649,9 +649,60 @@ def init_db():
     """)
     for col, ddl in [("paystack_reference", "TEXT"), ("gateway_response", "TEXT"),
                      ("currency", "TEXT DEFAULT 'NGN'"), ("verified_at", "TIMESTAMP"),
-                     ("amount_verified", "REAL"), ("channel", "TEXT")]:
+                     ("amount_verified", "REAL"), ("channel", "TEXT"), ("ref_code", "TEXT")]:
         _add_column(cur, "payments", col, ddl)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(transaction_reference)")
+
+    # --------------------------------------------------- sales partners (round 14)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS partners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_email TEXT NOT NULL,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            bank_name TEXT,
+            account_number TEXT,
+            account_name TEXT,
+            promo_plan TEXT,
+            status TEXT DEFAULT 'PENDING',
+            clicks INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved_at TIMESTAMP,
+            notes TEXT
+        )
+    """)
+    cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_user ON partners(user_email)")
+    cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_phone ON partners(phone)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS partner_commissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_id INTEGER NOT NULL,
+            payment_id INTEGER,
+            buyer TEXT,
+            product TEXT,
+            sale_amount REAL,
+            commission REAL,
+            status TEXT DEFAULT 'CLEARING',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            clears_at TIMESTAMP,
+            paid_at TIMESTAMP,
+            payout_id INTEGER
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_pc_partner ON partner_commissions(partner_id)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS partner_payouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_id INTEGER NOT NULL,
+            amount REAL,
+            status TEXT DEFAULT 'REQUESTED',
+            requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            paid_at TIMESTAMP,
+            reference TEXT,
+            note TEXT
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_pp_partner ON partner_payouts(partner_id)")
 
     # ------------------------------------------------------------- daily usage
     cur.execute("""

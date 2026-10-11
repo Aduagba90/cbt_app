@@ -1310,3 +1310,83 @@ seeded from the repo only on first boot). Companion scripts: `offline_engine_tes
 `offline_waec_engine_test.py` need `/tmp/demo_offline.html` + `/tmp/demo_waec.html` built first
 (builders return **BytesIO** — write with 'wb' + `.getvalue()`); `dropdown_test.py` needs a
 server on **port 8160** with user dd@example.com / Passw0rd123 seeded.
+
+## PrepNova Partners — affiliate programme, 30% of first purchases (Oct 2026, round 14)
+
+**The offer (locked with user):** Nigerians apply **FREE** online → owner approves after a
+WhatsApp/call check → each partner gets a personal link `/?ref=CODE` → every customer's
+**FIRST purchase** through that link earns the partner **30%** (renewals/repeat purchases are
+100% house). Commission clears after **14 days** (refund window), payout from **₦5,000**,
+weekly, **manual** (owner sends bank transfer, marks paid in admin). Partners are independent
+sales partners, NOT employees — anti-ponzi copy throughout ("free forever", "no recruiting
+money", "earnings depend on sales"). Existing stocked agents (40% off PINs) kept as Tier 2,
+cross-linked from /partners and /agent.
+
+**Attribution design:** partners ARE users (application creates/links a user account; guest
+applicants get a password field; existing-account emails are told to log in first). Their
+`users.referral_code` (ensure_referral_code, e.g. EMEKA-K4QY) doubles as the partner code —
+the existing `?ref=` registration bonus (3 days on friend's first mock) still works alongside.
+`@app.before_request _partner_ref_capture`: any page hit with `?ref=CODE` where CODE belongs
+to an ACTIVE partner → increments partner.clicks (self-visits excluded) and sets cookie
+`pn_ref` (30 days, httponly, Lax) via `@app.after_request _partner_ref_cookie`. The three
+consumer checkouts (`initialize_payment`, `family_start`, `shop_buy`) now store
+`request.cookies['pn_ref']` on the payments row (`payments.ref_code` column, migrated).
+`_maybe_credit_partner(cur, payment)` runs after SUCCESS in `_process_paystack_payment`
+(subscriptions), `_fulfil_family`, `_fulfil_pdf` (shop): guards = active partner, not self-buy
+(buyer email or buyer's users.phone == partner phone), buyer's FIRST successful payment ever
+(email OR phone match), amount > 0 → inserts partner_commissions (30%, CLEARING,
+clears_at = +14d). **Gifts have no payments row → excluded; sponsor/centre/agent orders are
+deliberately excluded** (B2B/discounted). Webhook and callback paths both credit (webhook has
+no cookies — attribution read from the stored payments.ref_code).
+
+**Routes (app.py partner section, after agent section):** `/partners` (marketing: 3-step
+how-it-works, live-DB earnings calculator, honest rules, top-5 masked leaderboard, agent
+cross-link), `/partner/terms`, `/partner/apply` (GET/POST, RL 5/600s, CSRF, validation:
+name/email/phone (normalise_phone can return None — `or ""`!), bank, 10-digit account,
+terms checkbox; guest + existing-email handling; user creation mirrors register incl.
+`_send_verification` when mail configured else email_verified=1 — **without this partners
+couldn't log in**), `/partner` dashboard (login_required; PENDING/REJECTED/BANNED panels or
+ACTIVE view: ref link + copy + WhatsApp share, 4 stat cards, commissions table with
+CLEARING→AVAILABLE lazy transition in `_partner_financials`, payout request button ≥ ₦5,000,
+payout history), `/partner/payout_request` (POST, RL 3/600s, locks commissions to REQUESTED).
+
+**Admin (admin_routes.py):** `/admin/partners` (pending queue with approve/reject, all-partners
+table with ref code/clicks/sales/earned/outstanding, payout queue with reference input +
+Mark paid/Reject, `?id=` partner detail with commission ledger), `/admin/partner_action/<pid>`
+(approve → ensure_referral_code + welcome email w/ link; reject w/ note; ban → cancels unpaid
+commissions), `/admin/partner_payout_action/<pay_id>` (paid → emails partner, commissions PAID;
+reject → balance returned to AVAILABLE). Admin bar gets a "Partners" nav link.
+**NOTE: admin blueprint routes carry explicit `/admin/...` paths (no url_prefix) — defining
+`/partners` on admin_bp collides with the public route and the admin one wins.**
+
+**db.py:** `partners` (user_email UNIQUE, phone UNIQUE, bank details, promo_plan, status
+PENDING/ACTIVE/REJECTED/BANNED, clicks), `partner_commissions` (partner_id, payment_id, buyer,
+product, sale_amount, commission, status CLEARING/AVAILABLE/REQUESTED/PAID/CANCELLED,
+clears_at, payout_id), `partner_payouts` (partner_id, amount, status REQUESTED/PAID/REJECTED,
+reference, note) + `payments.ref_code` migration.
+
+**Templates:** partners.html (public, indexable — SEO for "earn online Nigeria"), 
+partner_apply.html, partner_dashboard.html (noindex), partner_terms.html, admin_partners.html
+(standalone like admin_centre_detail). Touchpoints: landing community section recruitment band
+(`.pn-family-card` on navy gradient — CSS reused, no version bump, still v29), footer
+"Become a partner", agent.html cross-link card, admin bar link.
+
+**Tests:** `_work/partners_test.py` **48/48** (pages, validation incl. CSRF/RL 429/dupe
+phone+email/existing-account, guest user creation, admin approve→codes, cookie capture on /
+and product pages, click counting, ₦300 commission on monthly callback, webhook shop credit,
+family ₦18,000→₦5,400, repeat purchase blocked, self-buy blocked, agent stock excluded,
+clearing→available transition, payout min-gate/request/admin pay/reject-return, masked
+leaderboard, ban cancels). `_work/audit14.py` **26/26** browser (calculator interaction,
+cookie set only for valid codes, browser apply→login→pending panel, dashboard with real
+earnings, admin queue + mark-paid flow, landing band visibility, zero console errors).
+Full battery: **20 suites green** (partners_test added; dropdown_test needs its port-8160
+companion `_work/dd_server.py` — now persistent in _work).
+
+**Gotchas found this round:** the route collision above; `send_email` had to be imported in
+admin_routes; validation errors were collected but never rendered (alert block added to
+partner_apply.html); `normalise_phone()` returns None for bad input; shop_buy expects `slug`
+(not product_id) and agent_order enforces AGENT_MIN_QTY=10; Werkzeug test-client
+`get_cookie()` returns a Cookie OBJECT (compare `.value`); audit statefulness — restart the
+audit server for a clean browser run (two lessons now: family PINs and partner payouts);
+`/tmp` is wiped between turns (keep companion scripts in `_work/`); flashes render as
+`data-pn-flash` toast spans (they ARE in the HTML for string checks).

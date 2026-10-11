@@ -24,7 +24,7 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 
 from db import connect, DB_PATH
 from helpers import activate_subscription as grant_plan
-from helpers import generate_access_codes, pretty_code, fmt_naira
+from helpers import generate_access_codes, pretty_code, fmt_naira, ensure_referral_code, email_wrap, app_url, send_email
 from centre import (DURATIONS, DURATION_LABEL, activate_centre_order, extend_centre,
                     order_total, _centre_stats)
 from security import password_problems
@@ -5814,3 +5814,137 @@ def toggle_centre(centre_id):
     _audit("centre_toggle", f"{centre['name']} -> {'active' if new_state else 'disabled'}")
     flash(f"Centre '{centre['name']}' is now {'active' if new_state else 'disabled (join code blocked)'}.", "success")
     return redirect(url_for("admin_bp.centre_detail", centre_id=centre_id))
+
+
+# ----------------------------------------------------------------------------
+# Sales Partners (round 14 — applications, commissions, payouts)
+# ----------------------------------------------------------------------------
+
+@admin_bp.route("/admin/partners")
+def manage_partners():
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("UPDATE partner_commissions SET status = 'AVAILABLE' "
+                "WHERE status = 'CLEARING' AND clears_at <= datetime('now')")
+    pending = cur.execute("SELECT * FROM partners WHERE status = 'PENDING' ORDER BY id").fetchall()
+    partners = cur.execute(
+        """SELECT p.*,
+                  (SELECT COUNT(*) FROM partner_commissions pc WHERE pc.partner_id = p.id) AS sales,
+                  (SELECT COALESCE(SUM(commission), 0) FROM partner_commissions pc
+                    WHERE pc.partner_id = p.id AND pc.status IN ('AVAILABLE', 'REQUESTED', 'PAID')) AS earned,
+                  (SELECT COALESCE(SUM(amount), 0) FROM partner_payouts pp
+                    WHERE pp.partner_id = p.id AND pp.status = 'REQUESTED') AS outstanding,
+                  u.referral_code AS ref_code
+           FROM partners p LEFT JOIN users u ON u.email = p.user_email
+           ORDER BY p.id DESC LIMIT 400""").fetchall()
+    payouts = cur.execute(
+        """SELECT pp.*, p.name AS partner_name, p.user_email, p.bank_name, p.account_number, p.account_name
+           FROM partner_payouts pp JOIN partners p ON p.id = pp.partner_id
+           ORDER BY pp.id DESC LIMIT 100""").fetchall()
+    detail = detail_comms = None
+    pid = request.args.get("id", type=int)
+    if pid:
+        detail = cur.execute("SELECT * FROM partners WHERE id = ?", (pid,)).fetchone()
+        detail_comms = cur.execute(
+            "SELECT * FROM partner_commissions WHERE partner_id = ? ORDER BY id DESC LIMIT 100",
+            (pid,)).fetchall()
+    conn.commit()
+    conn.close()
+    return render_template("admin_partners.html", pending=pending, partners=partners,
+                           payouts=payouts, detail=detail, detail_comms=detail_comms)
+
+
+@admin_bp.route("/admin/partner_action/<int:pid>", methods=["POST"])
+def partner_action(pid):
+    action = (request.form.get("action") or "").strip()
+    conn = connect()
+    cur = conn.cursor()
+    partner = cur.execute("SELECT * FROM partners WHERE id = ?", (pid,)).fetchone()
+    if not partner:
+        conn.close()
+        abort(404)
+    if action == "approve" and partner["status"] != "ACTIVE":
+        code = ensure_referral_code(cur, partner["user_email"])
+        cur.execute("UPDATE partners SET status = 'ACTIVE', approved_at = CURRENT_TIMESTAMP WHERE id = ?", (pid,))
+        conn.commit()
+        link = f"{app_url()}/?ref={code}"
+        send_email(
+            "Your PrepNova Partner account is live",
+            partner["user_email"],
+            (f"Hello {partner['name']},\n\nGood news — your PrepNova Partner application is approved!\n\n"
+             f"Your personal link (share it anywhere — WhatsApp, TikTok, class groups):\n{link}\n\n"
+             f"When someone buys through your link, you earn 30% of their first purchase. "
+             f"Track everything in your dashboard: {app_url()}/partner\n\n"
+             f"Tip: you can also append ?ref={code} to ANY PrepNova page link, e.g. the offline simulator page.\n\n"
+             f"Welcome aboard!\nPrepNova Team"),
+            email_wrap("You're a PrepNova Partner now",
+                       f"Hello <b>{partner['name']}</b>,<br><br>Your application is approved. "
+                       f"Share your personal link and earn <b>30%</b> of every first purchase:",
+                       "Open my dashboard", f"{app_url()}/partner"))
+        _audit("partner_approve", f"{partner['name']} <{partner['user_email']}>")
+        flash(f"{partner['name']} approved — partner link {link} has been emailed.", "success")
+    elif action == "reject":
+        note = (request.form.get("note") or "")[:300]
+        cur.execute("UPDATE partners SET status = 'REJECTED', notes = ? WHERE id = ?", (note, pid))
+        conn.commit()
+        _audit("partner_reject", f"{partner['name']} <{partner['user_email']}>")
+        flash(f"Application from {partner['name']} rejected.", "info")
+    elif action == "ban":
+        cur.execute("UPDATE partners SET status = 'BANNED' WHERE id = ?", (pid,))
+        cur.execute("UPDATE partner_commissions SET status = 'CANCELLED' "
+                    "WHERE partner_id = ? AND status IN ('CLEARING', 'AVAILABLE')", (pid,))
+        conn.commit()
+        _audit("partner_ban", f"{partner['name']} <{partner['user_email']}>")
+        flash(f"{partner['name']} banned and unpaid commissions cancelled.", "warning")
+    else:
+        flash("Unknown partner action.", "danger")
+    conn.close()
+    return redirect(url_for("admin_bp.manage_partners"))
+
+
+@admin_bp.route("/admin/partner_payout_action/<int:pay_id>", methods=["POST"])
+def partner_payout_action(pay_id):
+    action = (request.form.get("action") or "").strip()
+    conn = connect()
+    cur = conn.cursor()
+    payout = cur.execute(
+        """SELECT pp.*, p.name AS partner_name, p.user_email, p.bank_name, p.account_number, p.account_name
+           FROM partner_payouts pp JOIN partners p ON p.id = pp.partner_id WHERE pp.id = ?""",
+        (pay_id,)).fetchone()
+    if not payout:
+        conn.close()
+        abort(404)
+    if payout["status"] != "REQUESTED":
+        flash("That payout has already been processed.", "info")
+        conn.close()
+        return redirect(url_for("admin_bp.manage_partners"))
+    if action == "paid":
+        reference = (request.form.get("reference") or "").strip()[:60] or "bank transfer"
+        cur.execute("UPDATE partner_payouts SET status = 'PAID', paid_at = CURRENT_TIMESTAMP, reference = ?, note = ? WHERE id = ?",
+                    (reference, (request.form.get("note") or "")[:300], pay_id))
+        cur.execute("UPDATE partner_commissions SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE payout_id = ?", (pay_id,))
+        conn.commit()
+        send_email(
+            "PrepNova Partner — your payout has been sent",
+            payout["user_email"],
+            (f"Hello {payout['partner_name']},\n\nYour payout of N{payout['amount']:,.2f} has been sent to "
+             f"{payout['bank_name']} {payout['account_number']}.\nReference: {reference}\n\n"
+             f"Give it up to 24 hours to land, then keep selling!\n\nPrepNova Team"),
+            email_wrap("Payout sent 🎉",
+                       f"Hello <b>{payout['partner_name']}</b>,<br><br>Your payout of "
+                       f"<b>N{payout['amount']:,.2f}</b> is on its way to your <b>{payout['bank_name']}</b> account.",
+                       "Open my dashboard", f"{app_url()}/partner"))
+        _audit("partner_payout", f"#{pay_id} N{payout['amount']:.2f} to {payout['partner_name']}")
+        flash(f"Marked ₦{payout['amount']:,.2f} PAID to {payout['partner_name']} "
+              f"({payout['bank_name']} • {payout['account_number']}).", "success")
+    elif action == "reject":
+        cur.execute("UPDATE partner_payouts SET status = 'REJECTED', note = ? WHERE id = ?",
+                    ((request.form.get("note") or "")[:300], pay_id))
+        cur.execute("UPDATE partner_commissions SET status = 'AVAILABLE', payout_id = NULL WHERE payout_id = ?", (pay_id,))
+        conn.commit()
+        _audit("partner_payout_reject", f"#{pay_id} N{payout['amount']:.2f} to {payout['partner_name']}")
+        flash(f"Payout rejected — N{payout['amount']:,.2f} returned to {payout['partner_name']}'s balance.", "warning")
+    else:
+        flash("Unknown payout action.", "danger")
+    conn.close()
+    return redirect(url_for("admin_bp.manage_partners"))
