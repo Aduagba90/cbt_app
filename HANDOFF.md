@@ -1544,6 +1544,15 @@ collisions were found and reworded ('ou'/uː → now tests 'ui', /ɜː/-bird →
 vary stress-question stems ("Which of these words is stressed on..." vs "In which word is the
 stress placed on..."). Repo db now 266 NECO questions (13,236 v2 total).
 
-**Still remaining (part 3):** Biology, Chemistry, Physics, Economics, Government batches
-(~90-100 each; paper is 60). Then consider: NECO offline-simulator shop product, announcement
-bar, dashboard touchpoints.
+**Part 3 progress (2026-10-11):** batches 053 + 054 shipped — NECO Biology (89 items,
+14 topics, Nigerian examples: tsetse fly, guinea worm/Cyclops, Anopheles) and NECO Chemistry
+(88 items, 17 topics, mole/percentage/volume answers machine-verified). Both papers live at
+60Q/75min. neco_test now **59/59**; battery 21 suites + regress green. Authoring lessons this
+round: the length-bias gate fires on the POST-BALANCE letter (balancing can move a long option
+into the answer slot — keep ALL options comparable in length, not just distractors); number-word
+options ("Five") fail the verify gate (_num reads digits only — write "5"); Roman-numeral
+options ("Group II") and formula options ("CnH2n+2") cannot be verified — drop the verify
+expression, don't force it. Repo db: 443 NECO questions, 13,413 v2 total.
+
+**Still remaining (part 4):** Physics, Economics, Government batches (~90 each; paper is 60).
+Then consider: NECO offline-simulator shop product, announcement bar, dashboard touchpoints.
