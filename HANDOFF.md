@@ -1612,3 +1612,15 @@ Then consider: NECO offline-simulator shop product, announcement bar, dashboard 
 
 ### Git-recovery note (16b part 1b)
 The sandbox `.git` regressed to round 14 AGAIN at a turn boundary (snapshot file cap — the multi-commit object store now exceeds it; expect this every turn). New, better recovery path: **fetch from GitHub** — `git ls-remote https://github.com/Aduagba90/cbt_app.git` works from the sandbox and origin/main is the canonical full history (user pushes after every deploy). Repair used: fetch main → `git reset --hard FETCH_HEAD` → `git checkout <squashed-commit> -- .` → commit (binary database.db cannot be patched with `git apply`; checkout-the-tree instead). Result: b66f837, 1 ahead of origin, tree verified identical. Always check `git log` parent BEFORE committing after a turn boundary.
+
+## Round 16b — Part 2: Physics + Government top-ups (batches 059–060)
+
+| Subject | Was | Now | Batch |
+|---|---|---|---|
+| Physics | 79 | **159** | 059 (80 new, Machines 4→13, every numeric verified, g=10) |
+| Government | 80 | **156** | 060 (76 new — de facto, delegated legislation, impeachment, SDP/NRC, NYM/Zikist, 1967 state creation, SIEC, BPE, ECOMOG, OPEC 1971, ICJ) |
+
+- NECO bank now **937 questions / 8 subjects**; repo db 13,907 v2.
+- Top-up authoring lesson: the near-dup scan now also hits MY OWN round-1 NECO items (they are in the db), so round-2 stems must be fresh ANGLES, not re-wordings of round-1 classics ("The pitch of a note depends on its" collided at 1.00 with round-1? no — with the JAMB/WAEC bank; classic definitional stems are nearly all taken; test the concept through a scenario instead).
+- neco_test: EXPECTED updated (937 total), label "batches 051-060". 92 checks pass; full battery green.
+- Remaining top-ups to reach 150+: Economics 84→150 (+66), Chemistry 88→150 (+62), Biology 89→150 (+61), Maths 97→150 (+53), Civic 95→150 (+55). English already 169. Then final 16b deploy (git push origin main + python3 setup.py).
