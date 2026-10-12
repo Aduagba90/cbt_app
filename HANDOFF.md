@@ -1624,3 +1624,14 @@ The sandbox `.git` regressed to round 14 AGAIN at a turn boundary (snapshot file
 - Top-up authoring lesson: the near-dup scan now also hits MY OWN round-1 NECO items (they are in the db), so round-2 stems must be fresh ANGLES, not re-wordings of round-1 classics ("The pitch of a note depends on its" collided at 1.00 with round-1? no — with the JAMB/WAEC bank; classic definitional stems are nearly all taken; test the concept through a scenario instead).
 - neco_test: EXPECTED updated (937 total), label "batches 051-060". 92 checks pass; full battery green.
 - Remaining top-ups to reach 150+: Economics 84→150 (+66), Chemistry 88→150 (+62), Biology 89→150 (+61), Maths 97→150 (+53), Civic 95→150 (+55). English already 169. Then final 16b deploy (git push origin main + python3 setup.py).
+
+## Round 16b — Part 3: Economics + Chemistry top-ups (batches 061–062)
+
+| Subject | Was | Now | Batch |
+|---|---|---|---|
+| Economics | 84 | **160** | 061 (76 new — scale of preference, barter, complements, inferior goods, consumer surplus, division of labour, economies of scale, duopoly, monopsony, cooperatives, e-commerce, optimum population, devaluation, capital market, OMO, canons of taxation, quota, HDI) |
+| Chemistry | 88 | **156** | 062 (68 new — sublimation, electron configuration, valency, molar-mass/concentration calcs machine-verified, brine electrolysis, electroplating, flame tests, separation techniques, galvanising, brass, alkenes, isomers, esterification) |
+
+- NECO bank now **1,081 questions / 8 subjects**; repo db 14,051 v2. neco_test 92/92, battery green.
+- Remaining top-ups: Biology 89→150 (+61), Mathematics 97→150 (+53), Civic Education 95→150 (+55). English already 169. Then final 16b deploy (git push origin main + python3 setup.py).
+- Note: batches can exceed plan (061 planned 66, wrote 76) — always read the builder's actual count for EXPECTED in neco_test, don't assume the plan.
