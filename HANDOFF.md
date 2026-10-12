@@ -1556,3 +1556,29 @@ expression, don't force it. Repo db: 443 NECO questions, 13,413 v2 total.
 
 **Still remaining (part 4):** Physics, Economics, Government batches (~90 each; paper is 60).
 Then consider: NECO offline-simulator shop product, announcement bar, dashboard touchpoints.
+
+## Round 16 — Part 4: Physics, Economics, Government (batches 055–057) — NECO bank COMPLETE
+
+**Status: all seven NECO subjects have live banks — 686 questions total.**
+
+| Subject | Batch | Items | Notes |
+|---|---|---|---|
+| Mathematics | 051 | 97 | committed part 1 |
+| English | 052 | 169 | committed part 1 (Obj + Test of Orals) |
+| Biology | 053 | 89 | committed part 3 |
+| Chemistry | 054 | 88 | committed part 3 |
+| **Physics** | **055** | **79** | 12 topics, numeric answers machine-verified, g=10 |
+| **Economics** | **056** | **84** | 16 topics, Nigerian institutions (CBN, OPEC, ECOWAS) |
+| **Government** | **057** | **80** | 17 topics, constitutions 1922–1999, nationalism, organs |
+
+- Paper wiring already live from part 1: Physics 60Q/75 min, Economics & Government 60Q/60 min (2026 NECO formats).nec_test.py now loops a real paper attempt for EVERY subject (86 checks, all pass) and asserts all seven appear on /neco_subjects.
+- Empty-subject checks in the suite now use a fake subject ("Zoology") since no real NECO subject is empty any more.
+- Authoring lessons from part 4 (beyond parts 1–3):
+  - When rewording a collision by swapping PEOPLE-options to YEAR-options, all four options must change together — a mixed options row (two years + two names) passes the writer's gates but is nonsense.
+  - JAMB's physics bank is huge: numeric template stems ("A car starts from rest…", "area under a velocity-time graph") collide at 1.00 even with different numbers, because the near-dup scan ignores numbers. Change the scenario (okada, motorcycle, diver, tuning fork), not just the digits.
+  - Two verify fields that "look fine" (UN 1945, ECOWAS 1975) fail when the ANSWER OPTION is a word whose value the expression can't produce — verify expressions must evaluate to the exact correct option, so verify is only usable when the correct option is the numeric answer itself.
+  - Length-bias gate fires POST-balance: grep the flag output for which slot is long, shorten the correct option (or the flagged distractor) to <30 chars or within 1.5× of the longest other option.
+- Repo database.db after re-seed: 13,656 questions_v2 = JAMB 11,475 / WAEC 1,260 / POST-UTME 235 / NECO 686. No test users leaked (users=6, 0 @example.com).
+- Full battery at this commit: 19 Flask suites + regress + neco 86/86, all green.
+
+**NECO release-1 is content-complete. Deploy when ready: `git push origin main`, then `python3 setup.py` on PythonAnywhere (per GO_LIVE.md).**
