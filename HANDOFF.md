@@ -1602,3 +1602,13 @@ Then consider: NECO offline-simulator shop product, announcement bar, dashboard 
 - Sandbox note: `.git` regressed to round 14 after a turn boundary (snapshot cap); restored from the zip's `.git` (f612f7d) — worktree diff was exactly this part's files. pip deps reinstalled.
 
 **Remaining in 16b:** top up the 8 subjects toward 150+ each (~385 more questions; Economics 84→150, Physics 79→150, Government 80→150, Chemistry 88→150, Biology 89→150, Maths 97→150, Civic 95→150, English already 169). Then deploy 16b with `git push origin main` + `python3 setup.py`.
+
+## Round 16b — Part 1b: deploy verified + "Civic Educations" typo cleanup
+
+- **Live site verified at 24991ca**: home counters (10,525 questions · 26 subjects) matched the with-Civic state exactly; user's push + `python3 setup.py` succeeded after a DNS hiccup (fixed by user).
+- Verification method (no admin login needed — live admin password differs from the sandbox one; do NOT retry logins): compute expected home-page stats from the repo db (`questions_v2` Active + legacy `questions` count; `COUNT(DISTINCT subject_name)` where status Active) and compare with `curl` of the landing page.
+- **Bug found during verification**: ancient day-one JAMB seed left a typo subject row "Civic Educations" (with s) — 0 questions, invisible to students, but it inflated the public Subjects counter by 1. Fixed by: repo db row set Inactive + one-time migration `fix_civic_typo_2026_10` in db.py (rides to live at the NEXT deploy; counter will read the honest 25). Real NECO Civic Education (id 43, 95 q) untouched.
+- neco_test + regress green after the db.py change.
+
+### Git-recovery note (16b part 1b)
+The sandbox `.git` regressed to round 14 AGAIN at a turn boundary (snapshot file cap — the multi-commit object store now exceeds it; expect this every turn). New, better recovery path: **fetch from GitHub** — `git ls-remote https://github.com/Aduagba90/cbt_app.git` works from the sandbox and origin/main is the canonical full history (user pushes after every deploy). Repair used: fetch main → `git reset --hard FETCH_HEAD` → `git checkout <squashed-commit> -- .` → commit (binary database.db cannot be patched with `git apply`; checkout-the-tree instead). Result: b66f837, 1 ahead of origin, tree verified identical. Always check `git log` parent BEFORE committing after a turn boundary.

@@ -1091,6 +1091,19 @@ def init_db():
         except Exception as exc:  # never stop the site from starting
             print(f"[neco-civic] subject setup skipped: {exc}")
 
+    # Round 16b cleanup (Oct 2026): the day-one JAMB seed left a typo subject row
+    # "Civic Educations" (with an s) that never held any questions. Deactivate it so the
+    # public subject counter on the home page counts real subjects only.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'fix_civic_typo_2026_10'").fetchone():
+        try:
+            cur.execute(
+                """UPDATE subjects SET status = 'Inactive'
+                   WHERE subject_name = 'Civic Educations' AND exam_type = 'JAMB'"""
+            )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('fix_civic_typo_2026_10', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[civic-typo] cleanup skipped: {exc}")
+
     if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_active_2026_09'").fetchone():
         try:
             # Day-one installs seeded some WAEC subjects (English/Mathematics/Biology) as Inactive for
