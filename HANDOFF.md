@@ -1635,3 +1635,23 @@ The sandbox `.git` regressed to round 14 AGAIN at a turn boundary (snapshot file
 - NECO bank now **1,081 questions / 8 subjects**; repo db 14,051 v2. neco_test 92/92, battery green.
 - Remaining top-ups: Biology 89→150 (+61), Mathematics 97→150 (+53), Civic Education 95→150 (+55). English already 169. Then final 16b deploy (git push origin main + python3 setup.py).
 - Note: batches can exceed plan (061 planned 66, wrote 76) — always read the builder's actual count for EXPECTED in neco_test, don't assume the plan.
+
+## Round 16b — Part 4 (FINAL): Biology, Mathematics, Civic Education top-ups (batches 063–065) — 16b COMPLETE
+
+| Subject | Was | Now | Batch |
+|---|---|---|---|
+| Biology | 89 | **150** | 063 (61 new — muscle mitochondria, RBC no nucleus, phloem ringing, universal donor, lactic acid, nephron/dialysis, epigeal germination, identical twins, cerebellum, gigantism, sickle-carrier cross, commensalism, treated nets, Benedict's/emulsion tests) |
+| Mathematics | 97 | **153** | 064 (56 new, ALL numerics machine-verified — bases, LCM, approximation, discount, indices/logs, Venn, factorisation, subject of formula, variation, AP term/sum, mensuration, polygon angles, circle theorems, bearings, surds, ratio/work-rate, statistics, probability, simple/compound interest) |
+| Civic Education | 95 | **151** | 065 (56 new — justice scenario, deprivation, NOA, coat of arms details, land compensation, UDHR 1948, magistrate court, adoption, driving age 18/FRSC licence, cult oaths, depressants, ARVs, smuggling-vs-trafficking, SAED, NAFEST) |
+
+**ROUND 16b CONTENT COMPLETE: every NECO subject now has 150+ questions.**
+
+| Final bank | | | |
+|---|---|---|---|
+| English 169 | Economics 160 | Physics 159 | Chemistry 156 |
+| Government 156 | Maths 153 | Civic 151 | Biology 150 |
+
+NECO total **1,254 questions / 8 subjects**; repo db 14,224 v2 (JAMB 11,475 / WAEC 1,260 / POST-UTME 235 / NECO 1,254). neco_test 92/92 (bank-count check now reads "153 questions in the bank"), battery 21 suites + regress green.
+
+- 16b authoring notes: maths "Simplify/Evaluate/Solve" stems hit ~500 template FALSE positives (numbers stripped → every such JAMB item scores 1.00) — judge tested content, reword only genuine same-skill hits (e.g. "Express 0.25 as fraction" vs db "0.375", "The value of log₁₀ 1000" vs db "Evaluate log₁₀ 1000"); verify expressions must evaluate to the exact OPTION TEXT (0b11001 ≠ "11001" string — drop verify for non-numeric options).
+- **DEPLOY 16b: `git push origin main` then `python3 setup.py`.** After deploy, home counters should read questions 11,050 / subjects 25 (NEC 10,251+274 legacy; the typo-row cleanup migration fix_civic_typo_2026_10 rides along).
