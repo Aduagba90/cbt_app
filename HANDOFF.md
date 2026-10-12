@@ -1582,3 +1582,23 @@ Then consider: NECO offline-simulator shop product, announcement bar, dashboard 
 - Full battery at this commit: 19 Flask suites + regress + neco 86/86, all green.
 
 **NECO release-1 is content-complete. Deploy when ready: `git push origin main`, then `python3 setup.py` on PythonAnywhere (per GO_LIVE.md).**
+
+## Round 16b — Part 1: Civic Education added (batch 058)
+
+**The 8th NECO subject — the compulsory one. 95 questions, 14 syllabus topics.**
+
+| What | Detail |
+|---|---|
+| Batch | 058 (`content/batch_058_neco_civic.json`), zero near-dup warnings — new subject, nothing to collide with |
+| Topics | Values, Citizenship/Nationalism, National Symbols, Human Rights, Law & Order, Responsible Parenthood, Traffic Regulations, Cultism, Drugs & Drug Abuse, HIV/AIDS, Human Trafficking, Youth Restiveness/Empowerment, National Unity, Political Apathy |
+| Paper | Paper III — Objective, 60Q/60min (official 2025 External + 2026 Internal timetables: paper 1033, 10:00–11:00, 1hr) |
+| Nigerian content | FRSC, LASTMA, NDLEA, NAFDAC, SON, NHRC, NAPTIP, NYSC 1973, coat-of-arms/flag facts, 2024 national anthem change |
+
+**Engineering notes (important for the next new subject):**
+- `content_loader.apply_batch` **silently skips every question when the subject row doesn't exist** in `subjects` (returns 0,0 — no error). A brand-new subject needs a seed migration in `db.py` FIRST. Civic Education got `neco_civic_2026_10` (insert-only, one-time gate key, idempotent — safe on the live db).
+- Civic Education is our first **two-word NECO subject**: `url_for('start_neco', subject=...)` encodes the space (`Civic%20Education`). Route/POST flow works unchanged; HTML-string tests must check the encoded form.
+- neco_test.py: 92 checks — 8-subject EXPECTED (781 total), per-subject paper loop incl. Civic 60Q/60min, subject-seed count == 8.
+- Repo db after re-seed: 13,751 questions_v2 = JAMB 11,475 / WAEC 1,260 / POST-UTME 235 / NECO 781 (8 subjects). Battery: 21 suites + regress, all green.
+- Sandbox note: `.git` regressed to round 14 after a turn boundary (snapshot cap); restored from the zip's `.git` (f612f7d) — worktree diff was exactly this part's files. pip deps reinstalled.
+
+**Remaining in 16b:** top up the 8 subjects toward 150+ each (~385 more questions; Economics 84→150, Physics 79→150, Government 80→150, Chemistry 88→150, Biology 89→150, Maths 97→150, Civic 95→150, English already 169). Then deploy 16b with `git push origin main` + `python3 setup.py`.

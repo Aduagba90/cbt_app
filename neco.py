@@ -60,6 +60,12 @@ PAPERS = {
          "60 questions in 1 hour, built around civic and political scenarios.",
          None),
     ],
+    "Civic Education": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour — the compulsory subject: values, citizenship, "
+         "rights and the social issues NECO asks about every year.",
+         None),
+    ],
 }
 
 # NECO letter grades for objective papers (commonly used boundaries; official

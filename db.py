@@ -1077,6 +1077,20 @@ def init_db():
         except Exception as exc:  # never stop the site from starting
             print(f"[neco] subject setup skipped: {exc}")
 
+    # Round 16b (Oct 2026): Civic Education — compulsory for every SSCE candidate, so it gets its
+    # own bank (batch 058). Same insert-only guard; harmless on databases that already have the row.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'neco_civic_2026_10'").fetchone():
+        try:
+            cur.execute(
+                """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                   SELECT 'NECO', 'Civic Education', 'CIV', 'Active', e.id FROM exam_types e
+                   WHERE e.exam_name = 'NECO'
+                     AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = 'Civic Education' AND s.exam_type_id = e.id)"""
+            )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('neco_civic_2026_10', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[neco-civic] subject setup skipped: {exc}")
+
     if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_active_2026_09'").fetchone():
         try:
             # Day-one installs seeded some WAEC subjects (English/Mathematics/Biology) as Inactive for
