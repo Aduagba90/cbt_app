@@ -3652,6 +3652,73 @@ def _partner_ref_capture():
         pass
 
 
+# ------------------------------------------------- in-app daily renewal trigger
+# Free PythonAnywhere accounts cannot run scheduled tasks, so the first request
+# of each day runs the renewal job inside the web app. The once-per-day lock
+# lives in app_settings (renewals_auto_state) and is shared with
+# scripts/renewals_daily.py, so a future paid scheduled task can never
+# double-run the job. On failure the lock records the error and allows one
+# retry per hour (a fresh attempt whenever the clock moves to a new hour).
+_RENEW_GUARD = {"slot": None}  # (day, hour) — one attempt per process per hour
+
+
+def run_daily_renewals_once(conn=None, now=None):
+    """Run the daily renewal job at most once a day. Returns the stats dict when
+    the job ran, None when it was skipped (already done today / retried this hour).
+    Never raises: a failure is recorded in the lock for the admin to see."""
+    now = now or datetime.now()
+    today, hour = now.strftime("%Y-%m-%d"), now.hour
+    own = conn is None
+    conn = conn or connect()
+    try:
+        cur = conn.cursor()
+        row = cur.execute("SELECT value FROM app_settings WHERE key = 'renewals_auto_state'").fetchone()
+        state = json.loads(row["value"]) if row and row["value"] else {}
+        if state.get("date") == today and (state.get("status") == "ok" or state.get("hour") == hour):
+            return None
+        stats = run_renewal_day(conn, now=now)
+        cur.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
+            ("renewals_auto_state",
+             json.dumps({"date": today, "status": "ok", "hour": hour, "stats": stats}),
+             now.strftime("%Y-%m-%d %H:%M:%S")),
+        )
+        conn.commit()
+        return stats
+    except Exception as exc:
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
+                ("renewals_auto_state",
+                 json.dumps({"date": today, "status": "error", "hour": hour, "error": str(exc)[:300]}),
+                 now.strftime("%Y-%m-%d %H:%M:%S")),
+            )
+            conn.commit()
+        except Exception:
+            pass
+        app.logger.exception("daily renewal job failed")
+        return None
+    finally:
+        if own:
+            conn.close()
+
+
+@app.before_request
+def _renewal_daily_trigger():
+    # Test suites drive run_renewal_day directly; never fire it from test requests.
+    if os.environ.get("TESTING") or app.config.get("TESTING"):
+        return None
+    if request.endpoint == "static":
+        return None
+    now = datetime.now()
+    slot = (now.strftime("%Y-%m-%d"), now.hour)
+    if _RENEW_GUARD["slot"] == slot:
+        return None
+    _RENEW_GUARD["slot"] = slot
+    run_daily_renewals_once(now=now)
+    return None
+
+
 @app.after_request
 def _partner_ref_cookie(response):
     ref = getattr(g, "pn_ref", None)

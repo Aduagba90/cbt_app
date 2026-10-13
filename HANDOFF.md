@@ -1655,3 +1655,13 @@ NECO total **1,254 questions / 8 subjects**; repo db 14,224 v2 (JAMB 11,475 / WA
 
 - 16b authoring notes: maths "Simplify/Evaluate/Solve" stems hit ~500 template FALSE positives (numbers stripped → every such JAMB item scores 1.00) — judge tested content, reword only genuine same-skill hits (e.g. "Express 0.25 as fraction" vs db "0.375", "The value of log₁₀ 1000" vs db "Evaluate log₁₀ 1000"); verify expressions must evaluate to the exact OPTION TEXT (0b11001 ≠ "11001" string — drop verify for non-numeric options).
 - **DEPLOY 16b: `git push origin main` then `python3 setup.py`.** After deploy, home counters should read questions 11,050 / subjects 25 (NEC 10,251+274 legacy; the typo-row cleanup migration fix_civic_typo_2026_10 rides along).
+
+## Round 16c: in-app daily renewal trigger (free-account replacement for PA scheduled tasks)
+
+PythonAnywhere's Tasks page confirmed scheduled tasks are PAID-accounts-only for the user, so the renewal job now also runs inside the website:
+
+- `run_daily_renewals_once(conn=None, now=None)` (app.py) — wraps `run_renewal_day` with a once-per-day lock stored in `app_settings.renewals_auto_state` (JSON: date/status/hour/stats). Returns stats when it ran, None when skipped. Never raises; failures are recorded in the lock and retried at most once per hour.
+- `@app.before_request _renewal_daily_trigger` — first request of each day runs the job; per-process memory guard `(day, hour)` keeps every other request free. Hard-skipped when `TESTING` (env var or app.config) so no test suite can ever fire it; skipped for /static.
+- `scripts/renewals_daily.py` now calls the same wrapper — if a paid scheduled task is ever added it shares the lock and just prints "already run today". Zero double-charge risk.
+- renewal_test.py: +6 checks (runs when due, ok-state recorded, skips same day, error→hourly retry, TESTING guard, shared lock). 65/65; full battery green.
+- **User asked-questions note:** PA Tasks page shows "only enabled for paid accounts" — that's the definitive answer on his account tier (free). Upgrade ($5/mo) remains optional later; the web trigger covers the need at ₦0.

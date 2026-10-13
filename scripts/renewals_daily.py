@@ -7,6 +7,11 @@ Does four things (all idempotent — safe to run more than once a day):
   3. Charges saved cards for plans expiring tomorrow (auto-renewal).
   4. Sends win-back emails with a 20% code ~7 days after a plan expires.
 
+The website ALSO runs this job automatically on the first visit of each day
+(free PythonAnywhere accounts have no scheduled tasks). Both share a
+once-per-day lock in the database, so running this script as well can never
+double-charge anyone — it simply reports "already run today".
+
 Setup on PythonAnywhere: Tasks tab -> Set a scheduled task ->
     /home/<your-username>/.virtualenvs/prepnova/bin/python3 /home/<your-username>/cbt_app/scripts/renewals_daily.py
 The venv python is required (Flask etc. live there). The script loads
@@ -41,13 +46,16 @@ def _load_env():
 _load_env()
 os.chdir(REPO)
 
-from app import run_renewal_day  # noqa: E402
+from app import run_daily_renewals_once  # noqa: E402
 from db import connect  # noqa: E402
 
 if __name__ == "__main__":
     conn = connect()
     try:
-        stats = run_renewal_day(conn)
-        print(f"renewal job done: {stats}")
+        stats = run_daily_renewals_once(conn)
+        if stats is None:
+            print("renewal job: already run today (by the website's own trigger) - nothing to do")
+        else:
+            print(f"renewal job done: {stats}")
     finally:
         conn.close()
