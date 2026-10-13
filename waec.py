@@ -51,6 +51,60 @@ PAPERS = {
          "50 questions in 1 hour, built around civic and political scenarios.",
          None),
     ],
+    "Civic Education": [
+        ("Paper 1 — Objective", 50, 60,
+         "50 questions in 1 hour — the compulsory subject: values, citizenship, "
+         "rights and the social issues WASSCE asks about every year.",
+         None),
+    ],
+    "Literature-in-English": [
+        ("Paper 1 — Objective", 50, 60,
+         "Literary appreciation: figures of speech, poetry, drama and prose, plus "
+         "the African classics. 50 questions in 1 hour.",
+         None),
+    ],
+    "Agricultural Science": [
+        ("Paper 1 — Objective", 50, 50,
+         "50 questions in 50 minutes on crops, soil, animals, tools and farm "
+         "business.",
+         None),
+    ],
+    "Geography": [
+        ("Paper 1 — Objective", 50, 60,
+         "50 questions in 1 hour on physical and human geography, maps and "
+         "the Nigerian environment.",
+         None),
+    ],
+    "Christian Religious Studies": [
+        ("Paper 1 — Objective", 50, 60,
+         "50 questions in 1 hour on the themes and stories of the Bible "
+         "set out in the syllabus.",
+         None),
+    ],
+    "Islamic Studies": [
+        ("Paper 1 — Objective", 50, 50,
+         "50 questions in 50 minutes on the Qur'an, Hadith, pillars of Islam "
+         "and the life of the Prophet (S.A.W.).",
+         None),
+    ],
+    "Commerce": [
+        ("Paper 1 — Objective", 50, 50,
+         "50 questions in 50 minutes on trade, business documents and "
+         "commercial institutions.",
+         None),
+    ],
+    "Financial Accounting": [
+        ("Paper 1 — Objective", 50, 60,
+         "50 questions in 1 hour — book-keeping to final accounts, in the "
+         "WASSCE objective style.",
+         None),
+    ],
+    "Marketing": [
+        ("Paper 1 — Objective", 50, 50,
+         "50 questions in 50 minutes on the marketing mix, segmentation and "
+         "consumer behaviour.",
+         None),
+    ],
 }
 
 # WAEC letter grades for objective papers (commonly used boundaries; official grade

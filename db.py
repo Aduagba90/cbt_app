@@ -565,14 +565,14 @@ def init_db():
              1500.0),
             ("offline-waec-cbt",
              "PrepNova Offline — WAEC Exam Simulator",
-             "Every WAEC objective paper in one file — English Paper 1 and the Test of Orals, Mathematics, Biology, Chemistry, Physics, Economics and Government. Official 2026 WASSCE formats and timing, instant marking with your A1–F9 grade, and explained answers. No network, no data charges.",
+             "Every WAEC objective paper in one file — all 16 WAEC subjects, from English Paper 1 and the Test of Orals to Mathematics, the sciences, Literature, Commerce and Accounting. Official 2026 WASSCE formats and timing, instant marking with your A1–F9 grade, and explained answers. No network, no data charges.",
              1500.0),
         ])
     cur.execute("""INSERT OR IGNORE INTO pdf_products (slug, title, blurb, price, bundle_items)
                    VALUES (?, ?, ?, ?, ?)""",
                 ("offline-duo-bundle",
                  "PrepNova Offline — JAMB + WAEC Simulator Bundle",
-                 "Both offline simulators in one purchase: the full JAMB mock (6,979 questions, 14 subjects, real 120-minute timing) AND every WAEC objective paper (1,260 questions, official 2026 WASSCE formats, A1–F9 grading). Buy together and save ₦500 — two download links, one payment.",
+                 "Both offline simulators in one purchase: the full JAMB mock (6,979 questions, 14 subjects, real 120-minute timing) AND every WAEC objective paper (all WAEC subjects, official 2026 WASSCE formats, A1–F9 grading). Buy together and save ₦500 — two download links, one payment.",
                  2500.0,
                  "offline-jamb-cbt,offline-waec-cbt"))
 
@@ -1110,6 +1110,27 @@ def init_db():
             cur.execute("INSERT INTO app_settings (key, value) VALUES ('neco_gce_subjects_2026_10', '1')")
         except Exception as exc:  # never stop the site from starting
             print(f"[neco-gce] subject setup skipped: {exc}")
+
+    # Round 16e (Oct 2026): the nine remaining WASSCE subjects, seeded up front.
+    # Rows are harmless while empty: a subject only shows once its questions_v2
+    # bank reaches MIN_BANK_FOR_V2, so they appear as their batches land.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'waec_subjects_16e_2026_10'").fetchone():
+        try:
+            for name, code in (("Civic Education", "CIV"), ("Literature-in-English", "LIT"),
+                               ("Agricultural Science", "AGR"), ("Geography", "GEO"),
+                               ("Christian Religious Studies", "CRS"), ("Islamic Studies", "IRS"),
+                               ("Commerce", "COM"), ("Financial Accounting", "FAC"),
+                               ("Marketing", "MKT")):
+                cur.execute(
+                    """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                       SELECT 'WAEC', ?, ?, 'Active', e.id FROM exam_types e
+                       WHERE e.exam_name = 'WAEC'
+                         AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
+                    (name, code, name),
+                )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('waec_subjects_16e_2026_10', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[waec-16e] subject setup skipped: {exc}")
 
     # Round 16b cleanup (Oct 2026): the day-one JAMB seed left a typo subject row
     # "Civic Educations" (with an s) that never held any questions. Deactivate it so the

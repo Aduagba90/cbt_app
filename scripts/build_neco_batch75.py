@@ -1,0 +1,263 @@
+"""Batch 075 - WAEC Literature-in-English, Paper 1 Objective round 1.
+
+WASSCE Literature-in-English Paper 1 (Objective) is a 50-item paper (1 hr;
+official 2026 second-series timetable, paper 2101). This batch covers the
+WASSCE literature syllabus with FRESH angles and phrasings - device-in-
+quotation items, specific African and non-African works and authors, oral
+literature forms - because the near-dup scan checks every item against the
+JAMB, WAEC and NECO banks, including our NECO Literature bank of 90 items.
+
+    python3 scripts/build_neco_batch75.py -> content/batch_075_waec_literature.json
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from batch_common import build_batch  # noqa: E402
+
+S = "Literature-in-English"
+
+T_FIG = "Figures of Speech"
+T_POE = "Poetry: Form and Technique"
+T_DRA = "Drama: Form and Technique"
+T_PRO = "Prose: Form and Technique"
+T_TER = "Literary Terms"
+T_AFR = "African Literature"
+T_ORA = "Oral Literature"
+
+PASSAGES = []
+PQ = []
+
+Q = [
+    # ---------------------------------------------------------------- figures of speech
+    (T_FIG, "Easy", "'The lake slept quietly under the moon.' The figure of speech in this line is",
+     "personification", "simile", "hyperbole", "onomatopoeia", "A",
+     "A non-human thing is given a human action."),
+    (T_FIG, "Easy", "'Uche is the rock of our family.' This expression is a",
+     "metaphor", "simile", "litotes", "oxymoron", "A",
+     "It compares directly without 'like' or 'as'."),
+    (T_FIG, "Medium", "'Tunde sang the song of victory.' The device at work here is",
+     "personification", "metonymy", "pun", "paradox", "A",
+     "Singing here is a human act given to an idea."),
+    (T_FIG, "Medium", "'She died a thousand deaths before checking her results.' The device used is",
+     "hyperbole", "euphemism", "irony", "pun", "A",
+     "Deliberate exaggeration creates the effect."),
+    (T_FIG, "Medium", "Saying that a dead leader 'passed on' instead of 'died' is an example of",
+     "euphemism", "oxymoron", "antithesis", "apostrophe", "A",
+     "A mild expression replaces a harsh one."),
+    (T_FIG, "Medium", "'Parting is such sweet sorrow.' The pairing of opposite ideas in this line is",
+     "an oxymoron", "a metonymy", "an allusion", "an innuendo", "A",
+     "Contradictory terms stand side by side."),
+    (T_FIG, "Hard", "In 'The pen is mightier than the sword', 'pen' and 'sword' stand for writing and warfare. The figure used is",
+     "metonymy", "synecdoche", "hyperbole", "personification", "A",
+     "Names of closely linked things replace the things."),
+    (T_FIG, "Hard", "'The whistling wind worried the window.' The dominant sound device in this line is",
+     "alliteration", "assonance", "rhyme", "refrain", "A",
+     "Initial consonant sounds repeat in nearby words."),
+    (T_FIG, "Medium", "A statement whose real meaning is the opposite of its surface meaning is",
+     "irony", "sarcasm-free praise", "hyperbole", "eulogy", "A",
+     "Irony says one thing and means another."),
+    # ---------------------------------------------------------------- poetry
+    (T_POE, "Easy", "A sonnet is a poem of",
+     "fourteen lines", "twelve lines", "sixteen lines", "eight lines", "A",
+     "The sonnet traditionally has 14 lines."),
+    (T_POE, "Easy", "Which type of poem expresses sorrow for someone who has died?",
+     "an elegy", "an ode", "a ballad", "an epic", "A",
+     "The elegy expresses grief for loss."),
+    (T_POE, "Medium", "Blank verse is a form of poetry that",
+     "uses meter but no end-rhyme", "uses rhyme but no meter", "uses neither meter nor rhythm", "is printed without a title", "A",
+     "It has regular meter without rhyme."),
+    (T_POE, "Medium", "A line or group of lines repeated at intervals in a poem is a",
+     "refrain", "stanza", "couplet", "cadence", "A",
+     "The refrain returns at intervals."),
+    (T_POE, "Easy", "A long narrative poem about the deeds of a hero is",
+     "an epic", "a lyric", "an epigram", "an idyll", "A",
+     "Epics celebrate heroic achievements."),
+    (T_POE, "Medium", "A rhyme scheme is usually shown by",
+     "letters such as a b a b", "the number of stanzas", "the length of the lines", "the title of the poem", "A",
+     "Letters mark which line-ends rhyme."),
+    (T_POE, "Medium", "A poem of lofty praise addressed to a person or thing is",
+     "an ode", "a dirge", "a lampoon", "a limerick", "A",
+     "The ode praises in elevated style."),
+    (T_POE, "Medium", "The repetition of vowel sounds in nearby words, as in 'the deep green sea', is",
+     "assonance", "consonance", "alliteration", "anaphora", "A",
+     "Vowel sounds repeat inside the words."),
+    (T_POE, "Easy", "In poetry, a pair of lines forming one unit is called a",
+     "couplet", "tercet", "quatrain", "octave", "A",
+     "A couplet is a pair of lines."),
+    (T_POE, "Hard", "A poem in which a single speaker addresses a silent listener throughout is a",
+     "dramatic monologue", "dramatic dialogue", "choral verse", "prose poem", "A",
+     "One voice carries the whole poem."),
+    (T_POE, "Medium", "In 'Death be not proud', the poet speaks directly to death. This address to an abstract force is",
+     "apostrophe", "ellipsis", "litotes", "anaphora", "A",
+     "The speaker addresses an absent idea."),
+    # ---------------------------------------------------------------- drama
+    (T_DRA, "Easy", "A play that ends happily, often in a marriage, is a",
+     "comedy", "tragedy", "farce", "melodrama", "A",
+     "Comedy ends in joy, not ruin."),
+    (T_DRA, "Easy", "A speech in which a character alone on stage reveals private thoughts is a",
+     "soliloquy", "monologue", "aside", "dialogue", "A",
+     "The character thinks aloud, alone."),
+    (T_DRA, "Medium", "An aside differs from a soliloquy because an aside is",
+     "a brief remark to the audience", "a long speech to the crowd", "a song delivered by the chorus", "the closing speech of the play", "A",
+     "Asides are short and pointed aside."),
+    (T_DRA, "Medium", "The audience knows the stranger is a fraud but Olu does not. The effect created is",
+     "dramatic irony", "comic relief", "pathetic fallacy", "bathos", "A",
+     "The audience knows more than the actor."),
+    (T_DRA, "Medium", "A funny scene inserted into a serious play to reduce tension provides",
+     "comic relief", "tragic flaw", "catharsis", "climax", "A",
+     "Laughter eases the built-up tension."),
+    (T_DRA, "Easy", "The character who works against the central figure of a play is the",
+     "antagonist", "protagonist", "foil", "chorus", "A",
+     "The antagonist opposes the hero."),
+    (T_DRA, "Medium", "A character placed in a play mainly to contrast with the hero and highlight his qualities is a",
+     "foil", "stock character", "confidant", "narrator", "A",
+     "The foil sets off the hero's traits."),
+    (T_DRA, "Medium", "The point in a play where the conflict reaches its greatest intensity is the",
+     "climax", "exposition", "denouement", "interlude", "A",
+     "Tension peaks at the climax."),
+    (T_DRA, "Hard", "The section of a play in which the knots of the plot are finally untied is the",
+     "denouement", "prologue", "climax", "epilogue", "A",
+     "The denouement resolves the action."),
+    (T_DRA, "Easy", "The major divisions into which a play is split are called",
+     "acts", "chapters", "stanzas", "cantos", "A",
+     "Acts divide plays as chapters do novels."),
+    (T_DRA, "Medium", "The list showing the actors and the roles each will play is the",
+     "cast", "crew", "prompt", "set", "A",
+     "The cast lists who plays whom."),
+    (T_DRA, "Medium", "A serious play that ends in the ruin or death of the hero is a",
+     "tragedy", "comedy", "satire", "masque", "A",
+     "Tragedy ends in suffering and loss."),
+    # ---------------------------------------------------------------- prose
+    (T_PRO, "Easy", "The longest form of prose fiction, usually divided into chapters, is the",
+     "novel", "short story", "novelette sketch", "prose poem", "A",
+     "Length in prose fiction marks the novel."),
+    (T_PRO, "Easy", "A story told by a narrator who refers to himself as 'I' uses",
+     "first-person narration", "third-person narration", "omniscient narration", "second-person narration", "A",
+     "The 'I' voice tells first-person tales."),
+    (T_PRO, "Medium", "A narrator who moves freely into the minds of all the characters is",
+     "omniscient", "first-person", "naive", "peripheral", "A",
+     "The all-knowing voice sees every mind."),
+    (T_PRO, "Medium", "A short scene showing events that happened before the story began is a",
+     "flashback", "foreshadowing", "prologue chant", "afterpiece", "A",
+     "Flashbacks step back in story time."),
+    (T_PRO, "Medium", "Clues a writer plants about what will happen later in a story amount to",
+     "foreshadowing", "flashbacking", "framing", "foiling", "A",
+     "Hints prepare the reader for later."),
+    (T_PRO, "Easy", "The time and place in which the events of a novel occur form its",
+     "setting", "plot", "theme", "motif", "A",
+     "Setting covers where and when."),
+    (T_PRO, "Medium", "A secondary story woven inside the main story of a novel is a",
+     "sub-plot", "prologue", "epilogue", "blurb", "A",
+     "The sub-plot runs beside the plot."),
+    (T_PRO, "Medium", "A prose narrative longer than a short story but shorter than a novel is a",
+     "novella", "parable", "ballad", "essay", "A",
+     "The novella sits between the two."),
+    (T_PRO, "Easy", "The central idea that a novelist keeps returning to is the",
+     "theme", "plot", "setting", "diction", "A",
+     "The theme is the governing idea."),
+    (T_PRO, "Hard", "A character built on one repeated trait and never changing is described as",
+     "flat", "round", "dynamic", "tragic", "A",
+     "Flat characters stay one-dimensional."),
+    # ---------------------------------------------------------------- literary terms
+    (T_TER, "Medium", "A literary work that mocks human folly with the aim of correcting it is a",
+     "satire", "tragedy", "elegy", "fable", "A",
+     "Satire ridicules in order to reform."),
+    (T_TER, "Medium", "The writer's attitude towards his subject matter is called",
+     "tone", "mood", "plot", "theme", "A",
+     "Tone belongs to the writer's stance."),
+    (T_TER, "Medium", "The feeling a passage creates in the reader is best called the",
+     "mood", "tone", "voice", "diction", "A",
+     "Mood is what the reader feels."),
+    (T_TER, "Medium", "A writer's careful selection of words is referred to as",
+     "diction", "syntax", "setting", "theme", "A",
+     "Diction is word choice made artful."),
+    (T_TER, "Easy", "Expressions that appeal to the reader's physical senses in a passage make up its",
+     "imagery", "satire", "irony", "rhythm", "A",
+     "Imagery paints sense-pictures in words."),
+    (T_TER, "Hard", "A narrative in which characters and events stand for deeper abstract meanings is an",
+     "allegory", "elegy", "epigram", "parody", "A",
+     "Allegory carries a second meaning."),
+    (T_TER, "Hard", "A short, witty poem or saying that ends with a clever twist is an",
+     "epigram", "epic", "ode", "elegy", "A",
+     "The epigram is brief and pointed."),
+    (T_TER, "Medium", "A story told to illustrate a moral or religious lesson is a",
+     "parable", "legend", "myth", "epic", "A",
+     "Parables teach lessons in story form."),
+    # ---------------------------------------------------------------- african literature
+    (T_AFR, "Easy", "Things Fall Apart, the 1958 novel on Igbo life, was written by",
+     "Chinua Achebe", "Wole Soyinka", "Ngugi wa Thiong'o", "Cyprian Ekwensi", "A",
+     "Achebe set the novel in Igbo land."),
+    (T_AFR, "Easy", "The author of the play The Lion and the Jewel is",
+     "Wole Soyinka", "Chinua Achebe", "Ola Rotimi", "J.P. Clark", "A",
+     "Soyinka wrote it in 1959."),
+    (T_AFR, "Medium", "Who became Africa's first winner of the Nobel Prize in Literature?",
+     "Wole Soyinka", "Chinua Achebe", "Nadine Gordimer", "Naguib Mahfouz", "A",
+     "Soyinka took the prize in 1986."),
+    (T_AFR, "Medium", "The Nigerian author of the novel Purple Hibiscus is",
+     "Chimamanda Ngozi Adichie", "Buchi Emecheta", "Flora Nwapa", "Zaynab Alkali", "A",
+     "Adichie's first novel came out in 2003."),
+    (T_AFR, "Medium", "The Palm-Wine Drinkard, an early Nigerian novel in English, was written by",
+     "Amos Tutuola", "Chukwuemeka Ike", "Elechi Amadi", "Kole Omotoso", "A",
+     "Tutuola published it in 1952."),
+    (T_AFR, "Hard", "The novel The Joys of Motherhood, centred on a woman in Lagos, was written by",
+     "Buchi Emecheta", "Flora Nwapa", "Mabel Segun", "Zulu Sofola", "A",
+     "Emecheta published it in 1979."),
+    (T_AFR, "Hard", "Which Nigerian woman novelist published the novel Efuru in 1966?",
+     "Flora Nwapa", "Buchi Emecheta", "Adaora Ulasi", "Grace Ogot", "A",
+     "Nwapa's Efuru appeared in 1966."),
+    (T_AFR, "Medium", "The play Ovonramwen Nogbaisi, about the fall of a Benin king, was written by",
+     "Ola Rotimi", "Wole Soyinka", "J.P. Clark", "Hubert Ogunde", "A",
+     "Rotimi staged it in 1971."),
+    (T_AFR, "Hard", "The Famished Road, which won the Booker Prize, was written by",
+     "Ben Okri", "Wole Soyinka", "Ayi Kwei Armah", "Ngugi wa Thiong'o", "A",
+     "Okri won the 1991 Booker Prize."),
+    (T_AFR, "Hard", "Song of Lawino, a long poem from East Africa, was composed by",
+     "Okot p'Bitek", "Lenrie Peters", "Kofi Awoonor", "David Diop", "A",
+     "P'Bitek wrote it in Acholi first."),
+    (T_AFR, "Medium", "The River Between, set among the Gikuyu people, is a novel by",
+     "Ngugi wa Thiong'o", "Chinua Achebe", "Ayi Kwei Armah", "Peter Abrahams", "A",
+     "Ngugi published it in 1965."),
+    # ---------------------------------------------------------------- oral literature
+    (T_ORA, "Easy", "A short traditional saying that carries the wisdom of a people is a",
+     "proverb", "riddle", "fable", "myth", "A",
+     "Proverbs condense folk wisdom."),
+    (T_ORA, "Easy", "A puzzling question posed to test the wit of listeners is a",
+     "riddle", "proverb", "chant", "dirge", "A",
+     "Riddles play at hiding answers."),
+    (T_ORA, "Medium", "Among the Yoruba, the chanted poetry that praises a person or lineage is called",
+     "oriki", "ijala", "esa", "rara", "A",
+     "Oriki is the praise-name poetry."),
+    (T_ORA, "Medium", "A traditional story that explains the origin of a people's world is a",
+     "myth", "legend", "fable", "parody", "A",
+     "Myths explain origins and gods."),
+    (T_ORA, "Easy", "A folktale whose animal characters act out a moral lesson is a",
+     "fable", "myth", "legend", "epic", "A",
+     "Fables teach morals with beasts."),
+    (T_ORA, "Medium", "A song of lament performed at funerals in oral tradition is a",
+     "dirge", "lullaby", "work song", "war song", "A",
+     "Dirges mourn the dead in song."),
+    (T_ORA, "Easy", "Moonlight tales told by elders in the village belong to",
+     "oral literature", "written literature", "print journalism", "modern drama", "A",
+     "Such tales pass mouth to mouth."),
+]
+
+build_batch(
+    S,
+    "batch_075_waec_literature.json",
+    "075",
+    "WAEC Literature-in-English Paper 1 round 1 (Round 16e): the WASSCE "
+    "syllabus with FRESH angles - device-in-quotation items ('The lake slept "
+    "quietly', 'sweet sorrow', 'pen is mightier'), specific African works and "
+    "authors (Achebe, Soyinka, Adichie, Tutuola, Nwapa, Emecheta, Okri, "
+    "p'Bitek, Rotimi, Ngugi), oral forms (oriki, dirge, riddle) and term-"
+    "distinction items (tone/mood, aside/soliloquy, myth/legend) - because "
+    "the near-dup scan checks every item against the JAMB, WAEC and NECO "
+    "banks INCLUDING our 90-item NECO Literature bank. Topics: figures of "
+    "speech, poetry, drama, prose, literary terms, African literature, oral "
+    "literature.",
+    PASSAGES,
+    PQ,
+    Q,
+    exam_type="WAEC",
+)
