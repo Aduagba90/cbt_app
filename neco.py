@@ -66,6 +66,54 @@ PAPERS = {
          "rights and the social issues NECO asks about every year.",
          None),
     ],
+    "Literature-in-English": [
+        ("Paper III — Objective", 60, 60,
+         "Literary appreciation: figures of speech, poetry, drama and prose, plus "
+         "the African classics NECO loves to ask about. 60 questions in 1 hour.",
+         None),
+    ],
+    "Agricultural Science": [
+        ("Paper III — Objective", 60, 60,
+         "Crops, soil, animals, tools and farm business. 60 questions in 1 hour, "
+         "with an alternative-to-practical flavour.",
+         None),
+    ],
+    "Geography": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour on physical and human geography, maps and "
+         "the Nigerian environment.",
+         None),
+    ],
+    "Christian Religious Studies": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour on the themes and stories of the Bible "
+         "set out in the syllabus.",
+         None),
+    ],
+    "Islamic Studies": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour on the Qur'an, Hadith, pillars of Islam "
+         "and the life of the Prophet (S.A.W.).",
+         None),
+    ],
+    "Commerce": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour on trade, business documents and commercial "
+         "institutions.",
+         None),
+    ],
+    "Financial Accounting": [
+        ("Paper III — Objective", 60, 80,
+         "60 questions in 1 hour 20 minutes — NECO gives Accounting extra time. "
+         "Book-keeping to final accounts.",
+         None),
+    ],
+    "Marketing": [
+        ("Paper III — Objective", 60, 60,
+         "60 questions in 1 hour on the marketing mix, segmentation and "
+         "consumer behaviour.",
+         None),
+    ],
 }
 
 # NECO letter grades for objective papers (commonly used boundaries; official

@@ -1091,6 +1091,26 @@ def init_db():
         except Exception as exc:  # never stop the site from starting
             print(f"[neco-civic] subject setup skipped: {exc}")
 
+    # Round 16d (Oct 2026): the remaining eight NECO GCE subjects, seeded up front.
+    # Rows are harmless while empty: a subject only shows once its questions_v2
+    # bank reaches MIN_BANK_FOR_V2, so they appear as their batches land.
+    if not cur.execute("SELECT 1 FROM app_settings WHERE key = 'neco_gce_subjects_2026_10'").fetchone():
+        try:
+            for name, code in (("Literature-in-English", "LIT"), ("Agricultural Science", "AGR"),
+                               ("Geography", "GEO"), ("Christian Religious Studies", "CRS"),
+                               ("Islamic Studies", "IRS"), ("Commerce", "COM"),
+                               ("Financial Accounting", "FAC"), ("Marketing", "MKT")):
+                cur.execute(
+                    """INSERT INTO subjects (exam_type, subject_name, subject_code, status, exam_type_id)
+                       SELECT 'NECO', ?, ?, 'Active', e.id FROM exam_types e
+                       WHERE e.exam_name = 'NECO'
+                         AND NOT EXISTS (SELECT 1 FROM subjects s WHERE s.subject_name = ? AND s.exam_type_id = e.id)""",
+                    (name, code, name),
+                )
+            cur.execute("INSERT INTO app_settings (key, value) VALUES ('neco_gce_subjects_2026_10', '1')")
+        except Exception as exc:  # never stop the site from starting
+            print(f"[neco-gce] subject setup skipped: {exc}")
+
     # Round 16b cleanup (Oct 2026): the day-one JAMB seed left a typo subject row
     # "Civic Educations" (with an s) that never held any questions. Deactivate it so the
     # public subject counter on the home page counts real subjects only.

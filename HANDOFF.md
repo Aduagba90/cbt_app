@@ -1665,3 +1665,14 @@ PythonAnywhere's Tasks page confirmed scheduled tasks are PAID-accounts-only for
 - `scripts/renewals_daily.py` now calls the same wrapper — if a paid scheduled task is ever added it shares the lock and just prints "already run today". Zero double-charge risk.
 - renewal_test.py: +6 checks (runs when due, ok-state recorded, skips same day, error→hourly retry, TESTING guard, shared lock). 65/65; full battery green.
 - **User asked-questions note:** PA Tasks page shows "only enabled for paid accounts" — that's the definitive answer on his account tier (free). Upgrade ($5/mo) remains optional later; the web trigger covers the need at ₦0.
+
+## Round 16d — Part 1: Literature-in-English + Agricultural Science (batches 066–067)
+
+| Subject | Items | Batch |
+|---|---|---|
+| Literature-in-English | **90** | 066 — literary appreciation: figures of speech, poetry, drama, prose, general knowledge, African classics (Achebe, Soyinka, Adichie, Ngugi, p'Bitek, Nwapa, Emecheta, Rotimi, Blake, Shakespeare). Clean first pass, 0 collisions. |
+| Agricultural Science | **90** | 067 — full syllabus: crop production, soil science, animal production, tools, pests/diseases, propagation, econ/extension, records/surveying, agro-allied, fisheries/forestry. |
+
+- All 8 remaining GCE subjects SEEDED up front (migration `neco_gce_subjects_2026_10` in db.py) and PAPER formats wired in neco.py from the official 2026 External timetable: Lit/Agric/Geog/CRS/IRS/Commerce/Marketing 60Q/60min, **Financial Accounting 60Q/80min** (NECO gives it 1hr20). Empty subjects stay invisible (bank >= MIN_BANK_FOR_V2 gate).
+- NECO bank now **1,434 questions / 10 subjects** (16 subject rows). neco_test: EXPECTED + 2 subjects, seed count == 16, paper loop covers both new subjects. Repo db 14,404 v2.
+- Remaining 16d subjects: Geography, CRS, IRS, Commerce, Financial Accounting, Marketing (~90 each).
