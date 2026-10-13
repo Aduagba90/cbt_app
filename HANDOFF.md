@@ -1688,3 +1688,20 @@ PythonAnywhere's Tasks page confirmed scheduled tasks are PAID-accounts-only for
 - CRS collides with the WAEC CRS bank (e.g. "At the last supper Jesus identified his betrayer by", "Ananias and Sapphira died because they" both 1.00) — bible-story stems are heavily banked; question-form rewordings ("how did Jesus point out...") clear them.
 - Remaining 16d: IRS, Commerce, Financial Accounting, Marketing (~90 each) → then the full-16 deploy.
 - **Session-start lesson (IMPORTANT): the user does NOT push intermediate rounds — `origin/main` lags behind by design. ALWAYS restore .git from the ZIP at session start (it has the newest commit); `git fetch origin && reset --hard origin/main` would DISCARD unpushed rounds (nearly lost 16d part 1 this session; zip restore saved it).**
+
+## Round 16d — Part 3 (FINAL): IRS, Commerce, Accounting, Marketing (batches 070–073) — ALL 16 NECO SUBJECTS COMPLETE
+
+| Subject | Items | Batch |
+|---|---|---|
+| Islamic Studies | **70** | 070 — Qur'an (114 surahs, Hira, compilation), Hadith (isnad/matn), articles of faith, five pillars (rak'ahs, zakat 2.5%, Arafat), Sirah (hijrah, Badr, Hudaybiyyah, opening of Makkah), Khulafa' Rashidun, values, Muamalat, Islam in Nigeria (Kanem-Borno, dan Fodio), calendar/festivals |
+| Commerce | **74** | 071 — scope, production, trade, trade documents (invoice→statement), retail/wholesale, business units, banking services, insurance principles, transport docs (bill of lading), warehousing (bonded), advertising, tourism |
+| Financial Accounting | **62** | 072 — equation (calculations verified), double entry, prime entry books, trial balance, final accounts (gross/net verified), depreciation straight-line verified, accruals, bank rec, control accounts, manufacturing, non-profit, errors/suspense |
+| Marketing | **60** | 073 — concepts, segmentation, mix (4Ps), life cycle, pricing methods, channels, promotion, consumer behaviour (dissonance), research, e-commerce/customer care |
+
+**THE COMPLETE NECO OFFER: all 16 GCE subjects, 1,875 questions.** Every subject serves at least one full fresh paper (Marketing exactly 60; Accounting 60Q/80min per the official timetable).
+
+Final per-subject banks: English 169 · Economics 160 · Physics 159 · Chemistry 156 · Government 156 · Maths 153 · Civic 151 · Biology 150 · Agric 90 · Literature 90 · CRS 88 · Geography 87 · Commerce 74 · IRS 70 · Accounting 62 · Marketing 60.
+
+- Repo db: 14,845 questions_v2 = JAMB 11,475 / WAEC 1,260 / POST-UTME 235 / NECO 1,875. neco_test green (EXPECTED covers all 16; paper loop tests every subject incl. Accounting 80 min); battery 21 suites + regress green.
+- Authoring notes: commerce/accounting classics collide heavily with the WAEC Commerce and JAMB Financial Accounting banks; question-form rewordings clear them. Marketing 59 nearly shipped — a paper needs bank >= 60; the suite caught it, +1 item (market share).
+- **DEPLOY 16d: `git push origin main` then `python3 setup.py`.** Expected live home counters after deploy: questions **11,619** (active v2 11,345 + legacy 274) and subjects **29** (25 + 8 new GCE subjects).
