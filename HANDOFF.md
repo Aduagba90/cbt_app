@@ -1676,3 +1676,15 @@ PythonAnywhere's Tasks page confirmed scheduled tasks are PAID-accounts-only for
 - All 8 remaining GCE subjects SEEDED up front (migration `neco_gce_subjects_2026_10` in db.py) and PAPER formats wired in neco.py from the official 2026 External timetable: Lit/Agric/Geog/CRS/IRS/Commerce/Marketing 60Q/60min, **Financial Accounting 60Q/80min** (NECO gives it 1hr20). Empty subjects stay invisible (bank >= MIN_BANK_FOR_V2 gate).
 - NECO bank now **1,434 questions / 10 subjects** (16 subject rows). neco_test: EXPECTED + 2 subjects, seed count == 16, paper loop covers both new subjects. Repo db 14,404 v2.
 - Remaining 16d subjects: Geography, CRS, IRS, Commerce, Financial Accounting, Marketing (~90 each).
+
+## Round 16d — Part 2: Geography + Christian Religious Studies (batches 068–069)
+
+| Subject | Items | Batch |
+|---|---|---|
+| Geography | **87** | 068 — earth structure/rocks, weathering/landforms, climate & rainfall types, vegetation/soils, map reading, population/settlement, economic geography, transport, regional Nigeria (confluence, Mambilla, Jos tin, Enugu coal, Chad Basin), environmental issues (Agulu-Nanka gullies, desertification, gas flaring) |
+| Christian Religious Studies | **88** | 069 — creation/fall, patriarchs, exodus, judges, kings, prophets, Jesus' ministry, passion/resurrection, early church, themes (faith, justice, forgiveness, service, love) |
+
+- NECO bank now **1,609 questions / 12 subjects**. neco_test green (EXPECTED + 2, paper loop covers both), battery green. Repo db 14,579 v2.
+- CRS collides with the WAEC CRS bank (e.g. "At the last supper Jesus identified his betrayer by", "Ananias and Sapphira died because they" both 1.00) — bible-story stems are heavily banked; question-form rewordings ("how did Jesus point out...") clear them.
+- Remaining 16d: IRS, Commerce, Financial Accounting, Marketing (~90 each) → then the full-16 deploy.
+- **Session-start lesson (IMPORTANT): the user does NOT push intermediate rounds — `origin/main` lags behind by design. ALWAYS restore .git from the ZIP at session start (it has the newest commit); `git fetch origin && reset --hard origin/main` would DISCARD unpushed rounds (nearly lost 16d part 1 this session; zip restore saved it).**
