@@ -1767,3 +1767,11 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 - db re-seeded: CA 507 → 757 (POST-UTME); v2 16,407 → 16,657. JAMB Active 7,975 + Inactive 3,500 = 11,475 (unchanged; note: earlier notes' 11,475 counted Active+Inactive).
 - Battery 21/21 green (3 fresh battle runs pass). KNOWN FLAKE (pre-existing, not from this batch): battle_test check "play page leaks no answers" tests `"correct" not in h`, and 135 JAMB English stress-pattern stems legitimately contain the word "correct" — a random draw including one trips the check ~1-in-N runs. Fix option for a later round: make the check target a real leak marker instead of the bare word.
 - CA now 757 of the ~1,200 approved cap. Next per plan: alternate WAEC/NECO top-ups toward 4,500-5,000 each. NECO GCE starts 4 Nov; PA renewal click due 12 Nov.
+
+## Round 21 — WAEC top-up (batches 102–109) — 20 Oct 2026
+- .git corrupt 7th time; recovered from zip (7642eaf), dirty 0, no work lost.
+- Batches 102–109 (exam_type WAEC): 102 Marketing 54 (→153), 103 Commerce 49 (→150), 104 Acct 49 (→152), 105 Agric 48 (→152), 106 IRS 54 (→158), 107 Geo 53 (→158), 108 Lit 52 (→162), 109 CRS 52 (→168). WAEC 2,232 → **2,643** (16 subjects, thinnest now Civic 130); v2 16,657 → **17,068**.
+- Builders scripts/build_neco_batch102…109.py; all 0 warnings after short-expl/length-bias fixes and ~70 near-dup stem rewords vs r1/r2, NECO and JAMB pools.
+- offline_waec_test counts bumped to 16 / 2,643 / 17; full battery 21 green.
+- Content: Marketing concepts/mix/segmentation/retail types/promotion tools/control; Commerce trade+world bodies/entrepreneurship/finance/insurance/markets/e-commerce; Accounting numeric (equation, imprest, depreciation, ratios, manufacturing) + reconciliation + PAYE; Agric cropping/propagation/forage/fish/livestock/records/processing/institutions; IRS hadith/taharah/salah/zakat/hajj/family/faraid/seerah/aqidah; Geography physical/coasts/climate/soils/population/resources/hazards; Literature devices/poetry forms/prose/drama/African writers; CRS patriarchs→early church.
+- Per approved plan the next top-ups alternate to NECO (R22: lift Civic 151→, Marketing 97→, Acct 102→ etc.), then WAEC Civic/Econ/Gov/Physics/Bio, until ~4,500–5,000 each. CA 757 of ~1,200 cap. NECO GCE 4 Nov; PA renewal click 12 Nov.
