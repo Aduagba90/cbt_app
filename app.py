@@ -1184,8 +1184,12 @@ def jamb_courses():
             last_custom = [x for x in json.loads(last["subjects_json"]) if x in electives]
         except (TypeError, ValueError):
             last_custom = []
+    conn = connect()
+    from past_papers import preview_jamb_years
+    past_years = preview_jamb_years(conn.cursor())
+    conn.close()
     return render_template("jamb_courses.html", groups=groups, duration=JAMB_DURATION_MIN, electives=electives,
-                           last_custom=last_custom, total=len(JAMB_COURSES))
+                           last_custom=last_custom, total=len(JAMB_COURSES), past_years=past_years)
 
 
 @app.route("/waec_subjects")
@@ -1196,18 +1200,21 @@ def waec_subjects():
     avail = available_subjects("WAEC")
     conn = connect()
     cur = conn.cursor()
+    from past_papers import preview_years
     subjects = []
     for name in sorted(avail):
         papers = []
+        past = {}
         for label, count, minutes, note, topic in waecf.papers_for(name):
             if topic:
                 source, _ = resolve_source(cur, "WAEC", name)
                 n = len(fetch_question_ids(cur, source, "WAEC", name, topics=[topic])) if source else 0
                 if n < MIN_BANK_FOR_V2:
                     continue
+            past[label] = preview_years(cur, "WAEC", name, label)
             papers.append({"label": label, "count": count, "minutes": minutes, "note": note, "bank": n if topic else avail[name]})
         if papers:
-            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers})
+            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers, "past": past})
     conn.close()
     return render_template("waec_subjects.html", subjects=subjects)
 
@@ -1230,9 +1237,14 @@ def start_jamb(course):
         flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
-        attempt_id = engine.create_jamb_attempt(session["user"], course, client_ip(), request.headers.get("User-Agent"))
-    except engine.ExamError as e:
-        flash(str(e), "danger")
+        year = (request.form.get("past_year") or "").strip()
+        if year:
+            attempt_id = engine.create_past_jamb_attempt(session["user"], course, int(year), client_ip(),
+                                                         request.headers.get("User-Agent"))
+        else:
+            attempt_id = engine.create_jamb_attempt(session["user"], course, client_ip(), request.headers.get("User-Agent"))
+    except (engine.ExamError, ValueError) as e:
+        flash(str(e) if not isinstance(e, ValueError) else "That past-style mock is not available. Please pick a year from the list.", "danger")
         return redirect(url_for("jamb_courses"))
     return redirect(url_for("exam_room", attempt_id=attempt_id))
 
@@ -1260,10 +1272,16 @@ def start_jamb_custom():
         return redirect(url_for("exam_types"))
     name = f"{CUSTOM_COURSE_PREFIX}: " + " · ".join(SHORT_SUBJECT.get(s_, s_) for s_ in picked)
     try:
-        attempt_id = engine.create_jamb_attempt(session["user"], name, client_ip(), request.headers.get("User-Agent"),
-                                                subjects=["Use of English"] + picked)
-    except engine.ExamError as e:
-        flash(str(e), "danger")
+        year = (request.form.get("past_year") or "").strip()
+        if year:
+            attempt_id = engine.create_past_jamb_attempt(session["user"], name, int(year), client_ip(),
+                                                         request.headers.get("User-Agent"),
+                                                         subjects=["Use of English"] + picked)
+        else:
+            attempt_id = engine.create_jamb_attempt(session["user"], name, client_ip(), request.headers.get("User-Agent"),
+                                                    subjects=["Use of English"] + picked)
+    except (engine.ExamError, ValueError) as e:
+        flash(str(e) if not isinstance(e, ValueError) else "That past-style mock is not available. Please pick a year from the list.", "danger")
         return redirect(url_for("jamb_courses"))
     return redirect(url_for("exam_room", attempt_id=attempt_id))
 
@@ -1282,10 +1300,15 @@ def start_waec(subject):
         flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
-        attempt_id = engine.create_waec_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
-                                                paper=request.form.get("paper"))
-    except engine.ExamError as e:
-        flash(str(e), "danger")
+        year = (request.form.get("past_year") or "").strip()
+        if year:
+            attempt_id = engine.create_past_ssce_attempt("WAEC", session["user"], subject, int(year), client_ip(),
+                                                         request.headers.get("User-Agent"), paper=request.form.get("paper"))
+        else:
+            attempt_id = engine.create_waec_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
+                                                    paper=request.form.get("paper"))
+    except (engine.ExamError, ValueError) as e:
+        flash(str(e) if not isinstance(e, ValueError) else "That past-style paper is not available. Please pick a year from the list.", "danger")
         return redirect(url_for("waec_subjects"))
     return redirect(url_for("exam_room", attempt_id=attempt_id))
 
@@ -1300,18 +1323,21 @@ def neco_subjects():
     avail = available_subjects("NECO")
     conn = connect()
     cur = conn.cursor()
+    from past_papers import preview_years
     subjects = []
     for name in sorted(avail):
         papers = []
+        past = {}
         for label, count, minutes, note, topic in necof.papers_for(name):
             if topic:
                 source, _ = resolve_source(cur, "NECO", name)
                 n = len(fetch_question_ids(cur, source, "NECO", name, topics=[topic])) if source else 0
                 if n < MIN_BANK_FOR_V2:
                     continue
+            past[label] = preview_years(cur, "NECO", name, label)
             papers.append({"label": label, "count": count, "minutes": minutes, "note": note, "bank": n if topic else avail[name]})
         if papers:
-            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers})
+            subjects.append({"name": name, "icon": subject_icon(name), "count": avail[name], "papers": papers, "past": past})
     conn.close()
     return render_template("neco_subjects.html", subjects=subjects)
 
@@ -1330,10 +1356,15 @@ def start_neco(subject):
         flash("You already have an exam in progress. Resume it below, or discard it to start a new one.", "warning")
         return redirect(url_for("exam_types"))
     try:
-        attempt_id = engine.create_neco_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
-                                                paper=request.form.get("paper"))
-    except engine.ExamError as e:
-        flash(str(e), "danger")
+        year = (request.form.get("past_year") or "").strip()
+        if year:
+            attempt_id = engine.create_past_ssce_attempt("NECO", session["user"], subject, int(year), client_ip(),
+                                                         request.headers.get("User-Agent"), paper=request.form.get("paper"))
+        else:
+            attempt_id = engine.create_neco_attempt(session["user"], subject, client_ip(), request.headers.get("User-Agent"),
+                                                    paper=request.form.get("paper"))
+    except (engine.ExamError, ValueError) as e:
+        flash(str(e) if not isinstance(e, ValueError) else "That past-style paper is not available. Please pick a year from the list.", "danger")
         return redirect(url_for("neco_subjects"))
     return redirect(url_for("exam_room", attempt_id=attempt_id))
 

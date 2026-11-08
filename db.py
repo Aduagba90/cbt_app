@@ -979,6 +979,14 @@ def init_db():
     )
     cur.execute("CREATE INDEX IF NOT EXISTS idx_attempts_live ON exam_attempts(live_id, status)")
 
+    # Fixed past-style papers (one paper per exam/subject/paper/year, same for every student).
+    # Schema lives in past_papers.py so the module is self-describing; materialisation is lazy.
+    try:
+        from past_papers import SCHEMA as _past_papers_schema
+        cur.execute(_past_papers_schema)
+    except Exception as exc:  # never stop the site from starting
+        print(f"[past-papers] schema skipped: {exc}")
+
     # ------------------------------------------------------------ app settings + one-off data fixes
     cur.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
     # Launch pricing (Sept 2026): Monthly 1,000 / Quarterly 2,500 / Yearly 8,000. Runs once; afterwards

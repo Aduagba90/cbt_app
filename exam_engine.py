@@ -337,6 +337,59 @@ def create_neco_attempt(username, subject, ip=None, ua=None, paper=None):
     return _create_ssce_paper_attempt("NECO", username, subject, ip=ip, ua=ua, paper=paper)
 
 
+def create_past_ssce_attempt(exam, username, subject, year, ip=None, ua=None, paper=None):
+    """A fixed past-style SSCE paper: the same questions for every student, forever.
+
+    year: label like 2024 — the paper is freshly written in that year's format,
+    honestly labelled '-Style', never a leaked original.
+    """
+    if exam == "WAEC":
+        from waec import get_paper, papers_for
+    else:
+        from neco import get_paper, papers_for
+    papers = papers_for(subject)
+    chosen = get_paper(subject, paper) if paper else (papers[0] if papers else None)
+    if not chosen:
+        raise ExamError(f"No {exam} questions are available yet for {subject}. Please try another subject or check back soon.")
+    label, count, minutes, note, topic_filter = chosen
+    from past_papers import past_paper
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        source, ids = past_paper(cur, exam, subject, label, year)
+        if not ids:
+            raise ExamError(f"The {year}-Style {exam} {subject} paper is not available yet. Try another year or the random paper.")
+        conn.commit()
+    finally:
+        conn.close()
+    name = f"{exam} {subject} — {year}-Style" if len(papers) == 1 else f"{exam} {subject} — {year}-Style · {label}"
+    plan = [(subject, source, ids)]
+    return create_attempt(username, exam, name, [subject], duration_min=minutes, plan=plan, ip=ip, ua=ua)
+
+
+def create_past_jamb_attempt(username, course, year, ip=None, ua=None, subjects=None):
+    """A full JAMB mock in a fixed year style: same paper for every student sitting that course."""
+    subjects = subjects or JAMB_COURSES.get(course)
+    if not subjects:
+        raise ExamError("Invalid course selected.")
+    from past_papers import past_paper
+    conn = connect()
+    cur = conn.cursor()
+    try:
+        plan = []
+        for subject in subjects:
+            source, ids = past_paper(cur, "JAMB", subject, "", year)
+            if not ids:
+                raise ExamError(f"The {year}-Style JAMB paper for {subject} is not available yet. Try another year.")
+            plan.append((subject, source, ids))
+        conn.commit()
+    finally:
+        conn.close()
+    name = f"{course} — {year}-Style Mock"
+    return create_attempt(username, "JAMB", name, subjects, duration_min=JAMB_DURATION_MIN,
+                          plan=plan, ip=ip, ua=ua)
+
+
 def create_live_attempt(username, live_id, subjects, ip=None, ua=None):
     """Saturday Live Mock: the same fixed paper (per subject) for every student that week."""
     from study import live_paper

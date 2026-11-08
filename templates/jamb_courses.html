@@ -31,11 +31,26 @@
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
                 <button class="btn btn-primary" id="comboStart" disabled data-loading="Preparing your exam…" data-confirm="Start your custom JAMB mock now? The {{ duration }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start mock with my combination</button>
+                {% if past_years %}
+                <label class="small text-muted ms-1 mb-0">or a past-style paper:
+                    <select name="past_year" class="form-select form-select-sm d-inline-block w-auto ms-1">
+                        <option value="">Fresh random paper</option>
+                        {% for y in past_years %}<option value="{{ y }}">{{ y }}-Style (same for everyone)</option>{% endfor %}
+                    </select>
+                </label>
+                {% endif %}
                 <span class="small text-muted" id="comboHint">Pick three subjects to continue.</span>
             </div>
         </form>
     </div>
 </div>
+
+{% if past_years %}
+<div class="alert alert-light border d-flex align-items-start gap-2 py-2 px-3 mb-4 small anim-rise">
+    <i class="bi bi-info-circle text-primary mt-1"></i>
+    <div><b>Past-style mocks:</b> each year label is one fixed paper — the same questions for every student, so you can compare scores fairly with friends and classmates. Papers are freshly written to the current syllabus in each year's format — never a memorised leak. A fresh random paper is always available too.</div>
+</div>
+{% endif %}
 
 {% for g in groups %}
 <section class="course-group mb-4" data-group="{{ g.name|lower }}">
@@ -57,6 +72,20 @@
                     <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
                     <button class="btn btn-primary w-100" data-loading="Preparing your exam…" data-confirm="Start the {{ c.name }} JAMB mock now? The {{ duration }}-minute timer begins immediately."><i class="bi bi-play-fill"></i> Start mock exam</button>
                 </form>
+                {% if past_years %}
+                <div class="pn-past-row mt-2">
+                    <small class="text-muted d-block mb-1">Past-style — same paper for everyone:</small>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for y in past_years %}
+                        <form method="POST" action="{{ url_for('start_jamb', course=c.name) }}" data-once class="mb-0">
+                            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+                            <input type="hidden" name="past_year" value="{{ y }}">
+                            <button type="submit" class="pn-year-chip" data-confirm="Sit the {{ c.name }} {{ y }}-Style JAMB mock now? The {{ duration }}-minute timer begins immediately." data-loading="…">{{ y }}-Style</button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
                 {% else %}
                 <button class="btn btn-outline-secondary w-100 mt-auto" disabled>Questions being added</button>
                 {% endif %}

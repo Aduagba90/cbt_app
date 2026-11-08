@@ -240,6 +240,13 @@ a:hover { color: var(--pn-primary-700); }
 .pn-subject-link small { display: block; font-weight: 500; color: var(--pn-muted); font-size: .78rem; }
 .pn-subject-link i.bi-chevron-right { margin-left: auto; color: var(--pn-muted); }
 
+/* ---------- Past-style year chips ---------- */
+.pn-past-row { padding: .35rem .5rem .3rem; border-left: 3px solid var(--pn-accent); background: rgba(242, 183, 5, .06); border-radius: 0 var(--pn-radius) var(--pn-radius) 0; }
+.pn-past-row small { font-size: .74rem; }
+.pn-year-chip { display: inline-block; padding: .18rem .6rem; font-size: .76rem; font-weight: 700; border-radius: 999px; border: 1px solid var(--pn-line); background: #fff; color: var(--pn-ink); transition: all .15s ease; }
+.pn-year-chip:hover { border-color: var(--pn-primary); background: var(--pn-primary); color: #fff; transform: translateY(-1px); }
+.pn-year-chip:focus-visible { outline: 2px solid var(--pn-primary); outline-offset: 2px; }
+
 /* ---------- Auth pages ---------- */
 .pn-auth { min-height: 100vh; display: grid; grid-template-columns: 1fr; background: var(--pn-bg); }
 @media (min-width: 992px) { .pn-auth { grid-template-columns: 5fr 7fr; } }
