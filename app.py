@@ -48,7 +48,7 @@ from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_
                      mask_email, practice_allowance, random_question, record_practice_use, resolve_source,
                      send_email, subject_icon, CHALLENGE_SIZE, REFERRAL_REWARD_DAYS, ensure_referral_code, referral_stats,
                      share_text, study_streak, clear_mistake, jamb_projection, mistakes_summary, pace_info, record_mistake,
-                     generate_access_codes, pretty_code, redeem_access_code)
+                     school_display, generate_access_codes, pretty_code, redeem_access_code)
 from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, generate_csrf_token, json_login_required,
                       login_required, normalise_phone, password_problems, rate_limit, valid_email, validate_csrf,
                       wants_json_response)
@@ -2238,6 +2238,9 @@ def fix_mistakes(subject=None):
 @login_required
 def leaderboard():
     period = request.args.get("period", "month")
+    board = request.args.get("board", "students")
+    if board not in ("students", "schools"):
+        board = "students"
     since = {"week": "-7 days", "month": "-30 days", "all": "-100 years"}.get(period, "-30 days")
     conn = connect()
     rows = conn.execute(
@@ -2249,10 +2252,53 @@ def leaderboard():
         """,
         (since,),
     ).fetchall()
+    # School board: average of each student's average (one grind-happy student cannot
+    # carry a school alone). Groups keyed on the lowercased whitespace-collapsed school
+    # name so 'fgc lagos', 'FGC Lagos' and 'FGC  lagos' are one school. Python grouping
+    # because SQLite has no regex to collapse internal whitespace. At least 2 to rank.
+    per_student = conn.execute(
+        """
+        SELECT r.username, TRIM(COALESCE(u.school, '')) AS school, COUNT(*) AS exams, AVG(r.percentage) AS avg_pct
+        FROM results r JOIN users u ON u.email = r.username
+        WHERE r.date_taken >= datetime('now', ?) AND r.total >= 10
+        GROUP BY r.username
+        """,
+        (since,),
+    ).fetchall()
+    user_row = conn.execute("SELECT school FROM users WHERE email = ?", (session["user"],)).fetchone()
     conn.close()
+    groups = {}
+    for row in per_student:
+        key = " ".join((row["school"] or "").lower().split())
+        if not key:
+            continue
+        g = groups.setdefault(key, {"raw": row["school"], "students": 0, "mocks": 0, "pct_sum": 0.0, "best": 0.0})
+        g["students"] += 1
+        g["mocks"] += row["exams"]
+        g["pct_sum"] += row["avg_pct"]
+        g["best"] = max(g["best"], row["avg_pct"])
+    schools = [{"key": k, "display": school_display(g["raw"]), "students": g["students"], "mocks": g["mocks"],
+                "avg_pct": round(g["pct_sum"] / g["students"], 1), "best": round(g["best"], 1)}
+               for k, g in groups.items()]
+    ranked_schools = sorted([s for s in schools if s["students"] >= 2], key=lambda s: (-s["avg_pct"], -s["mocks"]))[:25]
+    solo_schools = sorted([s for s in schools if s["students"] == 1], key=lambda s: -s["avg_pct"])[:30]
     me = session["user"]
     my_rank = next((i for i, r in enumerate(rows, start=1) if r["username"] == me), None)
-    return render_template("leaderboard.html", rows=rows, period=period, me=me, my_rank=my_rank)
+    my_school = (user_row["school"] or "").strip() if user_row else ""
+    my_school_key = " ".join(my_school.lower().split())
+    my_school_rank = next((i for i, s in enumerate(ranked_schools, start=1) if s["key"] == my_school_key), None) if my_school else None
+    base = app_url()
+    if my_school and my_school_rank:
+        school_share = (f"{school_display(my_school)} is #{my_school_rank} on PrepNova CBT's school leaderboard! "
+                        f"Rep your school — every mock its students write counts. Practise free: {base}")
+    elif my_school:
+        school_share = (f"I'm repping {school_display(my_school)} on PrepNova CBT — every mock its students write counts for the school. "
+                        f"Practise free: {base}")
+    else:
+        school_share = ""
+    return render_template("leaderboard.html", rows=rows, period=period, board=board, me=me, my_rank=my_rank,
+                           ranked_schools=ranked_schools, solo_schools=solo_schools,
+                           my_school=my_school, my_school_rank=my_school_rank, school_share=school_share)
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_share.html" import share_row %}
 {% block title %}Leaderboard{% endblock %}
 
 {% block content %}
@@ -10,10 +11,17 @@
     </div>
     <div class="btn-group btn-group-sm" role="group">
         {% for key, label in [('week', 'This week'), ('month', 'This month'), ('all', 'All time')] %}
-        <a href="{{ url_for('leaderboard', period=key) }}" class="btn {{ 'btn-primary' if period == key else 'btn-outline-primary' }}">{{ label }}</a>
+        <a href="{{ url_for('leaderboard', board=board, period=key) }}" class="btn {{ 'btn-primary' if period == key else 'btn-outline-primary' }}">{{ label }}</a>
         {% endfor %}
     </div>
 </div>
+
+<ul class="nav nav-tabs mb-3 anim-rise" role="tablist">
+    <li class="nav-item"><a class="nav-link {{ 'active' if board == 'students' }}" href="{{ url_for('leaderboard', board='students', period=period) }}"><i class="bi bi-person-fill me-1"></i>Students</a></li>
+    <li class="nav-item"><a class="nav-link {{ 'active' if board == 'schools' }}" href="{{ url_for('leaderboard', board='schools', period=period) }}"><i class="bi bi-bank2 me-1"></i>Schools</a></li>
+</ul>
+
+{% if board == 'students' %}
 
 {% if my_rank %}
 <div class="alert alert-primary d-flex align-items-center gap-3 anim-rise"><span class="pn-stat-icon tint-blue"><i class="bi bi-trophy"></i></span><div>You are ranked <b>#{{ my_rank }}</b> {{ 'this week' if period == 'week' else ('this month' if period == 'month' else 'overall') }}. Keep it up!</div></div>
@@ -57,5 +65,69 @@
 </div>
 {% else %}
 <div class="pn-empty card anim-rise"><span class="ico"><i class="bi bi-trophy"></i></span><h3>No scores in this period yet</h3><p>Be the first — complete a mock exam and claim the top spot.</p><a href="{{ url_for('exam_types') }}" class="btn btn-primary">Take a mock</a></div>
+{% endif %}
+
+{% else %}
+
+{# ------------------------------- Schools board ------------------------------- #}
+{% if not my_school %}
+<div class="alert alert-warning d-flex align-items-center gap-3 anim-rise"><span class="pn-stat-icon tint-gold"><i class="bi bi-bank2"></i></span>
+    <div class="flex-grow-1"><b>Rep your school!</b> Add your school name to your profile and every mock you write counts for it.</div>
+    <a href="{{ url_for('edit_profile') }}" class="btn btn-sm btn-warning text-nowrap">Add my school</a>
+</div>
+{% elif my_school_rank %}
+<div class="alert alert-primary d-flex align-items-center gap-3 anim-rise"><span class="pn-stat-icon tint-blue"><i class="bi bi-trophy"></i></span><div><b>{{ my_school }}</b> is ranked <b>#{{ my_school_rank }}</b> {{ 'this week' if period == 'week' else ('this month' if period == 'month' else 'overall') }}. Keep writing mocks to lift your school!</div></div>
+{% endif %}
+
+{% if ranked_schools %}
+<div class="card anim-rise d1 mb-3">
+    <div class="card-body pb-1">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Schools rank by the average of their students' averages — at least <b>two</b> students needed to rank, so no lone genius can carry a school.</p>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table pn-table align-middle mb-0">
+            <thead><tr><th style="width:60px">Rank</th><th>School</th><th class="text-center">Students</th><th class="text-center">Mocks</th><th class="text-center">Average</th><th class="text-center d-none d-sm-table-cell">Best student</th><th class="text-center"></th></tr></thead>
+            <tbody>
+                {% for s in ranked_schools %}
+                <tr class="{{ 'table-primary' if s['key'] == my_school|lower }}">
+                    <td><span class="pn-rank {{ 'top' if loop.index <= 3 }}">{{ loop.index }}</span></td>
+                    <td><div class="d-flex align-items-center gap-2"><span class="pn-avatar sm"><i class="bi bi-bank2"></i></span><div><div class="fw-semibold">{{ s['display'] }}{% if s['key'] == my_school|lower %} <span class="badge bg-primary ms-1">Your school</span>{% endif %}</div><div class="small text-muted">best single student: {{ s['best'] }}%</div></div></div></td>
+                    <td class="text-center">{{ s['students'] }}</td>
+                    <td class="text-center">{{ s['mocks'] }}</td>
+                    <td class="text-center"><b>{{ s['avg_pct'] }}%</b></td>
+                    <td class="text-center d-none d-sm-table-cell">{{ s['best'] }}%</td>
+                    <td class="text-center">
+                        <a class="btn btn-sm btn-outline-success" href="https://wa.me/?text={{ (s['display'] ~ ' is #' ~ loop.index ~ ' on PrepNova CBT\'s school leaderboard! Rep your school — practise free: ' ~ request.url_root|trim('/'))|urlencode }}" target="_blank" rel="noopener" title="Share this school's rank"><i class="bi bi-whatsapp"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="pn-empty card anim-rise"><span class="ico"><i class="bi bi-bank2"></i></span><h3>No ranked schools yet</h3><p>A school needs at least two students writing mocks to rank. Add your school in your profile, then bring a classmate.</p><a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Add my school</a></div>
+{% endif %}
+
+{% if solo_schools %}
+<div class="card anim-rise d2">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-person-plus-fill text-primary"></i><b>One student away from the ranking</b></div>
+        <p class="small text-muted mb-2">These schools have a single student practising — one more classmate and they enter the ranking. Bring yours!</p>
+        <div class="d-flex flex-wrap gap-2">
+            {% for s in solo_schools %}
+            <span class="pn-subject-chip"><i class="bi bi-bank2"></i> {{ s['display'] }} <small class="text-muted">· 1 student</small></span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if school_share %}
+{{ share_row(request.url_root|trim('/'), school_share, label='Share your school') }}
+{% endif %}
+
 {% endif %}
 {% endblock %}

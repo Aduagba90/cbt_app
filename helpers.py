@@ -765,6 +765,28 @@ def study_streak(cur, email):
     return streak
 
 
+def school_display(name):
+    """Tidy a student-typed school name for the school leaderboard.
+
+    Groups are keyed on the lowercased trimmed name, so 'kings college lagos',
+    'Kings College Lagos' and '  KINGS COLLEGE  lagos ' are one school.  For the
+    display we keep whatever casing the student typed if it already has caps,
+    upper-case short alpha tokens (fgc -> FGC, gss -> GSS), and otherwise
+    capitalise the first letter of the word ('king's' -> 'King's').
+    """
+    words = " ".join((name or "").split()).split(" ")
+    out = []
+    for w in words:
+        if any(ch.isupper() for ch in w):
+            pass  # already cased by a human — leave it
+        elif len(w) <= 3 and w.isalpha():
+            w = w.upper()
+        else:
+            w = w[:1].upper() + w[1:] if w else w
+        out.append(w)
+    return " ".join(out)
+
+
 def share_text(name, exam, score_txt, pct, url):
     first = (name or "I").split()[0]
     if pct >= 50:
