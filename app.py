@@ -1961,6 +1961,24 @@ def verify_result(code):
     return render_template("verify_result.html", r=r, subjects=subjects, code=code)
 
 
+@app.route("/result/<int:result_id>/scorecard.png")
+@login_required
+def scorecard_png(result_id):
+    """The shareable score-card picture for one of MY results (owner-only, like every result view)."""
+    data = engine.load_result(result_id, session["user"])
+    if not data:
+        abort(404)
+    import scorecard as scorecard_mod
+    from io import BytesIO
+    from flask import send_file
+    png = scorecard_mod.build_scorecard(data["result"], session.get("name"), app_url())
+    resp = send_file(BytesIO(png), mimetype="image/png")
+    if request.args.get("dl"):
+        resp.headers["Content-Disposition"] = 'attachment; filename="PrepNova_Score.png"'
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
 def _result_pdf(data):
     from io import BytesIO
 

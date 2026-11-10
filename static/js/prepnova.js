@@ -399,3 +399,22 @@ document.addEventListener("click", function (e) {
         if (inst) { inst.hide(); }
     }
 });
+
+
+/* ---------- Score card: share the picture (mobile share sheet with the image, fallback save) ---------- */
+document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-share-card]");
+    if (!btn) { return; }
+    e.preventDefault();
+    var url = btn.getAttribute("data-share-card");
+    fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
+        var file = new File([blob], "prepnova-score.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: "My PrepNova score" }).catch(function () {});
+        } else {
+            window.location.href = url + (url.indexOf("?") > -1 ? "&" : "?") + "dl=1";
+        }
+    }).catch(function () {
+        window.location.href = url + (url.indexOf("?") > -1 ? "&" : "?") + "dl=1";
+    });
+});

@@ -753,6 +753,7 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
 .pn-ref-banner b { display: block; font-size: .9rem; }
 .pn-ref-banner small { display: block; font-size: .78rem; }
 .pn-share-card { border-left: 4px solid #25d366; }
+.pn-scorecard-preview { width: 100%; max-width: 230px; border-radius: 14px; border: 1px solid var(--pn-line); box-shadow: 0 10px 26px rgba(15, 31, 61, .28); display: inline-block; }
 
 /* ===== Growth pack 2: PIN box, fix-mistakes, target ===== */
 .pn-pin-card { border-left: 4px solid var(--pn-accent); }
