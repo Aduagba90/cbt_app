@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.name }} {{ subject }} Past Questions — Free Online Practice{% endblock %}
+{% block og_title %}{{ exam.name }} {{ subject }} past questions — practise free online{% endblock %}
+{% block og_description %}{{ bank }} {{ exam.name }} {{ subject }} past-style questions with full explanations. Real {{ exam.body }} paper format, past-style 2023–2025 papers and a fresh paper every time. Free 7-day trial.{% endblock %}
+{% block description %}Practice {{ exam.name }} {{ subject }} past questions online for free: {{ bank }} questions in the bank, real {{ exam.body }} paper format and timing, fixed past-style papers (2023–2025) and full explanations for every answer. PrepNova CBT.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('seo_library') }}">Past questions</a><i class="bi bi-chevron-right"></i><span>{{ exam.name }} {{ subject }}</span></div>
+        <h1>{{ exam.name }} {{ subject }} Past Questions</h1>
+        <p class="lead">Practice {{ exam.name }} {{ subject }} past questions online — <b>{{ bank }} questions</b> in our {{ subject }} bank, the real {{ exam.body }} paper format and timing, and a clear explanation after every single answer. Free to start, no card needed.</p>
+    </div>
+    <div class="d-grid gap-2">
+        <a href="{{ url_for('register') }}" class="btn btn-primary"><i class="bi bi-play-fill"></i> Start practising free</a>
+        <small class="text-muted text-center">7-day free trial · no card</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        {% for p in papers %}
+        <div class="card mb-3 anim-rise d{{ loop.index0 % 4 }}">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0"><i class="bi bi-file-earmark-text me-2 text-primary"></i>{{ p.label }}</h2>
+                    <span class="badge bg-primary">{{ p.count }} questions · {{ p.minutes }} min</span>
+                </div>
+                <p class="small text-muted mb-2">{{ p.note }}</p>
+                {% if p.years %}
+                <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                    <span class="small text-muted me-1">Past-style papers:</span>
+                    {% for y in p.years %}
+                    <a class="pn-year-chip" href="{{ url_for(target_subjects_page) }}">{{ y }}-Style</a>
+                    {% endfor %}
+                    <span class="small text-muted ms-1">— the same fixed paper for everyone, so you can compare scores.</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if samples %}
+        <h2 class="h5 mt-4 mb-3 anim-rise"><i class="bi bi-stars me-2 text-warning"></i>Free sample questions — try them right now</h2>
+        {% for q in samples %}
+        <div class="card mb-3 anim-rise d{{ loop.index0 % 4 }}">
+            <div class="card-body">
+                <p class="fw-semibold mb-2">{{ loop.index }}. {{ q.question_text }}</p>
+                <div class="ps-2">
+                    <div class="small mb-1">A. {{ q.option_a }}</div>
+                    <div class="small mb-1">B. {{ q.option_b }}</div>
+                    <div class="small mb-1">C. {{ q.option_c }}</div>
+                    <div class="small mb-3">D. {{ q.option_d }}</div>
+                    <details>
+                        <summary class="small fw-semibold text-primary" style="cursor:pointer">Check answer &amp; explanation</summary>
+                        <p class="small mt-2 mb-1">Correct answer: <b>{{ q.correct_answer }}</b></p>
+                        <p class="small text-muted mb-0">{{ q.explanation }}</p>
+                    </details>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <p class="small text-muted">These are real questions from our {{ subject }} bank — every mock serves them with a full explanation like the ones above. <a href="{{ url_for('register') }}">Create a free account</a> to sit the whole paper.</p>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card pn-custom-combo mb-3 anim-rise">
+            <div class="card-body">
+                <h2 class="h6 mb-2"><i class="bi bi-lightning-charge me-2 text-warning"></i>How it works</h2>
+                <ol class="small mb-0 ps-3">
+                    <li class="mb-1"><b>Create a free account</b> — 7 days of full access, no card needed.</li>
+                    <li class="mb-1"><b>Pick your paper</b> — a fixed past-style year paper, or a fresh random one.</li>
+                    <li class="mb-1"><b>Sit it on the CBT timer</b> — the real {{ exam.body }} question count and clock.</li>
+                    <li><b>Get your score + corrections</b> — every question explained, weak topics flagged.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="card mb-3 anim-rise d1">
+            <div class="card-body text-center">
+                <p class="small text-muted mb-2">Ready to sit the full paper?</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary w-100 mb-2"><i class="bi bi-play-fill"></i> Start my {{ exam.name }} {{ subject }} practice</a>
+                <a href="{{ url_for(target_subjects_page) }}" class="btn btn-outline-primary btn-sm w-100">I already have an account — take me to the papers</a>
+            </div>
+        </div>
+        <div class="card anim-rise d2">
+            <div class="card-body">
+                <h2 class="h6 mb-2"><i class="bi bi-collection me-2 text-primary"></i>Other {{ exam.name }} subjects</h2>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for s in siblings %}
+                    <a class="pn-subject-chip" href="{{ url_for('seo_subject', exam=exam_slug, subject=s.slug) }}"><i class="bi {{ subject_icon(s.name) }}"></i> {{ s.name }}</a>
+                    {% endfor %}
+                </div>
+                <a class="small d-block mt-2" href="{{ url_for('seo_library') }}"><i class="bi bi-arrow-left me-1"></i>All exams &amp; subjects</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4 pn-custom-combo anim-rise">
+    <div class="card-body">
+        <h2 class="h6 mb-2"><i class="bi bi-patch-question me-2 text-primary"></i>Frequently asked</h2>
+        <details class="mb-2"><summary class="small fw-semibold" style="cursor:pointer">Are these the exact {{ exam.name }} {{ subject }} past papers?</summary><p class="small text-muted mb-0 mt-2">They are past-<b>style</b> papers, honestly labelled. Every paper follows the official {{ exam.body }} format — the real question count, timing and syllabus — with questions written and checked by us. Nobody can sell you the exact upcoming paper; anyone claiming to is running a scam.</p></details>
+        <details class="mb-2"><summary class="small fw-semibold" style="cursor:pointer">Is it really free?</summary><p class="small text-muted mb-0 mt-2">Yes — every new account gets 7 days of full access with no card required, and practice mode stays free afterwards (10 questions a day). Paid plans simply unlock unlimited mocks for longer.</p></details>
+        <details><summary class="small fw-semibold" style="cursor:pointer">Why is a fresh paper better than repeating an old one?</summary><p class="small text-muted mb-0 mt-2">Because the real exam hall gives nobody a paper they have seen before. Memorising a 2020 paper trains your memory; sitting fresh papers trains your understanding — and every question still comes with a full explanation.</p></details>
+    </div>
+</div>
+{% endblock %}

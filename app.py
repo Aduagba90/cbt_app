@@ -11,6 +11,7 @@ Administration routes live in admin_routes.py.
 import hashlib
 import hmac
 import json
+import random
 from urllib.parse import quote, urlparse
 import logging
 import os
@@ -41,7 +42,7 @@ from centre import centre_bp
 import centre as centre_mod
 from db import connect, init_db
 import study
-from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, LEGACY_TO_V2, SHORT_SUBJECT,
+from helpers import (activate_subscription, COURSE_GROUPS, COURSE_ICONS, CUSTOM_COURSE_PREFIX, FREE_PRACTICE_PER_DAY, JAMB_COURSES, JAMB_DURATION_MIN, JAMB_ELECTIVES, JAMB_ENGLISH_QUESTIONS, LEGACY_TO_V2, SHORT_SUBJECT,
                      TRIAL_DAYS, WAEC_ENABLED, NECO_ENABLED, MIN_BANK_FOR_V2, app_url, available_subjects, email_wrap,
                      fetch_question_ids,
                      fetch_questions, fmt_date, fmt_duration, fmt_naira, get_subscription, initials,
@@ -2299,6 +2300,142 @@ def leaderboard():
     return render_template("leaderboard.html", rows=rows, period=period, board=board, me=me, my_rank=my_rank,
                            ranked_schools=ranked_schools, solo_schools=solo_schools,
                            my_school=my_school, my_school_rank=my_school_rank, school_share=school_share)
+
+
+# --------------------------------------------------------------------------- SEO
+# Public past-questions pages: one per exam+subject, matching what Nigerian
+# students type into Google ("WAEC Biology past questions"). Crawlable, no login.
+
+SEO_EXAMS = {
+    "jamb": {"name": "JAMB", "body": "UTME",
+             "blurb": "JAMB UTME past questions and answers, practised the real way — the full four-subject mock on a computer, exactly like the exam hall."},
+    "waec": {"name": "WAEC", "body": "WASSCE",
+             "blurb": "WAEC past questions for the objective papers — real WASSCE question counts, real timing, and a grade guide after every paper."},
+    "neco": {"name": "NECO", "body": "SSCE",
+             "blurb": "NECO past questions, freshly written to the current syllabus — real paper formats and full explanations for every answer."},
+}
+
+
+def _seo_slug(name):
+    return re.sub(r"[^a-z0-9]+", "-", (name or "").lower()).strip("-")
+
+
+def _seo_subject_slug_map(exam_name):
+    """{subject_name: slug} for every open subject of an exam."""
+    return {_seo_slug(n): n for n in available_subjects(exam_name)}
+
+
+def _seo_bank_count(cur, exam_name, subject):
+    source, _ = resolve_source(cur, exam_name, subject)
+    return len(fetch_question_ids(cur, source, exam_name, subject)) if source else 0
+
+
+def _seo_samples(cur, exam_name, subject, n=3):
+    """n real questions from the live bank, chosen deterministically per subject.
+
+    Read-only: no past-paper materialisation, no writes. Stable across loads so
+    crawlers and repeat visitors see the same samples.
+    """
+    source, _ = resolve_source(cur, exam_name, subject)
+    if not source:
+        return []
+    ids = sorted(fetch_question_ids(cur, source, exam_name, subject))
+    if not ids:
+        return []
+    rng_state = random.getstate()
+    random.seed(f"seo-{exam_name}-{subject}")
+    try:
+        picks = random.sample(ids, min(n, len(ids)))
+    finally:
+        random.setstate(rng_state)
+    rows = cur.execute(
+        f"""SELECT id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation
+            FROM questions_v2 WHERE id IN ({','.join('?' * len(picks))}) AND status = 'Active' ORDER BY id""",
+        picks,
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.route("/past-questions")
+def seo_library():
+    conn = connect()
+    cur = conn.cursor()
+    exams = []
+    total = 0
+    for slug, meta in SEO_EXAMS.items():
+        subjects = [{"name": n, "slug": _seo_slug(n), "count": _seo_bank_count(cur, meta["name"], n)}
+                    for n in sorted(available_subjects(meta["name"]))]
+        total += sum(s["count"] for s in subjects)
+        exams.append({"slug": slug, **meta, "subjects": subjects})
+    conn.close()
+    return render_template("seo_library.html", exams=exams, total_questions=total)
+
+
+@app.route("/past-questions/<exam>/<subject>")
+def seo_subject(exam, subject):
+    meta = SEO_EXAMS.get(exam)
+    if not meta:
+        abort(404)
+    target = {"waec": "waec_subjects", "neco": "neco_subjects", "jamb": "jamb_courses"}[exam]
+    conn = connect()
+    cur = conn.cursor()
+    slug_map = _seo_subject_slug_map(meta["name"])
+    name = slug_map.get(subject)
+    if not name:
+        conn.close()
+        abort(404)
+    bank = _seo_bank_count(cur, meta["name"], name)
+    samples = _seo_samples(cur, meta["name"], name)
+    from past_papers import preview_years
+    papers = []
+    if exam in ("waec", "neco"):
+        mod = waecf if exam == "waec" else necof
+        for label, count, minutes, note, topic in mod.papers_for(name):
+            years = preview_years(cur, meta["name"], name, label)
+            papers.append({"label": label, "count": count, "minutes": minutes, "note": note, "years": years})
+    else:  # JAMB: this subject sits inside the full mock
+        per = JAMB_ENGLISH_QUESTIONS if name == "Use of English" else 40
+        papers.append({"label": f"JAMB mock — {name}", "count": per, "minutes": JAMB_DURATION_MIN,
+                       "note": ("The compulsory paper: 60 Use of English questions inside every full mock."
+                                if name == "Use of English" else
+                                f"{name} contributes {per} questions to the 180-question, four-subject JAMB mock."),
+                       "years": preview_years(cur, "JAMB", name, "")})
+    siblings = [{"name": n, "slug": _seo_slug(n), "count": _seo_bank_count(cur, meta["name"], n)}
+                for n in sorted(available_subjects(meta["name"]))]
+    siblings = [s for s in siblings if s["name"] != name]
+    conn.close()
+    return render_template("seo_subject.html", exam_slug=exam, exam=meta, subject=name, subject_slug=subject,
+                           bank=bank, papers=papers, samples=samples, siblings=siblings,
+                           target_subjects_page=target)
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    conn = connect()
+    cur = conn.cursor()
+    urls = ["/", "/past-questions"]
+    for slug, meta in SEO_EXAMS.items():
+        for n in available_subjects(meta["name"]):
+            urls.append(f"/past-questions/{slug}/{_seo_slug(n)}")
+    conn.close()
+    urls += ["/shop", "/register", "/login", "/terms", "/privacy",
+             "/partner", "/sponsor", "/gift", "/schools"]
+    try:
+        urls += [url_for("tools.combination_checker"), url_for("tools.admission_calculator")]
+    except Exception:
+        pass
+    base = app_url().rstrip("/")
+    today = datetime.now().strftime("%Y-%m-%d")
+    items = "".join(f"<url><loc>{base}{u}</loc><lastmod>{today}</lastmod></url>" for u in urls)
+    xml = (f'<?xml version="1.0" encoding="UTF-8"?>'
+           f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{items}</urlset>')
+    return app.response_class(xml, mimetype="application/xml")
+
+
+@app.route("/robots.txt")
+def robots():
+    txt = f"User-agent: *\nAllow: /\n\nSitemap: {app_url().rstrip('/')}/sitemap.xml\n"
+    return app.response_class(txt, mimetype="text/plain")
 
 
 # ---------------------------------------------------------------------------

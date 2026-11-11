@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Past questions & answers — JAMB, WAEC and NECO practice{% endblock %}
+{% block og_title %}Past questions & answers for JAMB, WAEC and NECO — free online practice{% endblock %}
+{% block og_description %}Thousands of past questions with full explanations: JAMB UTME mocks, WAEC WASSCE objective papers and NECO SSCE papers — practised on a real CBT timer, free to start.{% endblock %}
+{% block description %}Past questions and answers for JAMB UTME, WAEC WASSCE and NECO SSCE — every subject, real exam timing, full explanations and instant grading. Free 7-day trial on PrepNova CBT.{% endblock %}
+
+{% block content %}
+<div class="pn-page-head anim-rise">
+    <div>
+        <div class="pn-breadcrumb"><a href="{{ url_for('home') }}">Home</a><i class="bi bi-chevron-right"></i><span>Past questions</span></div>
+        <h1>Past questions &amp; answers — every subject, every exam</h1>
+        <p class="lead">Practise {{ total_questions }} past-style questions for JAMB UTME, WAEC WASSCE and NECO SSCE on a real CBT timer — with full explanations for every answer. Fixed year-style papers (2023–2025) and unlimited fresh random papers. <b>Free 7-day trial, no card needed.</b></p>
+    </div>
+    <div class="d-grid gap-2">
+        <a href="{{ url_for('register') }}" class="btn btn-primary"><i class="bi bi-play-fill"></i> Start free trial</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm">Log in</a>
+    </div>
+</div>
+
+{% for e in exams %}
+<section class="mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3 anim-rise">
+        <span class="pn-stat-icon tint-blue"><i class="bi bi-journal-bookmark"></i></span>
+        <h2 class="h4 mb-0">{{ e.name }} past questions <span class="text-muted fw-normal small">· {{ e.body }}</span></h2>
+        <span class="badge bg-secondary">{{ e.subjects|length }} subjects</span>
+    </div>
+    <p class="text-muted small mb-3">{{ e.blurb }}</p>
+    <div class="row g-2">
+        {% for s in e.subjects %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a class="pn-subject-link w-100 text-start" href="{{ url_for('seo_subject', exam=e.slug, subject=s.slug) }}">
+                <span><i class="bi {{ subject_icon(s.name) }} me-2"></i>{{ s.name }}<small>{{ s.count }} questions</small></span>
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}
+
+<div class="card pn-custom-combo anim-rise mt-4">
+    <div class="card-body">
+        <h2 class="h5 mb-2"><i class="bi bi-question-circle me-2 text-primary"></i>Are these the real past papers?</h2>
+        <p class="mb-2">They are <b>past-style</b> papers, honestly labelled. Each paper follows the official format of that exam — the real question count, the real timing, the real syllabus — using questions written and checked by us. We never sell "leaked" or "exact" papers: those are scams, and memorising last year's paper does not prepare you for a fresh one.</p>
+        <p class="mb-0">What you get instead is better: <b>a fresh paper every time</b> — like the real CBT hall, where nobody has seen the paper before — plus fixed <b>2025-Style, 2024-Style and 2023-Style papers</b> you can compare scores on with friends.</p>
+    </div>
+</div>
+{% endblock %}
