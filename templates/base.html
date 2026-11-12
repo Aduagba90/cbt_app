@@ -6,6 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0f1f3d">
     <meta name="description" content="{% block description %}PrepNova CBT — Nigeria's smart JAMB, WAEC and Post-UTME practice platform with real CBT simulation, detailed explanations and performance analytics.{% endblock %}">
+    <!-- Google Search Console ownership verification — removing this un-verifies the site -->
+    <meta name="google-site-verification" content="16sZKYplugVRMVeKfOvur9fbBLK73ZVR5IvrpfWUlNU" />
     <title>{% block title %}{{ brand }}{% endblock %} | {{ brand }}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="preload" href="{{ url_for('static', filename='vendor/fonts/pjk-600.woff2') }}" as="font" type="font/woff2" crossorigin>
