@@ -2432,6 +2432,14 @@ def sitemap():
     return app.response_class(xml, mimetype="application/xml")
 
 
+@app.route("/google568bdb71e382cc31.html")
+def google_verification_file():
+    """Google Search Console HTML-file verification (URL-prefix property).
+    Content is exactly what Google's downloaded file contains; served forever."""
+    return app.response_class("google-site-verification: google568bdb71e382cc31.html",
+                              mimetype="text/html")
+
+
 @app.route("/robots.txt")
 def robots():
     txt = f"User-agent: *\nAllow: /\n\nSitemap: {app_url().rstrip('/')}/sitemap.xml\n"
