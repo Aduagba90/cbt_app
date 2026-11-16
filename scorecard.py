@@ -1,4 +1,4 @@
-"""The PrepNova score card: a branded, shareable picture of one exam result.
+"""The ConfamPrep score card: a branded, shareable picture of one exam result.
 
 After a mock, the result page shows the student a WhatsApp-ready image —
 name, score (UTME marks /400, SSCE percentage + grade band, or plain
@@ -74,8 +74,8 @@ def _canvas():
 
 def _brand(d):
     d.rounded_rectangle([72, 64, 118, 110], radius=12, fill=GOLD)
-    d.text((95, 87), "PN", font=font(800, 22), fill=NAVY, anchor="mm")
-    d.text((134, 87), "PrepNova CBT", font=font(700, 30), fill=WHITE, anchor="lm")
+    d.text((95, 87), "CP", font=font(800, 22), fill=NAVY, anchor="mm")
+    d.text((134, 87), "ConfamPrep", font=font(700, 30), fill=WHITE, anchor="lm")
 
 
 def _pill(d, center_x, top, text, weight, size, pad_x=34, pad_y=18):

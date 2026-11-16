@@ -1,5 +1,5 @@
 """
-PrepNova CBT — shared business helpers (questions, subscriptions, e-mail, formatting).
+ConfamPrep — shared business helpers (questions, subscriptions, e-mail, formatting).
 """
 
 import json
@@ -14,7 +14,7 @@ from flask import current_app, request, has_app_context
 
 from db import connect
 
-log = logging.getLogger("prepnova")
+log = logging.getLogger("confamprep")
 
 # ---------------------------------------------------------------------------
 # Static configuration
@@ -559,12 +559,12 @@ def email_wrap(title, intro, button_text=None, button_url=None, footer=None):
         )
     return f"""
     <div style="font-family:Segoe UI,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#1f2937">
-      <div style="font-weight:800;font-size:18px;color:#0f1f3d;margin-bottom:18px">PrepNova <span style="color:#0b7a4b">CBT</span></div>
+      <div style="font-weight:800;font-size:18px;color:#0f1f3d;margin-bottom:18px">ConfamPrep <span style="color:#0b7a4b">CBT</span></div>
       <h2 style="font-size:20px;margin:0 0 12px">{title}</h2>
       <div style="font-size:15px;line-height:1.6">{intro}</div>
       {btn}
       <hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0">
-      <p style="font-size:12px;color:#6b7280">{footer or 'PrepNova CBT — Practice. Prepare. Pass.'}</p>
+      <p style="font-size:12px;color:#6b7280">{footer or 'ConfamPrep — Practice. Prepare. Pass.'}</p>
     </div>
     """
 
@@ -616,12 +616,12 @@ def mask_email(email):
 def initials(name):
     parts = [p for p in (name or "").split() if p]
     if not parts:
-        return "PN"
+        return "CP"
     return (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper()
 
 
 def new_verification_code():
-    return "PN-" + secrets.token_hex(4).upper()
+    return "CP-" + secrets.token_hex(4).upper()
 
 
 def app_url():
@@ -790,9 +790,9 @@ def school_display(name):
 def share_text(name, exam, score_txt, pct, url):
     first = (name or "I").split()[0]
     if pct >= 50:
-        line = f"{first} just scored {score_txt} ({pct}%) in a {exam} mock on PrepNova CBT 🎯"
+        line = f"{first} just scored {score_txt} ({pct}%) in a {exam} mock on ConfamPrep 🎯"
         return f"{line}\nCan you beat it? Practise free for 7 days 👉 {url}"
-    line = f"{first} just finished a {exam} mock on PrepNova CBT — real CBT timer, every question explained 📚"
+    line = f"{first} just finished a {exam} mock on ConfamPrep — real CBT timer, every question explained 📚"
     return f"{line}\nPractise with me, free for 7 days 👉 {url}"
 
 
@@ -806,13 +806,13 @@ def normalise_code(raw):
 
 def pretty_code(code):
     code = code or ""
-    if len(code) == 10 and code.startswith("PN"):
+    if len(code) == 10 and code[:2] in ("CP", "PN"):
         return f"{code[:2]}-{code[2:6]}-{code[6:]}"
     return code
 
 
 def generate_access_codes(cur, count, days, label, max_uses, expires_at, created_by, custom=None):
-    """Create one custom code or `count` random PN-XXXX-XXXX codes. Returns the list of codes created."""
+    """Create one custom code or `count` random CP-XXXX-XXXX codes. Returns the list of codes created."""
     alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     made = []
     if custom:
@@ -826,7 +826,7 @@ def generate_access_codes(cur, count, days, label, max_uses, expires_at, created
         return [code]
     for _ in range(count):
         for _try in range(30):
-            code = "PN" + "".join(random.choice(alphabet) for _ in range(8))
+            code = "CP" + "".join(random.choice(alphabet) for _ in range(8))
             if not cur.execute("SELECT 1 FROM access_codes WHERE code = ?", (code,)).fetchone():
                 cur.execute("INSERT INTO access_codes (code, label, days, max_uses, expires_at, created_by) VALUES (?, ?, ?, ?, ?, ?)",
                             (code, label, days, max_uses, expires_at, created_by))

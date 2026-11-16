@@ -1,4 +1,4 @@
-/* PrepNova CBT — shared front-end behaviours (no external dependencies besides Bootstrap) */
+/* ConfamPrep — shared front-end behaviours (no external dependencies besides Bootstrap) */
 (function () {
   "use strict";
 
@@ -408,9 +408,9 @@ document.addEventListener("click", function (e) {
     e.preventDefault();
     var url = btn.getAttribute("data-share-card");
     fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
-        var file = new File([blob], "prepnova-score.png", { type: "image/png" });
+        var file = new File([blob], "confamprep-score.png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: "My PrepNova score" }).catch(function () {});
+            navigator.share({ files: [file], title: "My ConfamPrep score" }).catch(function () {});
         } else {
             window.location.href = url + (url.indexOf("?") > -1 ? "&" : "?") + "dl=1";
         }

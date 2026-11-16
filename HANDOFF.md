@@ -1,14 +1,14 @@
-# PrepNova CBT — project handoff (for continuing in a new chat)
+# ConfamPrep — project handoff (for continuing in a new chat)
 
 Paste the "Context for a new chat" section below into a fresh conversation to carry on
 without re-explaining anything.
 
 ## Context for a new chat
 
-> I have a Flask/SQLite CBT exam-practice app called **PrepNova CBT** for Nigerian students
+> I have a Flask/SQLite CBT exam-practice app called **ConfamPrep** for Nigerian students
 > (JAMB, WAEC, Post-UTME; Paystack subscriptions). Repo: https://github.com/Aduagba90/cbt_app
 > (branch `main`). It was recently rebuilt: JAMB-style exam engine (`exam_engine.py`),
-> security hardening (`security.py`), new design system (`static/css/prepnova.css`),
+> security hardening (`security.py`), new design system (`static/css/confamprep.css`),
 > admin blueprint (`admin_routes.py`), Admin → Subscriptions page with manual activation,
 > zero-config local run (`python app.py` = development mode, admin `admin@gmail.com` / `admin123`).
 > Production needs `.env` with `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, Paystack keys.
@@ -202,7 +202,7 @@ Next: Post-UTME bank, WAEC bank, then offline mode.
 | Security (CSRF, rate limits, lockout, decorators) | `security.py` |
 | Shared helpers (subscriptions, email, formatting) | `helpers.py` |
 | DB connection + migrations | `db.py` |
-| Design system | `static/css/prepnova.css`, `static/js/prepnova.js` |
+| Design system | `static/css/confamprep.css`, `static/js/confamprep.js` |
 | Templates (student = extend `base.html`; admin = legacy pages + injected `_admin_bar.html`) | `templates/` |
 | Seed database (question bank) | `database.db` |
 | Data-fix scripts | `scripts/` (see `scripts/README.md`) |
@@ -219,10 +219,10 @@ Next: Post-UTME bank, WAEC bank, then offline mode.
 - **Study streak**: consecutive days with any activity (mock result, practice via `daily_usage`, or challenge) — `helpers.study_streak()`; shown on dashboard + challenge page.
 - **Invite friends** `/invite`: each user gets `users.referral_code` (e.g. `AMINA-7K3Q`, created lazily). `/register?ref=CODE` stores `referred_by` + a `referrals` row. When the invited student submits their **first** mock (`exam_engine.finalize_attempt`), both get `REFERRAL_REWARD_DAYS` (3) added via `helpers.extend_subscription_days()` (extends trial/plan, or inserts a `BONUS` subscription row). Cap: 20 rewarded friends per inviter. Unknown codes are ignored silently.
 - **WhatsApp share**: result slip + challenge result build a `wa.me/?text=` link (`helpers.share_text()`); scores under 50% get a neutral "invite a study partner" message instead of a score boast. Uses the public `/verify_result/<code>` link so the score is verifiable.
-- **Access PINs** (admin → Access PINs, `/access_codes`): vouchers `PN-XXXX-XXXX` or a custom word, N days, max uses, optional expiry. Students redeem at Subscribe → "Have an Access PIN?" (`POST /redeem_pin`, rate-limited 8/10 min). `helpers.redeem_access_code()` → `grant_days()` (extends a paid plan; upgrades trial/bonus rows to `ACCESS_CODE`), redemptions are logged in `access_code_redemptions` (no `payments` row — that table has a FK to real plans). This is how testers get full mock access without Paystack.
+- **Access PINs** (admin → Access PINs, `/access_codes`): vouchers `CP-XXXX-XXXX` or a custom word, N days, max uses, optional expiry. Students redeem at Subscribe → "Have an Access PIN?" (`POST /redeem_pin`, rate-limited 8/10 min). `helpers.redeem_access_code()` → `grant_days()` (extends a paid plan; upgrades trial/bonus rows to `ACCESS_CODE`), redemptions are logged in `access_code_redemptions` (no `payments` row — that table has a FK to real plans). This is how testers get full mock access without Paystack.
 - **Fix my mistakes** (`/mistakes`, `/mistakes/fix[/<subject>]`): every wrong/blank answer in a mock or practice is upserted into `mistakes` (`record_mistake`), a correct answer clears it (`clear_mistake`). Drill shows hardest (most-missed) first.
 - **Target & projection**: `users.target_score` (POST `/set_target`, 100–400); `helpers.jamb_projection()` = average `jamb_score` of last 3 full JAMB mocks; shown on dashboard + result slip. **Pace meter**: `helpers.pace_info()` seconds/question vs allowed (JAMB 40 s) on the result slip.
-- Landing: "Only on PrepNova" section (`#only`) advertises these; hero badges float beside the mock card on desktop and become a stacked chip row under it on phones (`.pn-float-badge` rules in prepnova.css).
+- Landing: "Only on ConfamPrep" section (`#only`) advertises these; hero badges float beside the mock card on desktop and become a stacked chip row under it on phones (`.pn-float-badge` rules in confamprep.css).
 
 ## Growing the question bank
 
@@ -595,7 +595,7 @@ query params (work without JS, indexable, shareable URLs), wired into the landin
   now include them (added "Free tools" nav link + footer column; logged-in users see
   "Go to dashboard" instead of Log in). Landing gained a `#tools` section (2 cards) before
   "Try a question", and "+ 65 more" is now dynamic `+ {{ n_courses - 5 }}` (80 courses).
-- CSS appended at the end of `static/css/prepnova.css` (pn-hero-sm, pn-tool-card, pn-chipbox,
+- CSS appended at the end of `static/css/confamprep.css` (pn-hero-sm, pn-tool-card, pn-chipbox,
   pn-subject-pill, pn-nearmiss, pn-verdict-*, pn-feature-link). Note `?v=13` cache-bust on
   the css link in base.html — BUMP IT when changing css.
 - Jinja gotcha hit twice: `{{ 'a' if x else 'b' | tojson }}` filters only the else-branch ->
@@ -657,10 +657,10 @@ with the creator's referral code (existing referral rewards flow automatically).
   deploy). Templates: battle_lobby / battle_accept / battle_play / battle_result
   (accept/play/result use the _landing_nav/_landing_footer chrome; base.html gained a
   "Challenge a friend" dropdown item; daily challenge page gained a cross-link).
-- CSS: battle styles at the end of prepnova.css; **cache-bust bumped v=13 -> v=14**.
+- CSS: battle styles at the end of confamprep.css; **cache-bust bumped v=13 -> v=14**.
 - ALSO FIXED (pre-existing, spotted during audit): the app navbar overflowed ~61px on
   desktop widths 992-1399px (brand + 6 nav links + actions exceed the bar). Fixes in
-  prepnova.css: hide .pn-user-name 992-1399, tighter nav-link/btn padding 992-1299,
+  confamprep.css: hide .pn-user-name 992-1399, tighter nav-link/btn padding 992-1299,
   hide nav-link icons 992-1151. Verified 0px overflow 992-1600; mobile unaffected.
 - Tests: `_work/battle_test.py` — 43 checks, self-contained (/tmp/fb.db, wiped at
   start), covers creator/guest flows, replay blocks, IP cap, expiry, spoiler guard,
@@ -686,7 +686,7 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
     footer column, subscribe-page hint under the PIN card).
   - `GET/POST /centre/new` (login, RL 6/600) — order form with live JS total (no-JS:
     price table shown), renewal notice when the owner already has a centre. Creates
-    centre_orders + payments rows (PENDING, ref prefix `PN-C-`) then Paystack initialize.
+    centre_orders + payments rows (PENDING, ref prefix `CP-C-`) then Paystack initialize.
   - `GET /centre_callback` — verify -> `_process_centre_payment` (amount check,
     idempotent) -> `activate_centre_order`: creates the centre + an access_codes row
     (the JOIN CODE, max_uses = seats, days, expires_at = term end, centre_id set) or, if
@@ -711,7 +711,7 @@ The wholesale/direct-revenue channel, built to sell into the Jan-Mar SS3 intensi
 - Gotchas hit this round: (1) admin templates must CALL the token — `{{ csrf_token() }}`,
   NOT `{{ csrf_token }}` (Jinja does not auto-call; the form then posts the function
   repr and every POST fails CSRF with a silent redirect to /). (2) Admin pages load
-  prepnova.css at their own hardcoded ?v= (legacy standalone templates) — app pages are
+  confamprep.css at their own hardcoded ?v= (legacy standalone templates) — app pages are
   on v=15 now; harmless.
 - Tests: `_work/centre_test.py` — self-contained (/tmp/ct.db), faked Paystack
   (monkeypatch centre_mod.requests + env PAYSTACK_SECRET_KEY): 53+ checks covering
@@ -739,8 +739,8 @@ first-vs-latest improvement and per-subject weak spots. Names shortened for priv
   centre_mod.activate_centre_order (join code, max_uses=seats, term expiry) and the report
   reuses centre_mod._centre_stats.
 - REFERENCE PREFIX REGISTRY (webhook routes on startswith — order matters):
-  PN- = student plans (payments-table default path), PN-S- = parent sponsor-a-child,
-  PN-C- = centre orders, PN-G- = gifts, **PN-SC- = cohort sponsor** (checked before the
+  CP- = student plans (payments-table default path), CP-S- = parent sponsor-a-child,
+  CP-C- = centre orders, CP-G- = gifts, **CP-SC- = cohort sponsor** (checked before the
   default; no collision since 5th char differs). Callback URL is /sponsorship_callback —
   /sponsor_callback was TAKEN by the parent flow (endpoint collision crashes the app at
   import — check existing route names before adding any /sponsor* URL).
@@ -770,7 +770,7 @@ USER GOALS: (1) international-grade look, (2) chapter architecture with room for
 features, (3) make Exam Novels shareable to drive subscriptions. All approved via ask_user.
 
 - FONT: Plus Jakarta Sans self-hosted (static/vendor/fonts/pjk-{400,500,600,700,800}.woff2,
-  ~12KB each latin subset; @font-face at top of prepnova.css; 600+800 preloaded in base.html).
+  ~12KB each latin subset; @font-face at top of confamprep.css; 600+800 preloaded in base.html).
   NOTE: the latin subset has NO naira glyph (U+20A6) — browsers per-glyph fallback to system
   fonts for |naira output; the share PNGs use DejaVu Sans Bold for the naira sign.
 - CHAPTERS: hero+proof chips -> Novels (warm spotlight bg) -> Platform (exams/tools/features/
@@ -782,7 +782,7 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   WAEC / SSCE h3, gift/sponsor texts, promo strip, annc bar...).
 - SHARE SYSTEM: templates/_share.html macro share_row(url, text, label) — WhatsApp (wa.me),
   X intent, Facebook sharer, copy-link (data-share-copy, shows copied state), native share
-  (data-share-native, auto-hidden when !navigator.share; JS at end of prepnova.js, v=6).
+  (data-share-native, auto-hidden when !navigator.share; JS at end of confamprep.js, v=6).
   Placed on: shop page head, product pages (under buy form), landing #novels, and a big
   "Share with your class group" WhatsApp card on pdf_success (share text varies for
   past-question packs vs novels).
@@ -812,11 +812,11 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
   #pnDrawer offcanvas (Bootstrap offcanvas, custom .pn-drawer styles) with 7 links + footer
   CTAs. GOTCHA: data-bs-dismiss on drawer LINKS is broken — Bootstrap reads the link href
   (#pricing) as the offcanvas selector and preventDefaults, killing navigation. Fix: only the
-  X button keeps data-bs-dismiss; a delegated click handler in prepnova.js hides the offcanvas
+  X button keeps data-bs-dismiss; a delegated click handler in confamprep.js hides the offcanvas
   on any #pnDrawer a[href] click and lets navigation proceed. Also: 'Log in' nav button is
   d-none d-sm-inline-flex (below 576px it lives in the drawer only).
 - CACHE-BUST BUG FOUND & FIXED: the redesign-turn bumps to css v=26 / js v=6 SILENTLY FAILED
-  (replace pattern "prepnova.css?v=25" never matched — the version lives OUTSIDE the url_for
+  (replace pattern "confamprep.css?v=25" never matched — the version lives OUTSIDE the url_for
   bracket as ...css') }}?v=25). The shipped zip had new CSS/JS content behind unchanged v=25/v=5
   URLs — returning visitors would have run stale cached CSS/JS with new templates. Now
   css v=27 / js v=6; ALWAYS assert the version bump replace actually matched.
@@ -837,7 +837,7 @@ features, (3) make Exam Novels shareable to drive subscriptions. All approved vi
 
 ## Offline WAEC Simulator — every WASSCE objective paper in one file (Oct 2026, round 12)
 
-Second offline product: `offline-waec-cbt` "PrepNova Offline — WAEC Exam Simulator", ₦1,500,
+Second offline product: `offline-waec-cbt` "ConfamPrep Offline — WAEC Exam Simulator", ₦1,500,
 badge `("WORKS OFFLINE · WAEC SSCE", "info")`. Built on the SAME single-file engine as the
 JAMB simulator — `offline_cbt.py` now renders two personalities from one template via the
 `PN.exam` data field ("JAMB" | "WAEC").
@@ -860,7 +860,7 @@ calculator, keyboard, resume, history, review with filters + explanations.
 `_load_waec_bank`); `build_offline_jamb_html` unchanged; both go through `_render(data)`.
 JAMB file re-verified after refactor: 41/41 engine checks still pass.
 
-**Shop wiring:** `pdf_download` dispatches the slug → `PrepNova_Offline_WAEC_Simulator.html`
+**Shop wiring:** `pdf_download` dispatches the slug → `ConfamPrep_Offline_WAEC_Simulator.html`
 (text/html attachment). `/offline_free` now takes a `slug` POST field validated against both
 simulators (defaults to JAMB — backward compatible); product page shows the free-claim block
 for either slug; free form posts the slug. Product pages cross-sell each other (JAMB ↔ WAEC).
@@ -878,7 +878,7 @@ via stem matching, retake, resume, calculator, mobile drawer, zero errors). JAMB
 suite 41/41, shop_test → 12 products, offline_test, regress all green. Browser audit
 `_work/audit12.py` **21/21** (12 cards @1366+390, cross-sell visibility, annc visibility,
 paid WAEC download through the browser, opened from disk, English Paper 1 runs). Screenshots
-`_work/shots8/`. Demo copy for the owner: `/home/user/PrepNova_Offline_WAEC_DEMO.html`.
+`_work/shots8/`. Demo copy for the owner: `/home/user/ConfamPrep_Offline_WAEC_DEMO.html`.
 
 ## "Exam Novels" renamed to "Study shop" (Oct 2026)
 
@@ -888,7 +888,7 @@ the offline simulator) and visitors hunting the store couldn't find "Exam novels
 parents, works for every product type. Labels changed everywhere a user looks:
 landing desktop nav + mobile drawer (`_landing_nav.html`, icon bi-book → **bi-shop**),
 account dropdown + footer marquee (`base.html`), shop page title/og_title/breadcrumb/h1
-(now "🛍 The PrepNova Study Shop")/share text (`shop.html`), product + pdf_success
+(now "🛍 The ConfamPrep Study Shop")/share text (`shop.html`), product + pdf_success
 breadcrumbs, landing footer column, subscribe-page cross-sell line, landing pricing
 cross-sell line. Kept deliberately: the landing novels-spotlight section heading
 "The 2026 Exam Novels, decoded" and its share text (that section genuinely is about the
@@ -906,7 +906,7 @@ sticky `.pn-navbar`, so page scrolling never rescues the lower items — **Log o
 unreachable** on short laptop windows (Windows 150% scaling leaves ~512px) and on real
 phones (browser chrome eats ~120px of the 100vh). A mobile-only cap existed
 (`@media max-width:991.98px` in the tabbar section) but desktop had none, and it used
-`100vh` (ignores mobile toolbars). Fix in `prepnova.css`: a **global**
+`100vh` (ignores mobile toolbars). Fix in `confamprep.css`: a **global**
 `.pn-navbar .dropdown-menu, .pn-admin-bar .dropdown-menu { max-height: calc(100vh - 100px);
 overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
 scrollbar-width: thin; }` with a `@supports (100dvh)` override so the cap shrinks with
@@ -921,7 +921,7 @@ Core regressions re-run green (regress / shop_test / offline_test).
 
 The Q1 flagship. `offline_cbt.py` builds a **single self-contained HTML app** (~2.3 MB)
 sold through the existing PDF-shop machinery: product `offline-jamb-cbt`
-"PrepNova Offline — JAMB CBT Simulator", ₦1,500, badge `("WORKS OFFLINE · no data needed", "info")`,
+"ConfamPrep Offline — JAMB CBT Simulator", ₦1,500, badge `("WORKS OFFLINE · no data needed", "info")`,
 price-DESC sort puts it 2nd on /shop (right after the ₦3,500 bundle).
 
 **Inside the file:** the whole JAMB bank embedded as JSON — Use of English (500-question cap,
@@ -942,10 +942,10 @@ all/wrong/skipped/flagged filters + explanations, retake-with-fresh-questions, p
 attempt history (last 20) and resume. localStorage is wrapped in try/catch with an in-memory
 fallback (sandboxed iframes and private mode keep working).
 
-**Delivery:** identical PDF pipeline — PN-P- reference, 20-char download code (14 days /
+**Delivery:** identical PDF pipeline — CP-P- reference, 20-char download code (14 days /
 5 downloads), receipt email. `pdf_download` dispatches the slug to
 `offline_cbt.build_offline_jamb_html(conn, site, buyer_name, ref)` and serves
-`text/html` attachment `PrepNova_Offline_JAMB_CBT.html`. `pdf_success` and `product`
+`text/html` attachment `ConfamPrep_Offline_JAMB_CBT.html`. `pdf_success` and `product`
 templates switch their copy for this slug (simulator wording, Chrome instructions).
 
 **Free for PAID subscribers (retention perk):** `POST /offline_free` (login_required,
@@ -1045,17 +1045,17 @@ waec-english-past-questions (N500).
   content assembled from published study guides; verify facts before major edits),
   build_past_questions_pdf() pulls up to 60 questions from questions_v2 (JOIN subjects
   + exam_types; '%English%' LIKE; falls back to any subject of that exam). Every pack
-  ends with a PrepNova CTA page. Question text is XML-escaped (_esc) — questions
+  ends with a ConfamPrep CTA page. Question text is XML-escaped (_esc) — questions
   contain HTML like <u>.
-- Flow: /shop -> /shop/<slug> (details + guest form) -> /shop_buy (PN-P- reference,
+- Flow: /shop -> /shop/<slug> (details + guest form) -> /shop_buy (CP-P- reference,
   10/10min rate limit, pdf_orders PENDING + payments row via _pdf_plan_id hidden
   'Digital study packs' plan) -> /pdf_callback -> _fulfil_pdf (idempotent, amount
   verified, mints download_code = 20-hex) -> success page with big download button.
   /pdf_download/<code>: PAID orders only, cap 5 downloads + 14 days (paid_at is UTC
   CURRENT_TIMESTAMP — compare with datetime.utcnow(), NOT now()), increments counter,
   streams the PDF as attachment.
-- Reference prefix registry now: PN- student, PN-S- parent, PN-C- centre, PN-G- gift,
-  PN-SC- sponsor cohort, PN-A- agent stock, **PN-P- pdf shop**.
+- Reference prefix registry now: CP- student, CP-S- parent, CP-C- centre, CP-G- gift,
+  CP-SC- sponsor cohort, CP-A- agent stock, **CP-P- pdf shop**.
 - Discovery: account menu ("PDF study packs"), app footer, landing footer Company
   column, line under the Paystack note in the landing pricing section, line on
   /subscribe. No CSS changes (v stayed 23).
@@ -1070,7 +1070,7 @@ waec-english-past-questions (N500).
 
 Logged-in users open /agent ("Become an agent" in the account menu + app footer +
 subscribe page line; landing footer routes to /register since agents need an account):
-pick a plan + quantity (10-200), pay 40% OFF retail upfront (PN-A- references;
+pick a plan + quantity (10-200), pay 40% OFF retail upfront (CP-A- references;
  Monthly ₦1,000 -> ₦600/PIN), PINs minted into "My stock" (persistent, not one-time)
 with per-PIN copy + WhatsApp send buttons. Agents sell at full retail and keep the
 margin. Same battle-tested spine: amount verified vs order, idempotent callback +
@@ -1085,8 +1085,8 @@ webhook branch, failed/mismatch -> no codes.
 - Constants in app.py: AGENT_DISCOUNT 0.40, AGENT_MIN_QTY 10, AGENT_MAX_QTY 200,
   AGENT_CODE_VALID_DAYS 180. Routes: /agent (login), /agent_order (POST, 6/10min),
   /agent_callback, _fulfil_agent. No new CSS (reuses gift/sponsor classes) — css stayed v=23.
-- Reference prefix registry now: PN- student, PN-S- parent, PN-C- centre, PN-G- gift,
-  PN-SC- sponsor cohort, **PN-A- agent stock**.
+- Reference prefix registry now: CP- student, CP-S- parent, CP-C- centre, CP-G- gift,
+  CP-SC- sponsor cohort, **CP-A- agent stock**.
 - Tests: `_work/agent_test.py` — 34 checks (guards, validation, wholesale math on two
   plans, callback + idempotency, webhook + signature, redemption marks stock sold with
   short buyer name, earnings, failure paths, stock privacy between agents, agent NOT
@@ -1114,9 +1114,9 @@ The student redeems it under Subscribe -> "Have an Access PIN" — existing mach
 so it stacks on running plans and works for new or existing accounts.
 
 - New table `gift_purchases` (db.py): buyer, recipient, message, plan, reference, status,
-  code_text. Gift references use the **PN-G-** prefix; /paystack/webhook branches on it
+  code_text. Gift references use the **CP-G-** prefix; /paystack/webhook branches on it
   (`_fulfil_gift`) so the buyer is NEVER auto-granted a subscription (payments-table
-  lookups ignore PN-G- refs by design — keep that separation).
+  lookups ignore CP-G- refs by design — keep that separation).
 - Routes in app.py (before "# Entry point"): /gift (public page), /gift_start (POST,
   rate-limited 10/10min, CSRF), /gift_callback (verify + fulfil + show PIN with
   WhatsApp-share link), `_fulfil_gift` (idempotent: PAID check first; amount/currency
@@ -1167,7 +1167,7 @@ No audio files, no server cost, works offline-of-our-servers on any device with 
   topic starts with "Test of Orals" — one source of truth, flows everywhere _pack is used.
   exam_engine.load_attempt_for_student and load_review copy the flag into their own dicts
   (both patched); my_bookmarks gets it via fetch_questions.
-- UI: `pn-say` speaker buttons (delegated-click TTS module appended to static/js/prepnova.js):
+- UI: `pn-say` speaker buttons (delegated-click TTS module appended to static/js/confamprep.js):
   - "Hear this question" stem button (data-say = q.text|say — the `say` Jinja filter in app.py
     strips HTML and IPA-between-slashes so the voice reads clean text) + a small speaker on
     each option (data-say = raw option text).
@@ -1180,9 +1180,9 @@ No audio files, no server cost, works offline-of-our-servers on any device with 
   - IMPORTANT UX guard: clicking a speaker inside an option label must NOT select the answer
     — the option click handlers in exam_room / practice_question / fix_mistakes all start
     with `if (e.target.closest('.pn-say')) return;` (keep that when editing those scripts).
-- CSS at the end of prepnova.css; base.html cache-bust bumped v=15 -> v=16, and after a
+- CSS at the end of confamprep.css; base.html cache-bust bumped v=15 -> v=16, and after a
   REAL LAPTOP BUG (speaker buttons rendered but clicks did nothing — the browser kept the
-  cached old prepnova.js because its version string was NOT bumped) js is now v=4 -> v=5.
+  cached old confamprep.js because its version string was NOT bumped) js is now v=4 -> v=5.
   LESSON: bump the ?v= of ANY static file you change (css AND js), or returning visitors
   keep the old file silently.
 - TTS hardening after the laptop report: Chrome desktop can leave the synth queue paused
@@ -1212,7 +1212,7 @@ No audio files, no server cost, works offline-of-our-servers on any device with 
   **"Sponsor {first}'s preparation"** card: the 3 plans (₦1,000 / ₦2,500 / ₦8,000) as Paystack buttons,
   or a WhatsApp-contact fallback when `PAYSTACK_SECRET_KEY` is unset. `POST /sponsor_payment/<code>/<plan_id>`
   (public, CSRF-checked, rate-limited 10/600s) creates the `payments` row with **username = the CHILD's
-  email** and reference prefix **`PN-S-`** (marks sponsor payments), then Paystack-initialises with
+  email** and reference prefix **`CP-S-`** (marks sponsor payments), then Paystack-initialises with
   `callback_url = /sponsor_callback`. `GET /sponsor_callback` verifies, runs the standard
   `_process_paystack_payment` (which calls `activate_subscription` for `payments.username` — i.e. the
   child, so the existing webhook/verification logic is reused untouched) and renders the public
@@ -1257,7 +1257,7 @@ Savings are computed from the **live DB plan prices** at render time (fallback
 - `family_page` (GET /family): marketing page, savings math, plan radios, buyer form.
 - `family_start` (POST, CSRF + rate-limit **10/600s scope `family_start`**): guest checkout —
   validates plan/name/email, inserts `family_purchases` PENDING + `payments` PENDING
-  (reference prefix **`PN-FAM-{unix}-{hex6}`**, plan_name `Family — Family Monthly/Quarterly/Yearly`),
+  (reference prefix **`CP-FAM-{unix}-{hex6}`**, plan_name `Family — Family Monthly/Quarterly/Yearly`),
   redirects to Paystack.
 - `family_callback` (GET): Paystack return URL → `_fulfil_family`.
 - `_fulfil_family(ref)` — idempotent (PAID → "already"): verify status/currency/amount (mismatch →
@@ -1267,12 +1267,12 @@ Savings are computed from the **live DB plan prices** at render time (fallback
   with the 3 PINs + tracker URL, mark payments SUCCESS. Returns `(ok, msg, row)`.
 - `family_status` (GET /family/status/&lt;key&gt;): the **PIN tracker** — per-PIN
   Activated ✓ / Waiting badge, who redeemed + when, expiry, Parent Link pointer. Wrong/unknown key → 404.
-- Webhook dispatcher: `PN-FAM-` prefix → `_fulfil_family` (after `PN-G-` gift branch).
+- Webhook dispatcher: `CP-FAM-` prefix → `_fulfil_family` (after `CP-G-` gift branch).
 - `db.py`: new `family_purchases` table (id, reference UNIQUE, plan_key, amount, buyer_name,
   buyer_email, payment_status, pins JSON, family_key, created_at, paid_at).
 
 **Templates:** `family.html` (marketing; paystack_ready gate with WhatsApp fallback like gifts),
-`family_success.html` (3 pretty PN-XXXX-XXXX PINs + copy buttons, tracker link, reference; noindex),
+`family_success.html` (3 pretty CP-XXXX-XXXX PINs + copy buttons, tracker link, reference; noindex),
 `family_status.html` (tracker; noindex). Touchpoints: subscribe page banner card
 ("Three children at home?"), landing pricing chapter line, landing footer link.
 
@@ -1311,7 +1311,7 @@ seeded from the repo only on first boot). Companion scripts: `offline_engine_tes
 (builders return **BytesIO** — write with 'wb' + `.getvalue()`); `dropdown_test.py` needs a
 server on **port 8160** with user dd@example.com / Passw0rd123 seeded.
 
-## PrepNova Partners — affiliate programme, 30% of first purchases (Oct 2026, round 14)
+## ConfamPrep Partners — affiliate programme, 30% of first purchases (Oct 2026, round 14)
 
 **The offer (locked with user):** Nigerians apply **FREE** online → owner approves after a
 WhatsApp/call check → each partner gets a personal link `/?ref=CODE` → every customer's
@@ -1421,10 +1421,10 @@ landed, see below); browser audit `_work/audit15.py` **27/27** (VISIBILITY proto
    success (`payments.renew_intent` → `saved_cards`, one active card per user, older cards
    deactivated) and `subscriptions.auto_renew=1`. The dashboard shows "Auto-renewal ON ·
    bank ••last4" with a turn-off toggle (turn-on only works if a card is saved). The daily
-   job charges the saved card when 0 < days_left ≤ 1 (refs `PN-RN-{ts}-{hex}`); success →
+   job charges the saved card when 0 < days_left ≤ 1 (refs `CP-RN-{ts}-{hex}`); success →
    `_fulfil_renewal` (idempotent, extends via `activate_subscription`, receipt email,
    retries reset); decline → `auto_renew_retries+1`; 2 declines → auto_renew=0 + "stopped"
-   email. Webhook also fulfils `PN-RN-` refs (job-crash safety). FREE_TRIAL subs are skipped.
+   email. Webhook also fulfils `CP-RN-` refs (job-crash safety). FREE_TRIAL subs are skipped.
 2. **Reminders + win-back.** T-3 email (sentiment-keyed `reminder3_for=end_date`, once per
    end_date): pre-charge notice if auto-renew+card, else renew nudge. 6–10 days after expiry:
    win-back email + single-use `COMEBACK-XXXX` 20%-off 30-day code (`winback_for` sentinel).
@@ -1464,7 +1464,7 @@ normal pushes resume from round 16.
 **Sandbox git caveat (lesson, twice now):** commit objects created late in a turn can
 vanish at the turn boundary while the worktree survives (happened to e5c265e AND e23f50b).
 At turn start run `git log --oneline -1` + `git status` — if HEAD is behind but the files
-are present, restore .git from the newest zip (`unzip PrepNova-CBT.zip 'cbt_app/.git/*'`)
+are present, restore .git from the newest zip (`unzip ConfamPrep-CBT.zip 'cbt_app/.git/*'`)
 or re-commit. The in-turn zip is always the authoritative deliverable.
 
 **Bugs found & fixed while testing (real ones):** bundle parent originally shared child-1's
@@ -1731,11 +1731,11 @@ Final per-subject banks: English 169 · Economics 160 · Physics 159 · Chemistr
 - Tests: waec_test paper loop extended to all 16 subjects (durations from the official timetable) + visibility checks: all 9 new subjects listed and launchable on /waec_subjects, practice pages open for new subjects. offline_waec_test expectations now 16 subjects / 1,863 questions / 17 papers. Full battery (21 suites) green.
 - Visibility/copy sweep: dashboard WAEC quick-action card now says "All 16 WAEC subjects" (parity with the NECO card); standalone WAEC Offline Simulator shop copy updated from the old 7-subject enumeration to all 16; duo-bundle copy already count-agnostic (16e part 1). Subject counts on landing/Exams pages are dynamic.
 - Repo db re-seeded: v2 15,448 (JAMB 11,475 / WAEC 1,863 / POST-UTME 235 / NECO 1,875), users 6, no example.com.
-- Deploy note (13 Oct 2026, UPDATED): the live site is **prepnova.pythonanywhere.com** — NOT adueffiong.pythonanywhere.com (that domain was this session's curl mistake; adueffiong… is just an unused parking page. ALWAYS curl prepnova…). The site is UP (login 200). FREE-TIER RENEWAL DONE 13 Oct 2026: user clicked the extend button on the PA Web tab — expiry moved 01 Nov → **Friday 13 November 2026**. IMPORTANT: PA changed free accounts in Jan 2026 — renewal is now a MONTHLY click (was 3-monthly; some accounts still show 3-month text). Next renewal needed by **12 Nov 2026** — mid-NECO (GCE ends 21 Nov), so a missed click would drop the site in exam week; told user to set a phone reminder for 12 Nov. User plans to upgrade to the paid Developer plan ($10/mo, ~₦14k) once money comes in — no card funds right now, still adding features for testing. When he upgrades, the monthly clicking stops. Deployed live version: 1cbb1dd-era; b559223 (dashboard NECO card), b52629e and 9e494b9 (16 WAEC subjects) remain undeployed — one update folds them all in. Owner routine: git push origin main (Windows) then python3 setup.py (PA Bash console, update mode). After deploy, read the live counters by curl — do not trust predicted numbers.
+- Deploy note (13 Oct 2026, UPDATED): the live site is **prepnova.pythonanywhere.com** — NOT adueffiong.pythonanywhere.com (that domain was this session's curl mistake; adueffiong… is just an unused parking page. ALWAYS curl confamprep…). The site is UP (login 200). FREE-TIER RENEWAL DONE 13 Oct 2026: user clicked the extend button on the PA Web tab — expiry moved 01 Nov → **Friday 13 November 2026**. IMPORTANT: PA changed free accounts in Jan 2026 — renewal is now a MONTHLY click (was 3-monthly; some accounts still show 3-month text). Next renewal needed by **12 Nov 2026** — mid-NECO (GCE ends 21 Nov), so a missed click would drop the site in exam week; told user to set a phone reminder for 12 Nov. User plans to upgrade to the paid Developer plan ($10/mo, ~₦14k) once money comes in — no card funds right now, still adding features for testing. When he upgrades, the monthly clicking stops. Deployed live version: 1cbb1dd-era; b559223 (dashboard NECO card), b52629e and 9e494b9 (16 WAEC subjects) remain undeployed — one update folds them all in. Owner routine: git push origin main (Windows) then python3 setup.py (PA Bash console, update mode). After deploy, read the live counters by curl — do not trust predicted numbers.
 
 ## Ops note (13 Oct 2026): workspace .git corruption + recovery
 
-Between turns the workspace snapshot reverted .git to a Round-14-era state while the working tree stayed current (all 16e files intact) — a `git commit --amend` then landed on the wrong base. Recovery: fetched origin/main (2c7f53a, full history), `git reset --mixed 2c7f53a`, recommitted the whole 16e delta as 62c7bc5. LESSONS: (1) every session, FIRST thing, verify not just HEAD but `git log --oneline -5` shows the expected recent history before touching anything; (2) never delete the old zip until the new one is built AND verified (build to PrepNova-CBT-new.zip, verify, then swap); (3) _work test files hardcode sys.path /home/user/cbt_app, so "run from extracted zip" actually imports the workspace app — valid only because zip == workspace at the same commit; (4) deps to pip-install each session: python-dotenv flask flask-sqlalchemy flask-mail flask-wtf requests pyyaml reportlab qrcode pillow.
+Between turns the workspace snapshot reverted .git to a Round-14-era state while the working tree stayed current (all 16e files intact) — a `git commit --amend` then landed on the wrong base. Recovery: fetched origin/main (2c7f53a, full history), `git reset --mixed 2c7f53a`, recommitted the whole 16e delta as 62c7bc5. LESSONS: (1) every session, FIRST thing, verify not just HEAD but `git log --oneline -5` shows the expected recent history before touching anything; (2) never delete the old zip until the new one is built AND verified (build to ConfamPrep-CBT-new.zip, verify, then swap); (3) _work test files hardcode sys.path /home/user/cbt_app, so "run from extracted zip" actually imports the workspace app — valid only because zip == workspace at the same commit; (4) deps to pip-install each session: python-dotenv flask flask-sqlalchemy flask-mail flask-wtf requests pyyaml reportlab qrcode pillow.
 
 ## Round 17: Post-UTME Current Affairs 235 → 507 (batch 083)
 
@@ -1824,7 +1824,7 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 ## Repo recovery — 25 Oct 2026 (start of R27)
 - Turn-start check found .git corrupt (12th time) AND the workspace zip stale at the R24 build (97,082,563 bytes, .git at ac34e71, no batch_13x entries) although the working tree held every R25+R26 file — the first snapshot inconsistency to affect the zip itself. No content lost: batches 130–141, their builders, HANDOFF and the clean R26 database.db (v2 18,334; 6 users; 17 unis) were all present on disk.
 - Recovered .git from the (older) zip to ac34e71, then recommitted the two lost rounds from the working tree as "R25 (recommit of lost 39cb7cf)" and "R26 (recommit of lost 04b4cc7)". Content trees identical to the originals; only commit SHAs/timestamps differ. Zip then rebuilt from the repaired repo.
-- New standing rule: at turn start, after `git log --oneline -3`, ALSO check zip freshness — `unzip -p PrepNova-CBT.zip .git/refs/heads/main` must match HEAD (and the zip should list the latest batch files). The zip is the recovery source and can itself go stale; after any recovery, recommit from the working tree and rebuild the zip BEFORE new work.
+- New standing rule: at turn start, after `git log --oneline -3`, ALSO check zip freshness — `unzip -p ConfamPrep-CBT.zip .git/refs/heads/main` must match HEAD (and the zip should list the latest batch files). The zip is the recovery source and can itself go stale; after any recovery, recommit from the working tree and rebuild the zip BEFORE new work.
 
 ## Round 27 — WAEC top-up (batches 142–147) — 25 Oct 2026
 - Turn start: .git corrupt 12th time AND workspace zip found stale at the R24 build (.git ac34e71, no batch_13x) though the working tree held all R25+R26 files — first zip-staleness incident. Recovered per the new rule: .git from zip, recommit both rounds from the tree ("R25 recommit of lost 39cb7cf" = 3a662df, "R26 recommit of lost 04b4cc7" = 957ad9e), zip rebuilt and verified BEFORE new work (see Repo recovery note above).
@@ -2013,7 +2013,7 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 - Progress: WAEC **4,538** (GOAL REACHED) / NECO 4,296 (needs ~200 more) of ~4,500–5,000 each; CA 757 of ~1,200. Next: R48 NECO top-up (thinnest: Geo 266, English 268, CRS 268, Civic 270 — lift to ~290), which should carry NECO past 4,500 too. Then user's own testing from extracted zip; single deploy folds all undeployed commits; queue NCEE + JAMB 2027 early-bird. NECO GCE starts 4 Nov (8 days); PA renewal click 12 Nov.
 
 ## Round 48 — NECO top-up (batches 234–237) + reversion #20 recovery — 27 Oct 2026
-- **REVERSION #20 at turn start (partial snapshot restore):** .git rolled back to Round-14 commit 9a71932 AND PrepNova-CBT.zip replaced by the ancient 20-Oct flat-root 97MB zip — while the working tree stayed at full R47 state (all files, db 21,066/4,538/4,296, 0 data loss). All mtimes rewritten to 08:08 (restore time). Recovery (worked first try): extract old zip's .git to /tmp (HEAD ac34e71, R24-era, contains bundle base cbb1992) → `git --git-dir fetch /home/user/repo-recovery.bundle main:frombundle` (139 commits, tip 58b856e) → swap recovered .git into cbt_app → `git reset --hard frombundle` → HEAD 58b856e, 0 diffs, db verified. This is exactly the designed chain "stale-zip .git + tiny bundle + working tree" from R27. NOTE: recovery bundle fetch into the ROLLED-BACK .git alone FAILS (bundle base cbb1992 missing) — the old zip's .git is the bridge; keep the bundle's fetch-test recipe (needs .git from zip).
+- **REVERSION #20 at turn start (partial snapshot restore):** .git rolled back to Round-14 commit 9a71932 AND ConfamPrep-CBT.zip replaced by the ancient 20-Oct flat-root 97MB zip — while the working tree stayed at full R47 state (all files, db 21,066/4,538/4,296, 0 data loss). All mtimes rewritten to 08:08 (restore time). Recovery (worked first try): extract old zip's .git to /tmp (HEAD ac34e71, R24-era, contains bundle base cbb1992) → `git --git-dir fetch /home/user/repo-recovery.bundle main:frombundle` (139 commits, tip 58b856e) → swap recovered .git into cbt_app → `git reset --hard frombundle` → HEAD 58b856e, 0 diffs, db verified. This is exactly the designed chain "stale-zip .git + tiny bundle + working tree" from R27. NOTE: recovery bundle fetch into the ROLLED-BACK .git alone FAILS (bundle base cbb1992 missing) — the old zip's .git is the bridge; keep the bundle's fetch-test recipe (needs .git from zip).
 - **Reversion also wiped the Python env:** flask+playwright+chromium reinstalled (playwright install-deps too), but battery first ran 2/21 — `app.py` needs `pip install -r requirements.txt` (dotenv, flask-mail, requests, openpyxl, qrcode, Pillow, reportlab, gunicorn). RULE after any reversion: reinstall flask+playwright+chromium AND requirements.txt before the battery.
 - **THINNEST-NOTE CORRECTION (again):** R47's note said R48 = Geo/English/CRS/Civic (positions 6–9). Fresh db query showed the true thinnest NECO: Econ 256, Chem 257, Physics 257, Acct 260. R48 lifted those instead (standing rule: re-query at round start, trust the db — second time this rule has corrected the plan, after R45).
 - Bank scanning as before. Pools: Economics 1,404; Chemistry 1,512 (incl. R47's 25); Physics 1,341; Accounting 1,019. Econ needed 7 waves + a cross-subject twin sweep via db LIKE query (one query, all candidate terms, all subjects — efficient; killed merchant/development bank, unit trust, primary/secondary market, privatisation/commercialisation (Gov), WTO (Geo/CA) as cross-twins). Chem round 2 on the same pool found fresh veins (industrial/environmental/lab). Physics pool deeply banked (momentum 109, energy 250) — fresh veins were classic-definition gaps (moments principle, equilibrium types, flotation law, luminous bodies). Acct pool the most thoroughly mined yet — needed 6 waves; errors family (transposition/undercast/reversal ×5-9 each) heavily banked.
@@ -2051,9 +2051,9 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 - **REVERSION #24 at turn start** (same partial pattern): .git → 9a71932, 410 diffs; LATEST zip + bundle both intact at a2a43b6 (R50 sizes — the -LATEST name + bundle again survived). Standard recovery. Env reinstall lesson: `playwright install-deps chromium` is NOT optional after a fresh chromium download — skipping it made the two browser suites (offeng/waeceng) fail with exitCode=127/kill-ESRCH; one install-deps + re-run → all green. (One-pass rule now: pip deps + playwright install chromium + INSTALL-DEPS + requirements.txt.)
 - **Live-site verification round (user-facing):** R50's past-papers deploy independently verified over HTTP — GitHub main = a2a43b6; live css v30; /health ok; counter 18,065+; JAMB page 400 chip-forms / WAEC 48 / NECO 48 year chips; opened "WAEC Biology — 2025-Style" end-to-end on the live site (50 q / 3000 s). Verification used a clearly-named test account (qa.check.arena@example.com, "QA Check") — kept for the QA lady or deletable via Admin → Students. Fun catch: the live password policy rejected the first attempt ("Do not use your name in your password") — security working as designed.
 - **FEATURE — Score-Share Picture:** a branded 1080×1350 PNG of a student's result, served per-result and shareable in one tap. New module `scorecard.py` (Pillow, house visual language from make_share_cards: navy→green gradient, gold orbs, gold PN badge, Plus Jakarta Sans — fonts now canonically in **static/fonts/pjk-400/500/700/800.ttf** (copied from _work; ~120 KB, committed, deployed reliably) with _work + DejaVu fallbacks). Card layout: eyebrow (EXAM · paper name, font-shrunk to fit), "First name scored", giant score (JAMB: jamb_score + "out of 400 · JAMB UTME mock"; SSCE: percentage + grade band via waec/neco grade() e.g. "Grade A1 · WAEC standard"; PUTME: "screening score"; else "n/n correct"), gold pill "CAN YOU BEAT ME?" (≥50%) or "PRACTISE WITH ME" (<50% — matches share_text's honest invite-not-flex stance), supporting line "Real CBT timer · every question explained", site host + "Free 7-day trial — no card needed". First name only (privacy, ≤14 chars); no email on the card.
-- **Route `/result/<int:result_id>/scorecard.png`** (login_required; engine.load_result with session user → 404 for anyone else; ?dl=1 → attachment "PrepNova_Score.png"; Cache-Control no-store; served inline otherwise for the result-page preview).
-- **Result-page share section upgraded:** left = live card preview (img src=scorecard route); right = existing WhatsApp text-share (wa.me, share_text unchanged) + NEW gold "Share picture" button (data-share-card → fetch blob → navigator.share with files on phones → fallback ?dl=1 download) + "Save picture" (?dl=1 direct) + existing Copy text. prepnova.js v7 (data-share-card delegated handler); css v31 (.pn-scorecard-preview: 230px, rounded, shadow).
-- **Test suite `_work/sharecard_test.py` (17 checks, scratch-db):** JAMB mock sat via HTTP (120/180 correct → 250/400): share section strings, both new buttons, preview img, wa.me link, PNG served (magic via PIL, 1080×1350, >40 KB, no-store), dl=1 attachment, share text contains "PrepNova"+"beat"; WAEC card generated; LOW-score card still generates; second student → 404 on my card; logged-out → login redirect; bank untouched 21,291. Suite-bug lesson: template attributes are HTML-escaped — use html.unescape (urllib.parse has no unescape).
+- **Route `/result/<int:result_id>/scorecard.png`** (login_required; engine.load_result with session user → 404 for anyone else; ?dl=1 → attachment "ConfamPrep_Score.png"; Cache-Control no-store; served inline otherwise for the result-page preview).
+- **Result-page share section upgraded:** left = live card preview (img src=scorecard route); right = existing WhatsApp text-share (wa.me, share_text unchanged) + NEW gold "Share picture" button (data-share-card → fetch blob → navigator.share with files on phones → fallback ?dl=1 download) + "Save picture" (?dl=1 direct) + existing Copy text. confamprep.js v7 (data-share-card delegated handler); css v31 (.pn-scorecard-preview: 230px, rounded, shadow).
+- **Test suite `_work/sharecard_test.py` (17 checks, scratch-db):** JAMB mock sat via HTTP (120/180 correct → 250/400): share section strings, both new buttons, preview img, wa.me link, PNG served (magic via PIL, 1080×1350, >40 KB, no-store), dl=1 attachment, share text contains "ConfamPrep"+"beat"; WAEC card generated; LOW-score card still generates; second student → 404 on my card; logged-out → login redirect; bank untouched 21,291. Suite-bug lesson: template attributes are HTML-escaped — use html.unescape (urllib.parse has no unescape).
 - **Battery 23/23 green** (sharecard suite added to /tmp/battery.py — recreated each round; demos rebuilt fresh + /tmp copies placed before run). Bank untouched: v2 21,291 / active 17,791.
 - Progress: score-share picture BUILT on a2a43b6 base. Deploy: user push + python3 setup.py (same 5-minute flow he now knows). NEXT queued: school leaderboard, SEO past-paper pages, never-repeat engine, NCEE + JAMB 2027 early-bird content rounds. Standing: expect reversion every turn; PA renewal ~8 Feb 2027; QA lady testing on live site (no payments/admin there).
 
@@ -2061,7 +2061,7 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 - **R51 deployed and verified by user same day** (push bc2d28e + setup.py; live css v31 confirmed before this round started — he now runs the full deploy dance unaided).
 - **REVERSION #25 at turn start** (same partial pattern): .git → 9a71932, 411 diffs; LATEST zip + bundle intact at bc2d28e. Standard recovery; env reinstalled one-pass INCLUDING playwright install-deps (R51 lesson applied — battery ran clean first try this round).
 - **FEATURE — Schools board (the leaderboard deep rework the user asked for):** /leaderboard now has two tabs — Students (existing board preserved verbatim: podium, masking, period tabs) and Schools (new). School ranking is honest and gaming-resistant: per-student average first, then school = AVERAGE OF STUDENT AVERAGES (one grind-happy student cannot carry a school), minimum TWO students to rank (stated on the page). Solo schools appear in a separate viral invite list "One student away from the ranking — bring a classmate" (chips with student counts). Grouping key = lowercased whitespace-collapsed school name (Python grouping — SQLite has no regex to collapse internal spaces; 'KINGS COLLEGE   lagos' == 'kings college lagos'), display via new helpers.school_display() (keeps human-typed casing, uppers ≤3-letter alpha tokens fgc→FGC, else capitalises first letter, king's→King's).
-- **Route work:** leaderboard() extended with board param (students|schools, invalid → students; period week/month/all applies to both). per-student SQL → Python grouping → ranked (≥2 students, top 25, sort avg then mocks) + solo (top 30). My-school: highlight row (table-primary) + "Your school" badge + rank alert; no-school users get a gold CTA "Rep your school — Add my school" → edit_profile. school_share text built in the route (ranked: "X is #N on PrepNova CBT's school leaderboard!..."; unranked: "I'm repping X...") rendered via the _share macro row; per-row WhatsApp buttons share each school's rank.
+- **Route work:** leaderboard() extended with board param (students|schools, invalid → students; period week/month/all applies to both). per-student SQL → Python grouping → ranked (≥2 students, top 25, sort avg then mocks) + solo (top 30). My-school: highlight row (table-primary) + "Your school" badge + rank alert; no-school users get a gold CTA "Rep your school — Add my school" → edit_profile. school_share text built in the route (ranked: "X is #N on ConfamPrep's school leaderboard!..."; unranked: "I'm repping X...") rendered via the _share macro row; per-row WhatsApp buttons share each school's rank.
 - **Template leaderboard.html rewritten:** nav-tabs Students/Schools (board param carried through period buttons), students section byte-equivalent logic, schools section: rule explainer, ranked table (Rank/School/Students/Mocks/Average/Best/WhatsApp share), solo-schools card, share_row, empty state. No css/js changes needed (existing classes) — css stays v31, js v7.
 - **DEV BUGS CAUGHT THIS ROUND (route-edit lessons):** (1) first edit closed the connection before the school query ran — order matters, keep all queries before conn.close(); (2) a placeholder line survived an edit — re-read the whole function after multi-block edits; (3) SQL GROUP BY LOWER(TRIM(school)) would NOT merge internal double spaces — normalise in Python when the key needs whitespace collapsing.
 - **Test suite `_work/leaderboard_test.py` (25 checks, scratch-db):** fixture = 4 users: two in "kings college lagos"/"KINGS COLLEGE   lagos" (80%+60% → school avg 70), one in FGC Ikot Ekpene (90%, solo), one school-less; WAEC Biology 50-q mocks sat over HTTP with exact correct-counts. Checks: tabs; students board preserved (podium, masking, Chika listed all-time); school display normalised; my-school badge + rank alert + row highlight; solo NOT ranked but listed with "1 student"; rule explained; wa.me share links with rank; avg 70.0/students 2/mocks 2/best 80 in the row; no-school CTA; week window; invalid board fallback; login gate; bank untouched. TEST-SCRIPT lessons: profile helper must not overwrite names (set_school(name, school)); a regex starting AT the display name cannot see the tr class that precedes it — check '<tr class="table-primary">' page-wide on the schools board.
@@ -2070,7 +2070,7 @@ Between turns the workspace snapshot reverted .git to a Round-14-era state while
 
 ## Round 53 — SEO past-questions pages (46 public pages + sitemap + robots) + reversion #26 recovery — 11 Nov 2026
 - **REVERSION #26 at turn start** (same partial pattern): .git → 9a71932, 412 diffs; LATEST zip + bundle intact at a12bcf1. Standard recovery + one-pass env reinstall (incl. install-deps) — battery-ready first try.
-- **R52 deployed + demoed live before this round:** user pushed a12bcf1 and ran setup.py himself; verified live (two tabs, CTA, students board intact). Live demo performed over HTTP with the two named test accounts (LB Check + QA Check, both set "PrepNova Test College" with different casings — merged correctly): both sat WAEC Biology mocks blind; board shows the school ranked #1, 2 students, 3 mocks, avg 18% — cold-start solved. Scratch files cleaned after.
+- **R52 deployed + demoed live before this round:** user pushed a12bcf1 and ran setup.py himself; verified live (two tabs, CTA, students board intact). Live demo performed over HTTP with the two named test accounts (LB Check + QA Check, both set "ConfamPrep Test College" with different casings — merged correctly): both sat WAEC Biology mocks blind; board shows the school ranked #1, 2 students, 3 mocks, avg 18% — cold-start solved. Scratch files cleaned after.
 - **FEATURE — SEO past-questions pages (the "free Google traffic" build):** 46 public, crawlable, no-login pages, one per exam+subject, matching real student searches. Routes (app.py, before Subscriptions section): SEO_EXAMS dict (jamb/waec/neco → name + exam body UTME/WASSCE/SSCE + honest blurb); _seo_slug (lowercase, non-alnum→hyphen); _seo_subject_slug_map (slug→name via available_subjects); _seo_bank_count; _seo_samples (3 real Active questions, READ-ONLY deterministic pick: sorted ids + seeded RNG f"seo-{exam}-{subject}" — no past-paper materialisation, stable for crawlers); /past-questions (library index: all 3 exams, every subject chip with counts, total questions, honest "are these the real papers" explainer); /past-questions/<exam>/<subject> (money page: exact-match H1 "WAEC Biology Past Questions", title/meta/og blocks, paper format cards from waec/neco PAPERS or synthesised JAMB card (subject's role in the 180-q/120-min mock, English 60), past-style year chips per paper, 3 sample questions with options + <details> answer/explanation (crawlable), how-it-works, register CTA + "I have an account" link to the subjects page, sibling-subject chips (internal linking), honest FAQ details blocks); unknown exam/subject → 404. /sitemap.xml (59 URLs: / + library + 46 subject pages + register/login/shop/terms/privacy/partner/sponsor/gift/schools + both tools; PRIVATE PAGES EXCLUDED — dashboard/admin/leaderboard/exam verified absent); /robots.txt (allow all + sitemap line; deliberately does NOT mention admin paths — robots.txt is public).
 - **Discovery wiring:** "Past questions" link added to BOTH footers — base.html app footer and _landing_footer.html Exams column (landing). Nav untouched (past navbar-overflow pain at 992-1399px — don't add nav links).
 - **Content honesty:** pages consistently say "past-style, honestly labelled" + anti-scam framing ("nobody can sell you the exact upcoming paper"); free trial stated; samples framed as real bank questions.

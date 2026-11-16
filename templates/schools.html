@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Schools & Lesson Centres — Bulk CBT Prep for Your Students{% endblock %}
-{% block description %}Bulk PrepNova CBT seats for lesson centres and schools in Nigeria: one join code unlocks daily WAEC/JAMB mocks for your whole class, and you get a class report showing every student's practice, scores and weakest subjects. From ₦300 per student.{% endblock %}
+{% block description %}Bulk ConfamPrep seats for lesson centres and schools in Nigeria: one join code unlocks daily WAEC/JAMB mocks for your whole class, and you get a class report showing every student's practice, scores and weakest subjects. From ₦300 per student.{% endblock %}
 {% block body_class %}pn-landing{% endblock %}
 
 {% block navbar %}{% include "_landing_nav.html" %}{% endblock %}
@@ -11,7 +11,7 @@
     <div class="container position-relative">
         <div class="small mb-2"><a class="text-white-50 text-decoration-none" href="{{ url_for('index') }}">Home</a> <i class="bi bi-chevron-right small"></i> <span class="text-white-50">Schools &amp; lesson centres</span></div>
         <h1 class="anim-rise">Give your whole class a CBT lab — on their own phones</h1>
-        <p class="lead anim-rise d1">Your students write WAEC and JAMB on a computer. PrepNova gives them daily timed mocks with instant corrections — and gives <b>you</b> the progress report to show parents. One payment, one join code, no cards needed for students.</p>
+        <p class="lead anim-rise d1">Your students write WAEC and JAMB on a computer. ConfamPrep gives them daily timed mocks with instant corrections — and gives <b>you</b> the progress report to show parents. One payment, one join code, no cards needed for students.</p>
         <div class="d-flex flex-wrap gap-2 mt-3 anim-rise d2">
             {% if session.get('user') %}
             <a href="{{ url_for('centre.centre_new') }}" class="btn btn-accent btn-lg"><i class="bi bi-mortarboard me-1"></i>Set up my centre</a>

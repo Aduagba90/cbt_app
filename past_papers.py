@@ -2,7 +2,7 @@
 
 Nigerian students trust year-labelled papers — "the 2023 paper" — because that
 is how past questions have always been sold.  Serious preparation, though, means
-sitting a paper nobody has memorised.  PrepNova's past-style papers reconcile
+sitting a paper nobody has memorised.  ConfamPrep's past-style papers reconcile
 the two:
 
 * Each label — e.g. WAEC Biology, 2024-Style — maps to ONE fixed paper, built

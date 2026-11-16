@@ -1,5 +1,5 @@
 """
-PrepNova CBT — administration routes (Blueprint).
+ConfamPrep — administration routes (Blueprint).
 
 Extracted from the original monolithic app.py. All routes are protected by the
 `admin_required` decorator that is applied automatically in `before_request`,
@@ -44,7 +44,7 @@ def _guard():
 
 @admin_bp.after_request
 def _admin_chrome(response):
-    """Inject the shared PrepNova admin bar + flash messages into every legacy admin page.
+    """Inject the shared ConfamPrep admin bar + flash messages into every legacy admin page.
 
     The legacy admin templates are standalone HTML documents; instead of editing each of
     them we splice the rendered partial right after <body> and make sure Bootstrap's JS
@@ -4956,7 +4956,7 @@ def download_question_template():
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)
-    return send_file(buf, as_attachment=True, download_name="prepnova_question_template.xlsx",
+    return send_file(buf, as_attachment=True, download_name="confamprep_question_template.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @admin_bp.route("/question_import_history")
@@ -5331,7 +5331,7 @@ def admin_backup():
     buf.seek(0)
     _audit("backup_download")
     return send_file(buf, as_attachment=True, mimetype="application/octet-stream",
-                     download_name=f"prepnova-backup-{datetime.now():%Y%m%d-%H%M}.db")
+                     download_name=f"confamprep-backup-{datetime.now():%Y%m%d-%H%M}.db")
 
 
 @admin_bp.route("/export_questions")
@@ -5364,7 +5364,7 @@ def export_questions():
     return send_file(
         buf,
         as_attachment=True,
-        download_name=f"prepnova_questions_{datetime.now():%Y%m%d}.xlsx",
+        download_name=f"confamprep_questions_{datetime.now():%Y%m%d}.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
@@ -5869,15 +5869,15 @@ def partner_action(pid):
         conn.commit()
         link = f"{app_url()}/?ref={code}"
         send_email(
-            "Your PrepNova Partner account is live",
+            "Your ConfamPrep Partner account is live",
             partner["user_email"],
-            (f"Hello {partner['name']},\n\nGood news — your PrepNova Partner application is approved!\n\n"
+            (f"Hello {partner['name']},\n\nGood news — your ConfamPrep Partner application is approved!\n\n"
              f"Your personal link (share it anywhere — WhatsApp, TikTok, class groups):\n{link}\n\n"
              f"When someone buys through your link, you earn 30% of their first purchase. "
              f"Track everything in your dashboard: {app_url()}/partner\n\n"
-             f"Tip: you can also append ?ref={code} to ANY PrepNova page link, e.g. the offline simulator page.\n\n"
-             f"Welcome aboard!\nPrepNova Team"),
-            email_wrap("You're a PrepNova Partner now",
+             f"Tip: you can also append ?ref={code} to ANY ConfamPrep page link, e.g. the offline simulator page.\n\n"
+             f"Welcome aboard!\nConfamPrep Team"),
+            email_wrap("You're a ConfamPrep Partner now",
                        f"Hello <b>{partner['name']}</b>,<br><br>Your application is approved. "
                        f"Share your personal link and earn <b>30%</b> of every first purchase:",
                        "Open my dashboard", f"{app_url()}/partner"))
@@ -5925,11 +5925,11 @@ def partner_payout_action(pay_id):
         cur.execute("UPDATE partner_commissions SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE payout_id = ?", (pay_id,))
         conn.commit()
         send_email(
-            "PrepNova Partner — your payout has been sent",
+            "ConfamPrep Partner — your payout has been sent",
             payout["user_email"],
             (f"Hello {payout['partner_name']},\n\nYour payout of N{payout['amount']:,.2f} has been sent to "
              f"{payout['bank_name']} {payout['account_number']}.\nReference: {reference}\n\n"
-             f"Give it up to 24 hours to land, then keep selling!\n\nPrepNova Team"),
+             f"Give it up to 24 hours to land, then keep selling!\n\nConfamPrep Team"),
             email_wrap("Payout sent 🎉",
                        f"Hello <b>{payout['partner_name']}</b>,<br><br>Your payout of "
                        f"<b>N{payout['amount']:,.2f}</b> is on its way to your <b>{payout['bank_name']}</b> account.",

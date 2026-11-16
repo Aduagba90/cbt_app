@@ -1,7 +1,7 @@
 """
-PrepNova CBT — free public admission tools (Blueprint).
+ConfamPrep — free public admission tools (Blueprint).
 
-Two crowd-puller pages aimed at strangers who have never heard of PrepNova:
+Two crowd-puller pages aimed at strangers who have never heard of ConfamPrep:
 
 1. Subject Combination Checker (/subject-combination-checker)
    Course -> the exact four JAMB UTME subjects, plus a reverse mode

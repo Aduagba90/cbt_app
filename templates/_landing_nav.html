@@ -10,8 +10,8 @@
     {% endif %}
     <div class="container d-flex align-items-center justify-content-between">
         <a class="pn-brand" href="{{ url_for('index') }}">
-            <span class="pn-logo">PN</span>
-            <span>PrepNova <span style="color:var(--pn-accent)">CBT</span></span>
+            <span class="pn-logo">CP</span>
+            <span>ConfamPrep <span style="color:var(--pn-accent)">CBT</span></span>
         </a>
         <ul class="nav d-none d-lg-flex align-items-center gap-1">
             <li class="nav-item"><a class="nav-link" href="{{ '#tools' if on_landing else url_for('tools.combination_checker') }}"><i class="bi bi-tools me-1"></i>Free tools</a></li>
@@ -34,7 +34,7 @@
     </div>
     <div class="offcanvas offcanvas-end pn-drawer" tabindex="-1" id="pnDrawer" aria-label="Site menu">
         <div class="offcanvas-header">
-            <a class="pn-brand" href="{{ url_for('index') }}"><span class="pn-logo">PN</span><span>PrepNova <span style="color:var(--pn-primary)">CBT</span></span></a>
+            <a class="pn-brand" href="{{ url_for('index') }}"><span class="pn-logo">CP</span><span>ConfamPrep <span style="color:var(--pn-primary)">CBT</span></span></a>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-0 d-flex flex-column">

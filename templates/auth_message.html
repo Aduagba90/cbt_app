@@ -12,7 +12,7 @@
         "If an account exists for <b>" ~ (email or "that address") ~ "</b>, we have sent a password reset link. It expires in 30 minutes.",
         "Did not get it? Check your spam folder or try again in a few minutes."),
     "reset_no_mail": ("tint-gold", "bi-whatsapp", "Password reset by email is not available yet",
-        "Our email system is not connected on this server, so a reset link cannot be sent. Contact the PrepNova team on WhatsApp and we will set a new password for you right away.",
+        "Our email system is not connected on this server, so a reset link cannot be sent. Contact the ConfamPrep team on WhatsApp and we will set a new password for you right away.",
         None),
     "invalid_reset": ("tint-red", "bi-link-45deg", "This reset link is invalid",
         "The link may have already been used. Request a new password reset link to continue.", None),
@@ -31,7 +31,7 @@
     {% include "_auth_side.html" %}
     <div class="pn-auth-body">
         <div class="pn-auth-card text-center">
-            <a class="pn-brand d-lg-none mb-4 justify-content-center" href="/"><span class="pn-logo">PN</span><span>PrepNova <span class="text-primary">CBT</span></span></a>
+            <a class="pn-brand d-lg-none mb-4 justify-content-center" href="/"><span class="pn-logo">CP</span><span>ConfamPrep <span class="text-primary">CBT</span></span></a>
             <span class="pn-stat-icon {{ tint }} mx-auto mb-3" style="width:64px;height:64px;font-size:1.7rem"><i class="bi {{ icon }}"></i></span>
             <h1>{{ title }}</h1>
             <p class="text-muted">{{ text|safe }}</p>

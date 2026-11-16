@@ -1,5 +1,5 @@
 """
-PrepNova CBT — Nigeria's smart exam preparation platform.
+ConfamPrep — Nigeria's smart exam preparation platform.
 
 Main application: configuration, security middleware, authentication,
 student dashboard, exam room (JAMB / WAEC / Post-UTME), practice mode,
@@ -57,7 +57,7 @@ from security import (CSRF_FORM_FIELD, apply_security_headers, client_ip, genera
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-log = logging.getLogger("prepnova")
+log = logging.getLogger("confamprep")
 
 
 def utcnow():
@@ -99,7 +99,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="None" if PREVIEW_EMBED else "Lax",
     SESSION_COOKIE_SECURE=PREVIEW_EMBED or os.getenv("SESSION_COOKIE_SECURE", "1" if IS_PRODUCTION else "0") == "1",
-    SESSION_COOKIE_NAME="prepnova_session",
+    SESSION_COOKIE_NAME="confamprep_session",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
     MAX_CONTENT_LENGTH=8 * 1024 * 1024,
     TEMPLATES_AUTO_RELOAD=not IS_PRODUCTION,
@@ -111,7 +111,7 @@ app.config.update(
     MAIL_USE_SSL=os.getenv("MAIL_USE_SSL", "0") == "1",
     MAIL_USERNAME=os.getenv("MAIL_USERNAME", ""),
     MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", ""),
-    MAIL_DEFAULT_SENDER=(os.getenv("MAIL_SENDER_NAME", "PrepNova CBT"), os.getenv("MAIL_USERNAME", "no-reply@prepnova.ng")),
+    MAIL_DEFAULT_SENDER=(os.getenv("MAIL_SENDER_NAME", "ConfamPrep"), os.getenv("MAIL_USERNAME", "no-reply@confamprep.ng")),
 )
 mail = Mail(app)
 
@@ -145,7 +145,7 @@ if PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY[3:8] != P
 if IS_PRODUCTION and PAYSTACK_SECRET_KEY.startswith("sk_test_"):
     log.warning("Paystack is in TEST mode — real cards will be declined. Switch to sk_live_/pk_live_ keys before launch.")
 app.config["PAYSTACK_READY"] = bool(PAYSTACK_SECRET_KEY)
-SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@prepnova.ng")
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@confamprep.ng")
 SUPPORT_WHATSAPP = os.getenv("SUPPORT_WHATSAPP", "")
 SESSION_IDLE_MINUTES = int(os.getenv("SESSION_IDLE_MINUTES", "60"))
 EXAM_IDLE_MINUTES = 240  # never time a student out during a live exam
@@ -261,7 +261,7 @@ def inject_globals():
     return {
         "csrf_token": generate_csrf_token,
         "csrf_field": CSRF_FORM_FIELD,
-        "brand": "PrepNova CBT",
+        "brand": "ConfamPrep",
         "support_email": SUPPORT_EMAIL,
         "support_whatsapp": SUPPORT_WHATSAPP,
         "support_whatsapp_link": _wa_link(),
@@ -649,13 +649,13 @@ def _send_verification(cur, email, name):
         (email, token, (utcnow() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")),
     )
     link = f"{app_url()}/verify_email/{token}"
-    body = (f"Hello {name},\n\nWelcome to PrepNova CBT! Please verify your email address by opening this link:\n\n{link}\n\n"
-            f"The link expires in 24 hours. If you did not create this account, you can ignore this message.\n\nPrepNova CBT Team")
+    body = (f"Hello {name},\n\nWelcome to ConfamPrep! Please verify your email address by opening this link:\n\n{link}\n\n"
+            f"The link expires in 24 hours. If you did not create this account, you can ignore this message.\n\nConfamPrep Team")
     html = email_wrap("Verify your email address",
-                      f"Hello <b>{name}</b>,<br><br>Welcome to PrepNova CBT — Nigeria's smart CBT practice platform. "
+                      f"Hello <b>{name}</b>,<br><br>Welcome to ConfamPrep — Nigeria's smart CBT practice platform. "
                       f"Confirm your email to activate your {TRIAL_DAYS}-day free trial.",
                       "Verify my email", link, "This link expires in 24 hours.")
-    send_email("Verify your PrepNova CBT email", email, body, html)
+    send_email("Verify your ConfamPrep email", email, body, html)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -871,12 +871,12 @@ def forgot_password():
                 )
                 conn.commit()
                 link = f"{app_url()}/reset_password/{token}"
-                body = (f"Hello {user['name'] or 'Student'},\n\nWe received a request to reset your PrepNova CBT password. "
+                body = (f"Hello {user['name'] or 'Student'},\n\nWe received a request to reset your ConfamPrep password. "
                         f"Open the link below to choose a new password:\n\n{link}\n\nThis link expires in 30 minutes. "
-                        f"If you did not request this, you can ignore this email.\n\nPrepNova CBT Team")
+                        f"If you did not request this, you can ignore this email.\n\nConfamPrep Team")
                 html = email_wrap("Reset your password", f"Hello <b>{user['name'] or 'Student'}</b>,<br><br>Click the button below to choose a new password.",
                                   "Reset password", link, "This link expires in 30 minutes. If you did not request a reset, ignore this email.")
-                send_email("Reset your PrepNova CBT password", email, body, html)
+                send_email("Reset your ConfamPrep password", email, body, html)
             conn.close()
         # Always the same response — do not reveal whether the email exists
         return render_template("auth_message.html", kind="reset_sent", email=email)
@@ -1975,7 +1975,7 @@ def scorecard_png(result_id):
     png = scorecard_mod.build_scorecard(data["result"], session.get("name"), app_url())
     resp = send_file(BytesIO(png), mimetype="image/png")
     if request.args.get("dl"):
-        resp.headers["Content-Disposition"] = 'attachment; filename="PrepNova_Score.png"'
+        resp.headers["Content-Disposition"] = 'attachment; filename="ConfamPrep_Score.png"'
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
@@ -2001,8 +2001,8 @@ def _result_pdf(data):
 
     buf = BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm,
-                            title=f"PrepNova result {r['verification_code']}")
-    story = [Paragraph("PrepNova CBT", brand), Paragraph("Official Practice Result Slip — Practice. Prepare. Pass.", sub), Spacer(1, 10)]
+                            title=f"ConfamPrep result {r['verification_code']}")
+    story = [Paragraph("ConfamPrep", brand), Paragraph("Official Practice Result Slip — Practice. Prepare. Pass.", sub), Spacer(1, 10)]
 
     info = [
         ["Student", user["name"] if user else r["username"], "Exam", f"{r['exam_type']} — {r['exam_name'] or '-'}"],
@@ -2058,10 +2058,10 @@ def _result_pdf(data):
         story += [Spacer(1, 12), Paragraph("Verification", h),
                   Table([[Image(qb, width=28 * mm, height=28 * mm), Paragraph(f"Scan the QR code or visit<br/><b>{url}</b><br/>to confirm this result slip is genuine.", body)]],
                         colWidths=[34 * mm, 120 * mm], style=TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))]
-    story += [Spacer(1, 16), Paragraph("This is a practice result generated by PrepNova CBT. It is not an official JAMB, WAEC or university document.", sub)]
+    story += [Spacer(1, 16), Paragraph("This is a practice result generated by ConfamPrep. It is not an official JAMB, WAEC or university document.", sub)]
     doc.build(story)
     buf.seek(0)
-    return send_file(buf, as_attachment=True, download_name=f"PrepNova_Result_{r['verification_code'] or r['id']}.pdf", mimetype="application/pdf")
+    return send_file(buf, as_attachment=True, download_name=f"ConfamPrep_Result_{r['verification_code'] or r['id']}.pdf", mimetype="application/pdf")
 
 
 # ---------------------------------------------------------------------------
@@ -2155,7 +2155,7 @@ def invite():
     conn.close()
     link = f"{app_url()}/register?ref={stats['code']}" if stats["code"] else f"{app_url()}/register"
     first = (session.get("name") or "").split()[0] if session.get("name") else "I"
-    msg = (f"{first} is preparing for JAMB on PrepNova CBT — real CBT mocks with step-by-step explanations. "
+    msg = (f"{first} is preparing for JAMB on ConfamPrep — real CBT mocks with step-by-step explanations. "
            f"Register with my link and we BOTH get {REFERRAL_REWARD_DAYS} free days after your first mock 👉 {link}")
     return render_template("invite.html", stats=stats, link=link, msg=msg)
 
@@ -2290,10 +2290,10 @@ def leaderboard():
     my_school_rank = next((i for i, s in enumerate(ranked_schools, start=1) if s["key"] == my_school_key), None) if my_school else None
     base = app_url()
     if my_school and my_school_rank:
-        school_share = (f"{school_display(my_school)} is #{my_school_rank} on PrepNova CBT's school leaderboard! "
+        school_share = (f"{school_display(my_school)} is #{my_school_rank} on ConfamPrep's school leaderboard! "
                         f"Rep your school — every mock its students write counts. Practise free: {base}")
     elif my_school:
-        school_share = (f"I'm repping {school_display(my_school)} on PrepNova CBT — every mock its students write counts for the school. "
+        school_share = (f"I'm repping {school_display(my_school)} on ConfamPrep — every mock its students write counts for the school. "
                         f"Practise free: {base}")
     else:
         school_share = ""
@@ -2549,7 +2549,7 @@ def parent_link():
     stats = f"So far: {mocks} mock exam{'s' if mocks != 1 else ''} written and a {streak}-day study streak"
     if projection:
         stats += f", projected UTME score {projection}/400"
-    wa = ("https://wa.me/?text=" + quote(f"Hello! This is {first}'s PrepNova CBT progress report.\n"
+    wa = ("https://wa.me/?text=" + quote(f"Hello! This is {first}'s ConfamPrep progress report.\n"
                                          f"{stats}.\n"
                                          f"You can follow my preparation live here (no login needed):\n{link}"))
     return render_template("parent_link.html", code=code, link=link, wa=wa)
@@ -2576,7 +2576,7 @@ def sponsor_payment(code, plan_id):
 
     The payment row is created against the CHILD's account, so the existing callback logic
     (_process_paystack_payment → activate_subscription) extends the child's subscription
-    automatically. References carry the PN-S- prefix to mark sponsor payments.
+    automatically. References carry the CP-S- prefix to mark sponsor payments.
     """
     code = code.strip().upper()[:12]
     if not PAYSTACK_SECRET_KEY:
@@ -2589,7 +2589,7 @@ def sponsor_payment(code, plan_id):
     if not child or not plan:
         conn.close()
         abort(404)
-    reference = f"PN-S-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-S-{int(time.time())}-{secrets.token_hex(6).upper()}"
     cur.execute(
         "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN')",
         (child["email"], plan["id"], plan["plan_name"], plan["price"], plan["duration_days"], reference),
@@ -2772,7 +2772,7 @@ def initialize_payment(plan_id):
     if not plan:
         conn.close()
         abort(404)
-    reference = f"PN-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-{int(time.time())}-{secrets.token_hex(6).upper()}"
     amount = float(plan["price"])
     promo_code = (request.form.get("promo_code") or "").strip().upper()[:24]
     if promo_code:
@@ -2859,12 +2859,12 @@ def _process_paystack_payment(reference, payment_data):
         conn.commit()
         name = student["name"] if student else "Student"
         body = (f"Hello {name},\n\nYour payment of {fmt_naira(record['amount'])} for the {record['plan_name']} plan was successful.\n\n"
-                f"Reference: {reference}\nActive from: {start:%d %B %Y}\nExpires: {end:%d %B %Y}\n\nThank you for choosing PrepNova CBT.")
+                f"Reference: {reference}\nActive from: {start:%d %B %Y}\nExpires: {end:%d %B %Y}\n\nThank you for choosing ConfamPrep.")
         html = email_wrap("Payment confirmed",
                           f"Hello <b>{name}</b>,<br><br>Your <b>{record['plan_name']}</b> plan is now active.<br>"
                           f"Amount: <b>{fmt_naira(record['amount'])}</b><br>Reference: <b>{reference}</b><br>Expires: <b>{end:%d %B %Y}</b>",
                           "Go to my dashboard", f"{app_url()}/dashboard")
-        send_email("PrepNova CBT — payment confirmed", record["username"], body, html)
+        send_email("ConfamPrep — payment confirmed", record["username"], body, html)
         return True, "ok"
     finally:
         conn.close()
@@ -2908,17 +2908,17 @@ def paystack_webhook():
         data = event.get("data") or {}
         reference = (data.get("reference") or "")[:64]
         if reference:
-            if reference.startswith("PN-G-"):
+            if reference.startswith("CP-G-"):
                 _fulfil_gift(reference, data)
-            elif reference.startswith("PN-FAM-"):
+            elif reference.startswith("CP-FAM-"):
                 _fulfil_family(reference, data)
-            elif reference.startswith("PN-SC-"):
+            elif reference.startswith("CP-SC-"):
                 _fulfil_sponsor(reference, data)
-            elif reference.startswith("PN-A-"):
+            elif reference.startswith("CP-A-"):
                 _fulfil_agent(reference, data)
-            elif reference.startswith("PN-P-"):
+            elif reference.startswith("CP-P-"):
                 _fulfil_pdf(reference, data)
-            elif reference.startswith("PN-RN-"):
+            elif reference.startswith("CP-RN-"):
                 _fulfil_renewal(reference, data)
             else:
                 _process_paystack_payment(reference, data)
@@ -2973,7 +2973,7 @@ def gift_start():
         conn.close()
         flash("Please choose a plan.", "danger")
         return redirect(url_for("gift_page"))
-    reference = f"PN-G-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-G-{int(time.time())}-{secrets.token_hex(6).upper()}"
     cur.execute(
         """INSERT INTO gift_purchases (buyer_name, buyer_email, recipient_name, message, plan_id, plan_name,
                                        amount, duration_days, transaction_reference, payment_status)
@@ -3040,7 +3040,7 @@ def _fulfil_gift(reference, payment_data):
         if mail_configured():
             try:
                 pretty = pretty_code(code)
-                send_email("PrepNova CBT — your gift PIN",
+                send_email("ConfamPrep — your gift PIN",
                            row["buyer_email"],
                            (f"Hello {row['buyer_name']},\n\nThank you for gifting the {row['plan_name']} plan.\n\n"
                             f"Gift PIN: {pretty}\nValid until: {expires}\nReference: {reference}\n\n"
@@ -3049,7 +3049,7 @@ def _fulfil_gift(reference, payment_data):
                                       (f"Hello <b>{row['buyer_name']}</b>,<br><br>Thank you for gifting the <b>{row['plan_name']}</b> plan."
                                        f"<br><br>Gift PIN: <b style='font-size:1.3rem'>{pretty}</b><br>Valid until: <b>{expires}</b><br>"
                                        f"Reference: <b>{reference}</b>"),
-                                      "Open PrepNova", f"{app_url()}"))
+                                      "Open ConfamPrep", f"{app_url()}"))
             except Exception:
                 log.exception("Gift receipt email failed")
         return True, "ok", code
@@ -3092,7 +3092,7 @@ def gift_callback():
     pretty = pretty_code(code)
     who = f", {row['recipient_name']}" if row["recipient_name"] else ""
     tail = f" — {row['message']}" if row["message"] else ""
-    share = (f"Your PrepNova CBT gift is ready{who}! Access PIN: {pretty}. "
+    share = (f"Your ConfamPrep gift is ready{who}! Access PIN: {pretty}. "
              f"Log in at {app_url()} -> Subscribe -> 'Have an Access PIN' "
              f"to unlock {row['duration_days']} days of full mock exams.{tail}")
     return render_template("gift_success.html", row=row, code=pretty, expires=expires,
@@ -3172,7 +3172,7 @@ def family_start():
         return redirect(url_for("family_page"))
     conn = connect()
     cur = conn.cursor()
-    reference = f"PN-FAM-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-FAM-{int(time.time())}-{secrets.token_hex(6).upper()}"
     cur.execute(
         "INSERT INTO family_purchases (reference, buyer_name, buyer_email, plan_name, days, seats, amount, payment_status) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')",
@@ -3260,7 +3260,7 @@ def _fulfil_family(reference, payment_data):
             status_url = f"{app_url()}/family/status/{family_key}"
             pin_lines = "\n".join(f"  {i + 1}. {c}" for i, c in enumerate(json.loads(row["pins"])))
             try:
-                send_email("PrepNova CBT — your 3 family PINs are ready",
+                send_email("ConfamPrep — your 3 family PINs are ready",
                            row["buyer_email"],
                            (f"Hello {row['buyer_name']},\n\nThank you for the {row['plan_name']} "
                             f"({row['seats']} children, {row['days']} days each).\n\n"
@@ -3274,7 +3274,7 @@ def _fulfil_family(reference, payment_data):
                                        f"Each child registers free at {app_url()} and enters their PIN under "
                                        f"Subscribe &rarr; 'Have an Access PIN'.<br><br>"
                                        f"<a href='{status_url}'>Track your PINs here</a>."),
-                                      "Open PrepNova", f"{app_url()}/family"))
+                                      "Open ConfamPrep", f"{app_url()}/family"))
             except Exception:
                 log.exception("Family receipt email failed")
         return True, "ok", row
@@ -3403,7 +3403,7 @@ def sponsor_start():
     amount = centre_mod.order_total(seats, days)
     label = centre_mod.DURATION_LABEL[days]
     owner_name = (f"{sponsor_name} ({org})" if org else sponsor_name)[:60]
-    reference = f"PN-SC-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-SC-{int(time.time())}-{secrets.token_hex(6).upper()}"
     report_code = secrets.token_hex(10).upper()
     conn = connect()
     cur = conn.cursor()
@@ -3492,7 +3492,7 @@ def _fulfil_sponsor(reference, payment_data):
         conn.commit()
         if mail_configured():
             try:
-                send_email("PrepNova CBT — your cohort is live",
+                send_email("ConfamPrep — your cohort is live",
                            order["owner_username"],
                            (f"Hello {order['owner_name']},\n\nYour sponsorship of {order['seats']} students at "
                             f"{order['centre_name']} is active.\n\nJoin code for the students: {join_code}\n"
@@ -3504,7 +3504,7 @@ def _fulfil_sponsor(reference, payment_data):
                                        f"<b>{order['seats']} students</b> at <b>{order['centre_name']}</b> is active."
                                        f"<br><br>Join code: <b style='font-size:1.3rem'>{join_code}</b><br>"
                                        f"Private impact report: <a href='{app_url()}/sponsor_report/{sp['report_code']}'>open it here</a>"),
-                                      "Open PrepNova", f"{app_url()}"))
+                                      "Open ConfamPrep", f"{app_url()}"))
             except Exception:
                 log.exception("Sponsor receipt email failed")
         sp = cur.execute("SELECT * FROM sponsorships WHERE id = ?", (sp["id"],)).fetchone()
@@ -3540,7 +3540,7 @@ def sponsorship_callback():
     centre = conn.execute("SELECT * FROM centres WHERE id = ?", (sp["centre_id"],)).fetchone()
     conn.close()
     join_code = centre["join_code"] if centre else ""
-    share = (f"PrepNova CBT — students of {order['centre_name']}: register free at {app_url()} and enter our code "
+    share = (f"ConfamPrep — students of {order['centre_name']}: register free at {app_url()} and enter our code "
              f"{join_code} under Subscribe -> 'I have an Access PIN' to unlock full mock exams. "
              f"Sponsored by {order['owner_name']}!")
     return render_template("sponsor_success.html", order=order, centre=centre, join_code=join_code,
@@ -3641,7 +3641,7 @@ def agent_page():
                      "expires": (row["expires_at"] or "")[:10], "used": row["uses"] > 0,
                      "buyer": _agent_short(row["buyer_name"]) if row["uses"] > 0 else None,
                      "when": (row["redeemed_at"] or "")[:10]})
-    sell_msg = (f"PrepNova CBT — full JAMB, WAEC & Post-UTME mock exams on your phone. "
+    sell_msg = (f"ConfamPrep — full JAMB, WAEC & Post-UTME mock exams on your phone. "
                 f"I have an access PIN for you! Register free at {app_url()} and I'll send it.")
     return render_template("agent.html", plans=plans, stock=view, orders=orders,
                            sold=sold, unsold=unsold, spent=spent, earned=round(earned),
@@ -3680,7 +3680,7 @@ def agent_order():
         return redirect(url_for("agent_page"))
     unit = round(float(plan["price"]) * (1 - AGENT_DISCOUNT))
     total = unit * qty
-    reference = f"PN-A-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-A-{int(time.time())}-{secrets.token_hex(6).upper()}"
     cur.execute(
         "INSERT INTO agent_orders (reference, agent, plan_id, plan_name, quantity, unit_price, total, status) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')",
@@ -4052,7 +4052,7 @@ def partner_apply():
         if not errors and not user:
             exists = cur.execute("SELECT 1 FROM users WHERE email = ?", (form["email"],)).fetchone()
             if exists:
-                errors.append("You already have a PrepNova account with this email. Log in first, then apply — "
+                errors.append("You already have a ConfamPrep account with this email. Log in first, then apply — "
                               "your application will be linked to your account.")
         if not errors and not user:
             if password_problems(password):
@@ -4316,11 +4316,11 @@ def _fulfil_renewal(reference, payment_data):
         student = cur.execute("SELECT name FROM users WHERE email = ?", (rec["username"],)).fetchone()
         name = student["name"] if student else "Student"
         try:
-            send_email("PrepNova CBT — your plan renewed automatically",
+            send_email("ConfamPrep — your plan renewed automatically",
                        rec["username"],
                        (f"Hello {name},\n\nYour {rec['plan_name']} plan was renewed automatically for {fmt_naira(rec['amount'])}.\n"
                         f"Reference: {reference}\nNew expiry: {end:%d %B %Y}\n\n"
-                        f"Manage auto-renewal any time from your dashboard.\n\nPrepNova Team"),
+                        f"Manage auto-renewal any time from your dashboard.\n\nConfamPrep Team"),
                        email_wrap("Your plan renewed automatically ✅",
                                   f"Hello <b>{name}</b>,<br><br>Your <b>{rec['plan_name']}</b> plan has been renewed "
                                   f"for <b>{fmt_naira(rec['amount'])}</b>. New expiry: <b>{end:%d %B %Y}</b>.",
@@ -4380,7 +4380,7 @@ def run_renewal_day(conn, now=None, charge_fn=None):
             plan = cur.execute("SELECT * FROM subscription_plans WHERE id = ?", (s["plan_id"],)).fetchone()
             if not plan:
                 continue
-            reference = f"PN-RN-{int(time.time())}-{secrets.token_hex(6).upper()}"
+            reference = f"CP-RN-{int(time.time())}-{secrets.token_hex(6).upper()}"
             cur.execute(
                 "INSERT INTO payments (username, plan_id, plan_name, amount, duration_days, transaction_reference, payment_status, currency, payment_method) "
                 "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'NGN', 'saved card')",
@@ -4399,11 +4399,11 @@ def run_renewal_day(conn, now=None, charge_fn=None):
                     cur.execute("UPDATE subscriptions SET auto_renew = 0, auto_renew_retries = ? WHERE username = ?",
                                 (retries, username))
                     try:
-                        send_email("PrepNova CBT — we couldn't renew you automatically",
+                        send_email("ConfamPrep — we couldn't renew you automatically",
                                    username,
                                    ("Hello,\n\nWe tried to charge your saved card to renew your plan but it was declined twice.\n"
                                     f"Your access ends {end:%d %B %Y}. Renew manually here: {app_url()}/subscribe\n\n"
-                                    "PrepNova Team"),
+                                    "ConfamPrep Team"),
                                    email_wrap("Auto-renewal stopped",
                                               "We couldn't charge your saved card, so auto-renewal is now off. "
                                               f"Your access ends <b>{end:%d %B %Y}</b> — renew manually to keep practising.",
@@ -4424,11 +4424,11 @@ def run_renewal_day(conn, now=None, charge_fn=None):
                 _price = fmt_naira(_plan["price"]) if _plan else ""
                 if card:
                     try:
-                        send_email("PrepNova CBT — your plan renews tomorrow",
+                        send_email("ConfamPrep — your plan renews tomorrow",
                                    username,
                                    (f"Hello,\n\nYour {s['plan_name']} plan renews tomorrow — {_price} will be charged to your "
                                     f"{card['bank'] or 'card'} card ••{card['last4']} automatically.\n"
-                                    f"Don't want that? Turn it off in your dashboard: {app_url()}/dashboard\n\nPrepNova Team"),
+                                    f"Don't want that? Turn it off in your dashboard: {app_url()}/dashboard\n\nConfamPrep Team"),
                                    email_wrap("Your plan renews tomorrow",
                                               f"Your <b>{s['plan_name']}</b> plan renews tomorrow — your "
                                               f"{card['bank'] or 'card'} card ••{card['last4']} will be charged automatically.",
@@ -4438,10 +4438,10 @@ def run_renewal_day(conn, now=None, charge_fn=None):
                     stats["notices"] += 1
             else:
                 try:
-                    send_email("PrepNova CBT — your plan expires soon",
+                    send_email("ConfamPrep — your plan expires soon",
                                username,
                                (f"Hello,\n\nYour {s['plan_name']} plan ends {end:%d %B %Y}.\n"
-                                f"Keep your streak and your access — renew in one minute: {app_url()}/subscribe\n\nPrepNova Team"),
+                                f"Keep your streak and your access — renew in one minute: {app_url()}/subscribe\n\nConfamPrep Team"),
                                email_wrap("Your plan expires soon ⏳",
                                           f"Your <b>{s['plan_name']}</b> plan ends <b>{end:%d %B %Y}</b>. "
                                           "Renew now and keep every feature — no days lost.",
@@ -4473,11 +4473,11 @@ def run_renewal_day(conn, now=None, charge_fn=None):
         cur.execute("UPDATE subscriptions SET winback_for = ? WHERE id = ?", (s["end_date"], s["id"]))
         conn.commit()
         try:
-            send_email("PrepNova — we miss you (20% off inside)",
+            send_email("ConfamPrep — we miss you (20% off inside)",
                        s["username"],
-                       (f"Hello,\n\nYour PrepNova access ended {end:%d %B %Y}. "
+                       (f"Hello,\n\nYour ConfamPrep access ended {end:%d %B %Y}. "
                         f"Here's 20% off your next plan if you come back this month:\n\nCode: {code}\n\n"
-                        f"Use it at checkout: {app_url()}/subscribe\n\nPrepNova Team"),
+                        f"Use it at checkout: {app_url()}/subscribe\n\nConfamPrep Team"),
                        email_wrap("We miss you — 20% off 🎁",
                                   "Your access ended, but your progress is waiting. Here's <b>20% off</b> "
                                   f"your next plan: <code>{code}</code>",
@@ -4672,7 +4672,7 @@ def shop_buy():
         conn.close()
         flash("That pack is not available.", "danger")
         return redirect(url_for("shop"))
-    reference = f"PN-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
     amount = float(product["price"])
     promo_code = (request.form.get("promo_code") or "").strip().upper()[:24]
     if promo_code:
@@ -4777,7 +4777,7 @@ def _fulfil_pdf(reference, payment_data):
                 link_lines = "\n".join(f"  {t}: {app_url()}/pdf_download/{c}" for t, c in bundle_items)
                 html_links = "<br>".join(f"<a href='{app_url()}/pdf_download/{c}'>{t}</a>" for t, c in bundle_items)
                 try:
-                    send_email("PrepNova CBT — your study bundle is ready",
+                    send_email("ConfamPrep — your study bundle is ready",
                                order["buyer_email"],
                                (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}. "
                                 f"Your download links (each valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n\n"
@@ -4785,12 +4785,12 @@ def _fulfil_pdf(reference, payment_data):
                                email_wrap("Your study bundle is ready",
                                           f"Hello <b>{order['buyer_name']}</b>,<br><br>Thank you for buying "
                                           f"<b>{product['title']}</b>.<br><br>{html_links}",
-                                          "Open PrepNova", f"{app_url()}/shop"))
+                                          "Open ConfamPrep", f"{app_url()}/shop"))
                 except Exception:
                     log.exception("PDF bundle receipt email failed")
             else:
                 try:
-                    send_email("PrepNova CBT — your study pack is ready",
+                    send_email("ConfamPrep — your study pack is ready",
                                order["buyer_email"],
                                (f"Hello {order['buyer_name']},\n\nThank you for buying {product['title']}.\n\n"
                                 f"Download link (valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads):\n"
@@ -4800,7 +4800,7 @@ def _fulfil_pdf(reference, payment_data):
                                            f"<b>{product['title']}</b>.<br><br>"
                                            f"<a href='{app_url()}/pdf_download/{order['download_code']}'>Download it here</a> "
                                            f"(valid {PDF_LINK_DAYS} days, up to {PDF_MAX_DOWNLOADS} downloads)."),
-                                          "Open PrepNova", f"{app_url()}/shop"))
+                                          "Open ConfamPrep", f"{app_url()}/shop"))
                 except Exception:
                     log.exception("PDF receipt email failed")
         return True, "ok", order
@@ -4889,11 +4889,11 @@ def pdf_download(code):
     elif slug == "jamb-english-past-questions":
         buf = pdf_store.build_past_questions_pdf(conn, "JAMB", "%English%",
                                                  "JAMB Use of English — Past-Style Question Pack",
-                                                 "Practice questions compiled from the PrepNova question bank", 60, site)
+                                                 "Practice questions compiled from the ConfamPrep question bank", 60, site)
     elif slug == "waec-english-past-questions":
         buf = pdf_store.build_past_questions_pdf(conn, "WAEC", "%English%",
                                                  "WAEC English — Past-Style Question Pack",
-                                                 "Practice questions compiled from the PrepNova question bank", 60, site)
+                                                 "Practice questions compiled from the ConfamPrep question bank", 60, site)
     elif slug == "offline-jamb-cbt":
         buf = offline_cbt.build_offline_jamb_html(conn, site, order["buyer_name"], order["reference"])
     elif slug == "offline-waec-cbt":
@@ -4904,12 +4904,12 @@ def pdf_download(code):
     conn.close()
     if slug == "offline-jamb-cbt":
         # Self-contained HTML app: download once, then it runs with zero network.
-        return send_file(buf, as_attachment=True, download_name="PrepNova_Offline_JAMB_CBT.html",
+        return send_file(buf, as_attachment=True, download_name="ConfamPrep_Offline_JAMB_CBT.html",
                          mimetype="text/html")
     if slug == "offline-waec-cbt":
-        return send_file(buf, as_attachment=True, download_name="PrepNova_Offline_WAEC_Simulator.html",
+        return send_file(buf, as_attachment=True, download_name="ConfamPrep_Offline_WAEC_Simulator.html",
                          mimetype="text/html")
-    return send_file(buf, as_attachment=True, download_name=f"PrepNova_{slug}.pdf", mimetype="application/pdf")
+    return send_file(buf, as_attachment=True, download_name=f"ConfamPrep_{slug}.pdf", mimetype="application/pdf")
 
 
 @app.route("/offline_free", methods=["POST"])
@@ -4922,7 +4922,7 @@ def offline_free():
         abort(404)
     sub = get_subscription(session["user"])
     if not sub["active"] or sub["is_trial"]:
-        flash("The Offline Simulator is free with a paid PrepNova plan — choose a plan to claim it.", "warning")
+        flash("The Offline Simulator is free with a paid ConfamPrep plan — choose a plan to claim it.", "warning")
         return redirect(url_for("subscribe"))
     conn = connect()
     cur = conn.cursor()
@@ -4930,7 +4930,7 @@ def offline_free():
     if not product:
         conn.close()
         abort(404)
-    reference = f"PN-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
+    reference = f"CP-P-{int(time.time())}-{secrets.token_hex(6).upper()}"
     code = secrets.token_hex(10).upper()
     cur.execute(
         "INSERT INTO pdf_orders (reference, product_id, buyer_name, buyer_email, amount, payment_status, "

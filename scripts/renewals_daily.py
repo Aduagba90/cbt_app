@@ -1,5 +1,5 @@
 """
-PrepNova daily renewal job — run once a day (e.g. 07:00).
+ConfamPrep daily renewal job — run once a day (e.g. 07:00).
 
 Does four things (all idempotent — safe to run more than once a day):
   1. Emails students whose plan expires in ~3 days ("renew now" link).

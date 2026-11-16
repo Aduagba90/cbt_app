@@ -12,7 +12,7 @@
 <header class="pn-hero">
     <a class="pn-annc" href="{{ url_for('product_page', slug='offline-jamb-cbt') }}">
         <span class="pn-annc-chip">NEW</span>
-        <span class="pn-annc-text">PrepNova Offline — the JAMB &amp; WAEC simulators that work without network<span class="d-none d-md-inline"> · one download each, unlimited practice</span></span>
+        <span class="pn-annc-text">ConfamPrep Offline — the JAMB &amp; WAEC simulators that work without network<span class="d-none d-md-inline"> · one download each, unlimited practice</span></span>
         <span class="pn-annc-cta">from ₦1,500 · free for subscribers <i class="bi bi-arrow-right"></i></span>
     </a>
     <div class="pn-hero-grid"></div>
@@ -228,7 +228,7 @@
 <section class="pn-section pt-0" id="features">
     <div class="container">
         <div class="pn-section-head sm reveal">
-            <span class="pn-eyebrow">Why students choose PrepNova</span>
+            <span class="pn-eyebrow">Why students choose ConfamPrep</span>
             <h2>Everything you need to score higher</h2>
         </div>
         <div class="row g-4">
@@ -259,7 +259,7 @@
 <section class="pn-section pn-only" id="only">
     <div class="container">
         <div class="pn-section-head sm reveal">
-            <span class="pn-eyebrow">Only on PrepNova</span>
+            <span class="pn-eyebrow">Only on ConfamPrep</span>
             <h2>Built to keep you studying — not just to sell past questions</h2>
             <p class="lead mx-auto" style="max-width:600px">Small daily habits are what move a JAMB score. These tools make the habit easy (and a little competitive).</p>
         </div>
@@ -294,7 +294,7 @@
             <div class="col-lg-5 reveal">
                 <span class="pn-eyebrow">No sign-up needed</span>
                 <h2>Try a real past question right now</h2>
-                <p class="lead">Pick an answer and see the correction instantly — this is exactly how Practice Mode works inside PrepNova. Then imagine {{ '{:,}'.format(stats.questions) }} more.</p>
+                <p class="lead">Pick an answer and see the correction instantly — this is exactly how Practice Mode works inside ConfamPrep. Then imagine {{ '{:,}'.format(stats.questions) }} more.</p>
                 <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg mt-2"><i class="bi bi-rocket-takeoff me-1"></i> Practise all subjects free for 7 days</a>
             </div>
             <div class="col-lg-7">
@@ -407,7 +407,7 @@
                 <div class="pn-gift-cta" id="gift">
                     <div class="pn-gift-cta-badge"><i class="bi bi-balloon-heart-fill"></i></div>
                     <h3>Give the gift of admission.</h3>
-                    <p>Know a JAMB, WAEC or Post-UTME candidate? Pay for their full PrepNova access in under a minute — they receive a PIN on WhatsApp and unlock every mock exam instantly. You don't need an account to buy.</p>
+                    <p>Know a JAMB, WAEC or Post-UTME candidate? Pay for their full ConfamPrep access in under a minute — they receive a PIN on WhatsApp and unlock every mock exam instantly. You don't need an account to buy.</p>
                     <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
                         <a href="{{ url_for('gift_page') }}" class="btn btn-accent btn-lg"><i class="bi bi-balloon-heart me-1"></i> Gift a subscription</a>
                         {% if plans %}<span class="small" style="opacity:.85">From {{ plans[0]['price']|naira }} for {{ plans[0]['duration_days'] }} days · instant WhatsApp delivery</span>{% endif %}
@@ -427,7 +427,7 @@
     <a href="{{ url_for('partners_page') }}" class="pn-family-card" style="background:linear-gradient(135deg,#0f1f3d,#193a6b)">
         <div class="pn-family-icon" style="background:linear-gradient(135deg,#ffd166,#f2b705);color:#241703"><i class="bi bi-hand-thumbs-up-fill"></i></div>
         <div class="pn-family-body">
-            <div class="pn-family-title" style="color:#fff">Need extra cash? Become a PrepNova Partner <span class="pn-gift-tag">Free to join</span></div>
+            <div class="pn-family-title" style="color:#fff">Need extra cash? Become a ConfamPrep Partner <span class="pn-gift-tag">Free to join</span></div>
             <div class="pn-family-text" style="color:rgba(255,255,255,.78)">Share your personal link on WhatsApp or TikTok — earn 30% of every customer's first purchase. Paid to your bank account, no capital needed.</div>
         </div>
         <span class="btn btn-accent pn-family-cta">See how it works <i class="bi bi-arrow-right"></i></span>
@@ -442,7 +442,7 @@
     <div class="container">
         <div class="pn-section-head reveal">
             <span class="pn-eyebrow">Student stories</span>
-            <h2>Nigerian students are scoring higher with PrepNova</h2>
+            <h2>Nigerian students are scoring higher with ConfamPrep</h2>
         </div>
         <div class="row g-4 pn-slider" data-slider>
             {% set quotes = [
@@ -475,7 +475,7 @@
             {% set faqs = [
                 ("Is the free trial really free?", "Yes. Every new account gets 7 days of full access with no card required. After that, choose any plan to continue — you can also keep using 10 free practice questions per day."),
                 ("Are the questions real past questions?", "Our bank is built from past JAMB/WAEC objective questions and expertly written practice items following the current syllabus, each with an explanation. New questions are added regularly."),
-                ("Does it work on my phone?", "Absolutely. PrepNova is designed mobile-first, uses very little data, and works in any modern browser on Android, iPhone or laptop — no app installation needed."),
+                ("Does it work on my phone?", "Absolutely. ConfamPrep is designed mobile-first, uses very little data, and works in any modern browser on Android, iPhone or laptop — no app installation needed."),
                 ("How do I pay?", "Choose a plan and pay securely through Paystack using a debit card, bank transfer or USSD. Your subscription activates immediately after payment."),
                 ("What happens if my network drops during a mock?", "Every answer is saved on our servers the moment you click it. Simply log back in and resume — your timer continues from where the real clock is."),
                 ("Can I use one account on two phones?", "For security, an account can be signed in on one device at a time. Logging in on a new device signs out the previous one."),

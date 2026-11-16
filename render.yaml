@@ -1,9 +1,9 @@
-# PrepNova CBT — Render.com Blueprint.
+# ConfamPrep — Render.com Blueprint.
 # In Render: New + → Blueprint → pick the GitHub repo → it reads this file and asks only
 # for the values marked "sync: false".  See docs/GO_LIVE.md for the step-by-step guide.
 services:
   - type: web
-    name: prepnova-cbt
+    name: confamprep-cbt
     runtime: python
     region: frankfurt
     buildCommand: pip install -r requirements.txt

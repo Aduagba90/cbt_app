@@ -1,11 +1,11 @@
-"""PrepNova PDF study packs — content + on-the-fly PDF generation.
+"""ConfamPrep PDF study packs — content + on-the-fly PDF generation.
 
 Two generators:
   build_lekki_pdf()                  -> The Lekki Headmaster study pack (content below)
   build_past_questions_pdf(conn, …)  -> past-style question packs from questions_v2
 
 PDFs are generated at download time (no files stored), watermarked with the
-PrepNova brand and a final CTA page pointing readers to the app.
+ConfamPrep brand and a final CTA page pointing readers to the app.
 """
 from io import BytesIO
 from xml.sax.saxutils import escape as _esc
@@ -208,7 +208,7 @@ LEKKI_TIPS = [
     "character table until every name is automatic.",
     "Be ready for 'why' questions on Bepo's final decision — connect it to the "
     "novel's themes, not just the plot.",
-    "Practise full Use of English mocks in the PrepNova CBT app to time yourself on "
+    "Practise full Use of English mocks in the ConfamPrep app to time yourself on "
     "the real paper.",
 ]
 
@@ -2758,11 +2758,11 @@ def _styles():
 def _doc(buf, title):
     return SimpleDocTemplate(buf, pagesize=A4, leftMargin=17 * mm, rightMargin=17 * mm,
                              topMargin=15 * mm, bottomMargin=15 * mm, title=title,
-                             author="PrepNova CBT")
+                             author="ConfamPrep")
 
 
 def _cover(story, s, title, subtitle, tagline):
-    banner = Table([[Paragraph("PrepNova CBT — Study Pack", s["tag"])]],
+    banner = Table([[Paragraph("ConfamPrep — Study Pack", s["tag"])]],
                    colWidths=[176 * mm], rowHeights=[12 * mm])
     banner.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), NAVY),
                                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
@@ -2775,7 +2775,7 @@ def _final_cta(story, s, site_url):
     story += [PageBreak(), Spacer(1, 30),
               Paragraph("Practise the full paper — free", s["h1"]),
               Paragraph("This pack covers the knowledge. To score high, you also need exam-day "
-                        "speed and nerves of steel. The PrepNova CBT app gives you the real "
+                        "speed and nerves of steel. The ConfamPrep app gives you the real "
                         "experience: full timed JAMB, WAEC and Post-UTME mocks on your phone or "
                         "laptop, instant corrections, performance analytics and a free 7-day "
                         "trial.", s["body"]),
@@ -2847,7 +2847,7 @@ def build_lekki_pdf(site_url):
         LEKKI_TITLE,
         "JAMB UTME 2026 Use of English — recommended novel by Kabir Alabi Garba",
         "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 exam tips \u00b7 50 practice "
-        "questions with answers. Compiled for PrepNova CBT.",
+        "questions with answers. Compiled for ConfamPrep.",
         LEKKI_ABOUT,
         [(f"Chapter {num}: {name}", text) for num, name, text in LEKKI_CHAPTERS],
         "Drill this table — JAMB's favourite question style is matching names to roles.",
@@ -2860,7 +2860,7 @@ def build_so_path_pdf(site_url):
         SO_PATH_TITLE,
         "WASSCE 2026-2030 Literature-in-English — African prose by Pede Hollist",
         "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 key terms \u00b7 exam tips "
-        "\u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        "\u00b7 50 practice questions with answers. Compiled for ConfamPrep.",
         SO_PATH_ABOUT,
         SO_PATH_CHAPTERS,
         "Drill this table — WAEC's favourite question style is 'who did what'. Know every name "
@@ -2874,7 +2874,7 @@ def build_mockingbird_pdf(site_url):
         MOCKINGBIRD_TITLE,
         "WASSCE 2026-2030 Literature-in-English — non-African prose by Harper Lee",
         "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 quote bank \u00b7 exam "
-        "tips \u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        "tips \u00b7 50 practice questions with answers. Compiled for ConfamPrep.",
         MOCKINGBIRD_ABOUT,
         MOCKINGBIRD_CHAPTERS,
         "Drill this table — WAEC's favourite question style is 'who said or did what'.",
@@ -2888,7 +2888,7 @@ def build_inspector_pdf(site_url):
         INSPECTOR_TITLE,
         "WASSCE 2026-2030 Literature-in-English — non-African drama by J. B. Priestley",
         "Act-by-act summaries \u00b7 character guide \u00b7 themes \u00b7 staging devices "
-        "\u00b7 exam tips \u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        "\u00b7 exam tips \u00b7 50 practice questions with answers. Compiled for ConfamPrep.",
         INSPECTOR_ABOUT,
         INSPECTOR_CHAPTERS,
         "Drill this table — WAEC's favourite question style is 'who said or did what'.",
@@ -2902,7 +2902,7 @@ def build_anansewa_pdf(site_url):
         ANANSEWA_TITLE,
         "WASSCE 2026-2030 Literature-in-English — African drama by Efua Sutherland",
         "Act-by-act summaries \u00b7 character guide \u00b7 themes \u00b7 exam tips \u00b7 50 "
-        "practice questions with answers. Compiled for PrepNova CBT.",
+        "practice questions with answers. Compiled for ConfamPrep.",
         ANANSEWA_ABOUT, ANANSEWA_CHAPTERS,
         "Drill this table — WAEC's favourite question style is 'who did what'.",
         ANANSEWA_CHARACTERS, ANANSEWA_THEMES, ANANSEWA_TIPS, ANANSEWA_QUESTIONS,
@@ -2915,7 +2915,7 @@ def build_redemption_pdf(site_url):
         REDEMPTION_TITLE,
         "WASSCE 2026-2030 Literature-in-English — African prose by Elma Shaw",
         "Chapter summaries \u00b7 character guide \u00b7 themes \u00b7 exam tips \u00b7 50 "
-        "practice questions with answers. Compiled for PrepNova CBT.",
+        "practice questions with answers. Compiled for ConfamPrep.",
         REDEMPTION_ABOUT, REDEMPTION_CHAPTERS,
         "Drill this table — WAEC's favourite question style is 'who did what'. Know every name.",
         REDEMPTION_CHARACTERS, REDEMPTION_THEMES, REDEMPTION_TIPS, REDEMPTION_QUESTIONS, site_url)
@@ -2927,7 +2927,7 @@ def build_poetry_pdf(site_url):
         POETRY_TITLE,
         "WASSCE 2026-2030 Literature-in-English — African poetry anthology",
         "Poem-by-poem analysis \u00b7 the poets \u00b7 themes \u00b7 devices \u00b7 exam tips "
-        "\u00b7 50 practice questions with answers. Compiled for PrepNova CBT.",
+        "\u00b7 50 practice questions with answers. Compiled for ConfamPrep.",
         POETRY_ABOUT, POETRY_CHAPTERS,
         "Know each poet's country and each poem's persona — WAEC's favourite poetry questions.",
         POETRY_CHARACTERS, POETRY_THEMES, POETRY_TIPS, POETRY_QUESTIONS, site_url,
@@ -2988,7 +2988,7 @@ def build_waec_bundle_pdf(site_url):
            "All six WASSCE 2026-2030 study packs in one download",
            "4 set texts + the African poetry anthology \u00b7 summaries \u00b7 character "
            "guides \u00b7 themes \u00b7 exam tips \u00b7 300 practice questions with "
-           "explained answers. Compiled for PrepNova CBT.")
+           "explained answers. Compiled for ConfamPrep.")
     story += [Paragraph("What's inside", s["h1"]),
               Paragraph("Six complete packs follow, each starting on its own page. Keep this "
                         "bundle on your phone or print it section by section.", s["body"])]
@@ -3006,7 +3006,7 @@ def build_waec_bundle_pdf(site_url):
 
 
 def build_past_questions_pdf(conn, exam_name, subject_like, title, subtitle, count, site_url):
-    """A past-style question pack generated from the PrepNova question bank."""
+    """A past-style question pack generated from the ConfamPrep question bank."""
     rows = conn.execute(
         """SELECT q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
                   q.correct_answer, q.explanation
@@ -3029,12 +3029,12 @@ def build_past_questions_pdf(conn, exam_name, subject_like, title, subtitle, cou
     story = []
     _cover(story, s, title, subtitle,
            f"{len(rows)} real past-style questions with options, a clean layout, and a full "
-           f"answer key with explanations at the end. Compiled for PrepNova CBT.")
+           f"answer key with explanations at the end. Compiled for ConfamPrep.")
     story += [Paragraph("How to use this pack", s["h1"]),
               Paragraph("Work through the questions honestly — no peeking. Write your answers on "
                         "paper, then mark yourself with the key at the end. Every wrong answer "
                         "has an explanation: read it, understand it, and re-test that topic in "
-                        "the PrepNova app until it is automatic.", s["body"]),
+                        "the ConfamPrep app until it is automatic.", s["body"]),
               Paragraph("Questions", s["h1"])]
     for i, q in enumerate(rows, 1):
         story += [Paragraph(f"<b>{i}.</b> {_esc(q['question_text'])}", s["q"]),

@@ -1,5 +1,5 @@
 """
-PrepNova CBT — exam engine.
+ConfamPrep — exam engine.
 
 Design principles (anti-cheating / integrity):
 * The server is the single source of truth: question order, answers, timer and
@@ -645,7 +645,7 @@ def finalize_attempt(attempt_id, username=None, cur=None, auto=False):
             record_many(cur, attempt["username"], attempt["exam_type"],
                         [(r["subject"], r["question_source"], r["question_id"], r["is_correct"]) for r in reviews])
         except Exception:
-            logging.getLogger("prepnova").exception("topic progress failed")
+            logging.getLogger("confamprep").exception("topic progress failed")
         # "Fix my mistakes": remember every wrong/blank answer, clear the ones answered correctly.
         try:
             for r in reviews:
@@ -654,14 +654,14 @@ def finalize_attempt(attempt_id, username=None, cur=None, auto=False):
                 else:
                     record_mistake(cur, attempt["username"], r["question_source"], r["question_id"], r["subject"], attempt["exam_type"])
         except Exception:
-            logging.getLogger("prepnova").exception("mistake tracking failed")
+            logging.getLogger("confamprep").exception("mistake tracking failed")
         # Referral reward: the invited friend's FIRST mock unlocks bonus days for both students.
         try:
             n_results = cur.execute("SELECT COUNT(*) FROM results WHERE username = ?", (attempt["username"],)).fetchone()[0]
             if n_results == 1:
                 reward_referral_if_due(cur, attempt["username"])
         except Exception:  # never let a bonus break a submission
-            logging.getLogger("prepnova").exception("referral reward failed")
+            logging.getLogger("confamprep").exception("referral reward failed")
         conn.commit()
         return result_id
     finally:

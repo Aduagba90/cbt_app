@@ -27,14 +27,14 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
                 <span class="pn-stat-icon tint-gold"><i class="bi bi-ticket-perforated-fill"></i></span>
-                <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship, a gift from family or the PrepNova team. Enter it to unlock full access instantly — no card needed.</div></div>
+                <div><b>Have an Access PIN?</b><div class="small text-muted">From your school, a tutorial centre, a scholarship, a gift from family or the ConfamPrep team. Enter it to unlock full access instantly — no card needed.</div></div>
 <p class="small text-muted mt-2 mb-0"><i class="bi bi-mortarboard me-1"></i>Running a lesson centre or school? <a href="{{ url_for('centre.schools') }}">See bulk pricing for your whole class →</a></p>
             <p class="small text-muted mt-2 mb-0"><i class="bi bi-briefcase me-1"></i>Want to earn while you study? <a href="{{ url_for('agent_page') }}"><b>Become an agent</b></a> — buy PINs at 40% off and sell to friends at full price.</p>
             <p class="small text-muted mt-2 mb-0"><i class="bi bi-book-half me-1"></i>Prefer printable? <a href="{{ url_for('shop') }}">Browse the Study shop</a> — exam novels, question packs &amp; the offline simulator, from ₦500.</p>
             </div>
             <form method="POST" action="{{ url_for('redeem_pin') }}" class="d-flex gap-2 flex-grow-1 flex-sm-grow-0" data-once>
                 <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
-                <input class="form-control pn-pin-input" name="pin" placeholder="PN-XXXX-XXXX" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" required {% if pin_open %}autofocus{% endif %}>
+                <input class="form-control pn-pin-input" name="pin" placeholder="CP-XXXX-XXXX" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" required {% if pin_open %}autofocus{% endif %}>
                 <button class="btn btn-accent fw-bold text-nowrap" data-loading="Checking…">Use PIN</button>
             </form>
         </div>

@@ -5,7 +5,7 @@
 <div class="pn-page-head anim-rise">
     <div>
         <div class="pn-breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><span>Agent</span></div>
-        <h1>💼 PrepNova Agent</h1>
+        <h1>💼 ConfamPrep Agent</h1>
         <p class="lead">Buy access PINs at {{ (discount * 100)|round(0)|int }}% off, sell them at full price to classmates and friends — you keep the difference. You pay upfront, so there's nothing to owe anyone.</p>
     </div>
 </div>
@@ -85,7 +85,7 @@
                         <td class="text-nowrap">
                             {% if not r.used %}
                             <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="navigator.clipboard.writeText('{{ r.code }}').then(function(b){ b.textContent='✓'; })">Copy</button>
-                            <a class="btn btn-sm btn-success py-0 px-2" href="https://wa.me/?text={{ ('Your PrepNova CBT PIN is ' ~ r.code ~ ' — ' ~ r.plan ~ ' of full access. Register free at ' ~ site_url ~ ' then Subscribe -> I have an Access PIN.')|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i></a>
+                            <a class="btn btn-sm btn-success py-0 px-2" href="https://wa.me/?text={{ ('Your ConfamPrep PIN is ' ~ r.code ~ ' — ' ~ r.plan ~ ' of full access. Register free at ' ~ site_url ~ ' then Subscribe -> I have an Access PIN.')|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i></a>
                             {% endif %}
                         </td>
                     </tr>
@@ -104,7 +104,7 @@
 
 <div class="card border-0 shadow-sm p-4 anim-rise mt-4">
     <h2 class="h5 mb-2">🤝 No capital to buy stock? Be a Partner instead</h2>
-    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling PrepNova: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
+    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling ConfamPrep: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
     <a href="{{ url_for('partners_page') }}" class="btn btn-primary">See the Partners page <i class="bi bi-arrow-right"></i></a>
 </div>
 
@@ -132,13 +132,13 @@
 
 <div class="card border-0 shadow-sm p-4 anim-rise mt-4">
     <h2 class="h5 mb-2">🤝 No capital to buy stock? Be a Partner instead</h2>
-    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling PrepNova: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
+    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling ConfamPrep: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
     <a href="{{ url_for('partners_page') }}" class="btn btn-primary">See the Partners page <i class="bi bi-arrow-right"></i></a>
 </div>
 
 <div class="card border-0 shadow-sm p-4 anim-rise mt-4">
     <h2 class="h5 mb-2">🤝 No capital to buy stock? Be a Partner instead</h2>
-    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling PrepNova: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
+    <p class="text-muted mb-2">The <b>Partner programme</b> is the zero-capital version of selling ConfamPrep: you get a personal link, share it anywhere, and earn <b>30% of every customer's first purchase</b> — we handle delivery, support and payments. Your money accumulates in a dashboard and is paid to your bank from ₦5,000.</p>
     <a href="{{ url_for('partners_page') }}" class="btn btn-primary">See the Partners page <i class="bi bi-arrow-right"></i></a>
 </div>
 {% endblock %}

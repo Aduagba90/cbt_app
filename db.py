@@ -1,5 +1,5 @@
 """
-PrepNova CBT — database helpers and idempotent schema migrations.
+ConfamPrep — database helpers and idempotent schema migrations.
 
 Every table/column/index needed by the application is created here at start-up,
 so the old "visit /create_xxx_table" routes are no longer required (or exposed).
@@ -560,18 +560,18 @@ def init_db():
              "All six WAEC 2026–2030 study packs in one download: So the Path Does Not Die, To Kill a Mockingbird, An Inspector Calls, The Marriage of Anansewa, Redemption Road and the African Poetry anthology — 300 practice questions with explained answers. Save ₦2,200.",
              3500.0),
             ("offline-jamb-cbt",
-             "PrepNova Offline — JAMB CBT Simulator",
+             "ConfamPrep Offline — JAMB CBT Simulator",
              "The complete JAMB mock exam in one file. Download once and practise anywhere — no network, no data charges. English + any 3 of 13 subjects, real 120-minute timing, instant scores and explained answers on your phone or laptop.",
              1500.0),
             ("offline-waec-cbt",
-             "PrepNova Offline — WAEC Exam Simulator",
+             "ConfamPrep Offline — WAEC Exam Simulator",
              "Every WAEC objective paper in one file — all 16 WAEC subjects, from English Paper 1 and the Test of Orals to Mathematics, the sciences, Literature, Commerce and Accounting. Official 2026 WASSCE formats and timing, instant marking with your A1–F9 grade, and explained answers. No network, no data charges.",
              1500.0),
         ])
     cur.execute("""INSERT OR IGNORE INTO pdf_products (slug, title, blurb, price, bundle_items)
                    VALUES (?, ?, ?, ?, ?)""",
                 ("offline-duo-bundle",
-                 "PrepNova Offline — JAMB + WAEC Simulator Bundle",
+                 "ConfamPrep Offline — JAMB + WAEC Simulator Bundle",
                  "Both offline simulators in one purchase: the full JAMB mock (6,979 questions, 14 subjects, real 120-minute timing) AND every WAEC objective paper (all WAEC subjects, official 2026 WASSCE formats, A1–F9 grading). Buy together and save ₦500 — two download links, one payment.",
                  2500.0,
                  "offline-jamb-cbt,offline-waec-cbt"))

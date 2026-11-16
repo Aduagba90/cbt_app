@@ -2,7 +2,7 @@
 
 Every WAEC subject is examined through an objective (multiple-choice) paper.  The
 durations below are the official 2026 WASSCE Nigeria durations for each objective
-paper, so a PrepNova mock mimics the real sitting: same question count, same clock.
+paper, so a ConfamPrep mock mimics the real sitting: same question count, same clock.
 
 Paper 3 (Test of Orals) is part of WASSCE English in Nigeria: 60 multiple-choice
 items on phonetics in 45 minutes.  It is offered as its own mock so students can

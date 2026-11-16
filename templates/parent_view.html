@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ d.name.split(' ')[0] if d.name else 'Student' }}'s progress{% endblock %}
-{% block description %}Read-only progress report for a PrepNova CBT student, shared with a parent or guardian.{% endblock %}
+{% block description %}Read-only progress report for a ConfamPrep student, shared with a parent or guardian.{% endblock %}
 
 {% block content %}
 {% set first = (d.name or 'Your child').split(' ')[0] %}
 <div class="row justify-content-center">
     <div class="col-lg-9">
         <div class="text-center mb-4 anim-rise">
-            <span class="pn-brand justify-content-center mb-3"><span class="pn-logo">PN</span><span>PrepNova CBT</span></span>
+            <span class="pn-brand justify-content-center mb-3"><span class="pn-logo">CP</span><span>ConfamPrep</span></span>
             <h1 class="h3">{{ first }}'s JAMB preparation</h1>
             <p class="text-muted mb-0">Progress report for parents and guardians · updated live · code <code>{{ code }}</code></p>
         </div>
@@ -42,7 +42,7 @@
                         </div>
                         {% else %}
                         <div class="alert alert-light border mb-0 small">
-                            Online payment is being set up. To activate {{ first }}'s plan right now, contact the PrepNova team on WhatsApp
+                            Online payment is being set up. To activate {{ first }}'s plan right now, contact the ConfamPrep team on WhatsApp
                             {% if support_whatsapp_link %} — <a href="{{ support_whatsapp_link }}" target="_blank" rel="noopener"><b>tap here to chat</b></a>{% endif %}.
                         </div>
                         {% endif %}
@@ -113,7 +113,7 @@
 
         <div class="alert alert-light border mt-4 small">
             <b>How to help:</b> ask about the weekly plan on Sundays, make sure there is a quiet 2-hour block for each mock, and celebrate a rising projected score rather than a single result. Practice mock results are not official JAMB scores.
-            <div class="mt-2 text-muted">This page is read-only. Only {{ first }} can change the account or create a new link. <a href="{{ url_for('home') }}">About PrepNova CBT</a></div>
+            <div class="mt-2 text-muted">This page is read-only. Only {{ first }} can change the account or create a new link. <a href="{{ url_for('home') }}">About ConfamPrep</a></div>
         </div>
     </div>
 </div>

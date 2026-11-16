@@ -1,12 +1,12 @@
 """
-PrepNova CBT — School & Lesson-Centre plan (bulk seats + class report).
+ConfamPrep — School & Lesson-Centre plan (bulk seats + class report).
 
 Wholesale channel: a lesson-centre owner (or school) buys a block of seats for a term;
 students register free and unlock full access by entering the centre's join code once
 (the existing Access-PIN flow — centre codes ARE access codes with a centre_id).
 
 - /schools               public pitch page with bulk pricing (linked from the landing page)
-- /centre/new            owner order form -> Paystack checkout (PN-C- references)
+- /centre/new            owner order form -> Paystack checkout (CP-C- references)
 - /centre_callback       Paystack return URL -> verifies, creates/renews the centre
 - /centre                the Centre Dashboard: seats, join code, member report, CSV export
 - /centre/members.csv    printable member stats (the "proof for parents" artefact)
@@ -213,7 +213,7 @@ def centre_new():
                 flash(p_, "warning")
             return redirect(url_for("centre.centre_new"))
         amount = order_total(seats, days)
-        reference = f"PN-C-{int(time.time())}-{secrets.token_hex(6).upper()}"
+        reference = f"CP-C-{int(time.time())}-{secrets.token_hex(6).upper()}"
         plan_label = f"{centre_name} — {seats} seats × {DURATION_LABEL[days]}"
         cur.execute(
             "INSERT INTO centre_orders (reference, centre_name, owner_username, owner_name, owner_phone, seats, days, amount, status, created_at) "
@@ -369,7 +369,7 @@ def dashboard():
     expiry = _parse_dt(centre["expires_at"])
     days_left = (expiry - datetime.now()).days if expiry else None
     top = sorted([m for m in members if m["avg_pct"] is not None], key=lambda m: -float(m["avg_pct"]))[:5]
-    share_txt = (f"PrepNova CBT — students of {centre['name']}: register free at {app_url()} and enter "
+    share_txt = (f"ConfamPrep — students of {centre['name']}: register free at {app_url()} and enter "
                  f"our centre code {centre['join_code']} under Subscribe → I have an Access PIN to unlock "
                  f"full access. Questions: WhatsApp me.")
     conn.commit()

@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css">
-<link rel="stylesheet" href="/static/css/prepnova.css?v=13">
+<link rel="stylesheet" href="/static/css/confamprep.css?v=13">
 <style>
   body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; font-size: .925rem; }
   .pn-admin-bar { position: sticky; top: 0; z-index: 1050; background: #0f1f3d; color: #fff; box-shadow: 0 4px 14px rgba(15,31,61,.25); }
@@ -27,7 +27,7 @@
 </style>
 <div class="pn-admin-bar">
   <div class="inner">
-    <a class="brand" href="{{ url_for('admin_bp.admin') }}"><span class="pn-logo">PN</span><span>PrepNova<small>Admin</small></span></a>
+    <a class="brand" href="{{ url_for('admin_bp.admin') }}"><span class="pn-logo">CP</span><span>ConfamPrep<small>Admin</small></span></a>
     <nav>
       {% set ep = (request.endpoint or '').split('.')[-1] %}
       <a href="{{ url_for('admin_bp.admin') }}" class="{{ 'active' if ep == 'admin' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>

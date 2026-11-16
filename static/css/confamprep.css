@@ -1,5 +1,5 @@
 /* =============================================================
-   PrepNova CBT — Design System
+   ConfamPrep — Design System
    Professional, mobile-first UI for Nigerian students.
    Base font size: 15px (mobile) / 16px (desktop) — readable,
    not oversized, comfortable on cheap Android screens & laptops.
@@ -699,7 +699,7 @@ kbd { background: #1f2937; color: #fff; border-radius: 5px; padding: .1rem .4rem
   .pn-rotate-word.on, .pn-rotate-word.out { animation: none; transform: none; }
 }
 
-/* ===== Growth pack: hero badges on phones, "Only on PrepNova", boosts, challenge, invite ===== */
+/* ===== Growth pack: hero badges on phones, "Only on ConfamPrep", boosts, challenge, invite ===== */
 .pn-float-badge { z-index: 2; }
 @media (max-width: 767.98px) {
   /* On phones the card fills the width, so the badges cannot float beside it. They become a row of

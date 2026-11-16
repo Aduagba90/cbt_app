@@ -1,5 +1,5 @@
 """
-PrepNova CBT — "Challenge a Friend": 1v1 subject battles with WhatsApp share cards.
+ConfamPrep — "Challenge a Friend": 1v1 subject battles with WhatsApp share cards.
 
 Viral loop:
   1. A logged-in student creates a battle (a fixed set of 5 questions from one subject)
@@ -431,23 +431,23 @@ def result(code):
     share = None
     if my_row:
         if my_row["is_creator"]:
-            txt = (f"\u2694\ufe0f PrepNova {short} battle! I scored {my_row['score']}/{len(ordered)} "
+            txt = (f"\u2694\ufe0f ConfamPrep {short} battle! I scored {my_row['score']}/{len(ordered)} "
                    f"in {my_row['time']} {my_row['squares']} Think you can beat me? "
                    f"Play free (no sign-up) \u27a1\ufe0f {link}")
         elif battle["creator_score"] is not None and my_row["score"] > battle["creator_score"]:
-            txt = (f"\U0001F389 I just beat {first} in a PrepNova {short} battle \u2014 "
+            txt = (f"\U0001F389 I just beat {first} in a ConfamPrep {short} battle \u2014 "
                    f"{my_row['score']}/{battle['creator_score']}! {my_row['squares']} "
                    f"Think you can beat US? Play free \u27a1\ufe0f {link}")
         else:
-            txt = (f"\u2694\ufe0f PrepNova {short} battle vs {first}: I scored {my_row['score']}/{len(ordered)} "
+            txt = (f"\u2694\ufe0f ConfamPrep {short} battle vs {first}: I scored {my_row['score']}/{len(ordered)} "
                    f"in {my_row['time']} {my_row['squares']} Think you can do better? "
                    f"Play free \u27a1\ufe0f {link}")
     elif battle["creator_score"] is not None:
-        txt = (f"\u2694\ufe0f PrepNova {short} battle \u2014 {first} scored "
+        txt = (f"\u2694\ufe0f ConfamPrep {short} battle \u2014 {first} scored "
                f"{battle['creator_score']}/{len(ordered)}. Think you can beat it? "
                f"Play free (no sign-up) \u27a1\ufe0f {link}")
     else:
-        txt = f"\u2694\ufe0f PrepNova {short} battle \u2014 think you can win? Play free: {link}"
+        txt = f"\u2694\ufe0f ConfamPrep {short} battle \u2014 think you can win? Play free: {link}"
     share = {"text": txt, "url": _share_link(txt)}
     ref_code = ensure_referral_code(cur, battle["creator_username"])
     conn.commit()

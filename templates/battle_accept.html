@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ battle['creator_name'] or 'A friend' }} challenges you — {{ battle['subject'] }} battle{% endblock %}
-{% block description %}Play a free 1v1 PrepNova battle: {{ size }} {{ battle['subject'] }} questions, same set for both players. No account needed — just beat the score.{% endblock %}
+{% block description %}Play a free 1v1 ConfamPrep battle: {{ size }} {{ battle['subject'] }} questions, same set for both players. No account needed — just beat the score.{% endblock %}
 
 {% block head %}
-<meta property="og:title" content="{{ (battle['creator_name'] or 'A friend').split()[0] }} scored {{ battle['creator_score'] or '?' }}/{{ size }} in a PrepNova {{ battle['subject'] }} battle — can you beat it?">
+<meta property="og:title" content="{{ (battle['creator_name'] or 'A friend').split()[0] }} scored {{ battle['creator_score'] or '?' }}/{{ size }} in a ConfamPrep {{ battle['subject'] }} battle — can you beat it?">
 <meta property="og:description" content="Free 2-minute challenge. Same questions, both players. No sign-up needed.">
 {% endblock %}
 
@@ -22,7 +22,7 @@
                 <p class="mb-0">Battles stay open for 7 days. Ask your friend to start a fresh one — or start training yourself.</p>
                 <a class="btn btn-accent btn-sm mt-2" href="{{ url_for('register') }}"><i class="bi bi-rocket-takeoff me-1"></i>Start free trial</a>
                 {% else %}
-                <div class="small text-white-50 mb-1">PREPNOVA 1v1 BATTLE · {{ battle['subject'] }}</div>
+                <div class="small text-white-50 mb-1">CONFAMPREP 1v1 BATTLE · {{ battle['subject'] }}</div>
                 <h1 class="h4 mb-1">{{ (battle['creator_name'] or 'Your friend').split()[0] }} scored {{ battle['creator_score'] }}/{{ size }} in {{ battle['creator_time'] }}s <span class="pn-squares">{{ rows[0]['squares'] if rows and rows[0]['is_creator'] else '' }}</span></h1>
                 <p class="mb-0">{% if is_creator %}This is your battle — share the link and defend your score.{% else %}Same {{ size }} questions. Beat the score, and if it's equal, beat the clock.{% endif %}</p>
                 {% endif %}

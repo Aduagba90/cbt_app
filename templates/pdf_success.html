@@ -33,7 +33,7 @@
         <div class="card border-0 shadow-sm p-4 mt-4 anim-rise d1">
             <h2 class="h5 mb-1">📣 Tell your class group</h2>
             <p class="small text-muted mb-3">Your classmates are writing the same exam — share the pack (and the free 7-day trial) with them:</p>
-            {% set share_text = ('Every WAEC objective paper in one file — works without network or data. Get it from PrepNova:' if p['slug'] == 'offline-waec-cbt' else ('The full JAMB mock exam in one file — works without network or data. Get it from PrepNova:' if p['slug'] == 'offline-jamb-cbt' else ('Real past-style questions with a full explained answer key — instant download from PrepNova:' if 'past-questions' in p['slug'] else 'Chapter summaries, character guide, themes and 50 explained questions — instant download from PrepNova:'))) %}
+            {% set share_text = ('Every WAEC objective paper in one file — works without network or data. Get it from ConfamPrep:' if p['slug'] == 'offline-waec-cbt' else ('The full JAMB mock exam in one file — works without network or data. Get it from ConfamPrep:' if p['slug'] == 'offline-jamb-cbt' else ('Real past-style questions with a full explained answer key — instant download from ConfamPrep:' if 'past-questions' in p['slug'] else 'Chapter summaries, character guide, themes and 50 explained questions — instant download from ConfamPrep:'))) %}
             <a class="btn btn-success w-100 mb-3" href="https://wa.me/?text={{ (share_text ~ ' ' ~ request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']))|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Share with your class group</a>
             <div class="text-center">{{ share_row(request.url_root.rstrip('/') ~ url_for('product_page', slug=p['slug']), share_text, label='Or share via') }}</div>
         </div>
@@ -44,14 +44,14 @@
                 <li>Keep the file — it is your simulator. Open it in <b>Chrome</b> on your phone or laptop.</li>
                 <li>Turn off your network completely and take a full paper — that is the point.</li>
                 <li>Review every explanation, then retake with fresh questions.</li>
-                <li>Want live battles, leaderboards and WAEC mocks too? Start a <b>free 7-day trial</b> of the PrepNova app.</li>
+                <li>Want live battles, leaderboards and WAEC mocks too? Start a <b>free 7-day trial</b> of the ConfamPrep app.</li>
             </ol>
             {% else %}
             <ol class="ps-3 mb-0 small" style="line-height:1.9">
                 <li>Print the pack or save it to your phone.</li>
                 <li>Work through it section by section — don't cram.</li>
                 <li>Finish with the practice questions, then mark yourself honestly.</li>
-                <li>Then test your exam-day speed with a <b>free 7-day trial</b> of full timed mocks in the PrepNova app.</li>
+                <li>Then test your exam-day speed with a <b>free 7-day trial</b> of full timed mocks in the ConfamPrep app.</li>
             </ol>
             {% endif %}
         </div>

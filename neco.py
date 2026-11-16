@@ -14,7 +14,7 @@ NECO paper structure:
 * Economics / Government: Paper III Objective (e.g. paper 4043) — 60 questions
   in 1 hour (10:00–11:00 am).
 
-Only objective papers are mocked (PrepNova is a CBT trainer); essay and
+Only objective papers are mocked (ConfamPrep is a CBT trainer); essay and
 practical papers are out of scope by design.
 """
 

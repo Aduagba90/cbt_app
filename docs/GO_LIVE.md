@@ -1,4 +1,4 @@
-# PrepNova CBT — Putting the site online (free), step by step
+# ConfamPrep — Putting the site online (free), step by step
 
 ## First, the plain-English background
 
@@ -10,14 +10,14 @@
   students / results / questions safely, and Paystack works on it (PythonAnywhere allows
   `api.paystack.co` for free accounts). Two limits:
   1. One small server: fine for tens of testers, slow if hundreds arrive at once. An own
-     domain such as `prepnova.ng` needs the paid plan (about $5/month) — upgrading keeps
+     domain such as `confamprep.ng` needs the paid plan (about $5/month) — upgrading keeps
      everything, nothing is rebuilt.
   2. **Every 3 months you must click one button** ("Run until 3 months from today" on the
      Web tab). PythonAnywhere e-mails you before it is due. If you forget, the site shows a
      "disabled" page until you click it — nothing is lost.
 - Your address will be **`https://YOURNAME.pythonanywhere.com`** (YOURNAME = the username
-  you choose when signing up — pick something like `prepnova`). An own domain such as
-  `prepnova.ng` needs the paid plan.
+  you choose when signing up — pick something like `confamprep`). An own domain such as
+  `confamprep.ng` needs the paid plan.
 
 Do the steps below **in order, one at a time**. Each one ends with something you can see.
 If your screen does not look like the description, stop and send a screenshot.
@@ -27,7 +27,7 @@ If your screen does not look like the description, stop and send a screenshot.
 ## Step 1 — Create the free account (3 minutes)
 
 1. Open <https://www.pythonanywhere.com/registration/register/beginner/>
-2. Fill in: **Username** (this becomes your web address — e.g. `prepnova`, lowercase, no
+2. Fill in: **Username** (this becomes your web address — e.g. `confamprep`, lowercase, no
    spaces), e-mail, password. Click **Register**.
 3. Open the confirmation e-mail they send and click the link.
 
@@ -73,7 +73,7 @@ the same line again (it is safe to repeat). If unsure, send a screenshot.
 ## Step 4 — Check the site (5 minutes)
 
 1. Open **https://YOURNAME.pythonanywhere.com** on your phone or laptop.
-   ✅ The PrepNova landing page appears, with the padlock (HTTPS) in the address bar.
+   ✅ The ConfamPrep landing page appears, with the padlock (HTTPS) in the address bar.
 2. Register a test student, log in, open **Practice** and answer a few questions, then start
    a JAMB mock and submit it.
 3. Open **https://YOURNAME.pythonanywhere.com/admin_login** with your admin e-mail and

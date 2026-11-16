@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Partner dashboard — PrepNova{% endblock %}
+{% block title %}Partner dashboard — ConfamPrep{% endblock %}
 {% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
 <div class="card border-0 shadow-sm p-5 text-center anim-rise">
     <div class="fs-1">💼</div>
     <h2 class="h4 mt-2">You are not a partner (yet)</h2>
-    <p class="text-muted mx-auto" style="max-width:520px">Earn 30% of every customer's first purchase by sharing your personal PrepNova link. Free to join — no capital, no fees.</p>
+    <p class="text-muted mx-auto" style="max-width:520px">Earn 30% of every customer's first purchase by sharing your personal ConfamPrep link. Free to join — no capital, no fees.</p>
     <div class="d-flex gap-2 justify-content-center flex-wrap">
         <a href="{{ url_for('partner_apply') }}" class="btn btn-primary">Apply to be a Partner</a>
         <a href="{{ url_for('partners_page') }}" class="btn btn-outline-primary">How it works</a>
@@ -50,9 +50,9 @@
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <code class="fs-6 px-3 py-2 rounded-3" style="background:rgba(11,122,75,.08)" id="refLink">{{ link }}</code>
                         <button class="btn btn-sm btn-primary" onclick="pnCopy(this, '{{ link }}')">Copy link</button>
-                        <a class="btn btn-sm btn-success" target="_blank" rel="noopener" href="https://wa.me/?text={{ ('Check this out — PrepNova has the full JAMB, WAEC and Post-UTME prep with real CBT mock exams: ' ~ link)|urlencode }}"><i class="bi bi-whatsapp me-1"></i>Share on WhatsApp</a>
+                        <a class="btn btn-sm btn-success" target="_blank" rel="noopener" href="https://wa.me/?text={{ ('Check this out — ConfamPrep has the full JAMB, WAEC and Post-UTME prep with real CBT mock exams: ' ~ link)|urlencode }}"><i class="bi bi-whatsapp me-1"></i>Share on WhatsApp</a>
                     </div>
-                    <div class="small text-muted mt-2"><i class="bi bi-lightbulb me-1"></i>Tip: add <code>?ref={{ code }}</code> to ANY PrepNova page — e.g. the offline simulator page — and it still credits you. {{ partner['clicks'] or 0 }} link clicks so far.</div>
+                    <div class="small text-muted mt-2"><i class="bi bi-lightbulb me-1"></i>Tip: add <code>?ref={{ code }}</code> to ANY ConfamPrep page — e.g. the offline simulator page — and it still credits you. {{ partner['clicks'] or 0 }} link clicks so far.</div>
                 </div>
             </div>
         </div>

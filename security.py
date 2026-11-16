@@ -1,5 +1,5 @@
 """
-PrepNova CBT — security utilities.
+ConfamPrep — security utilities.
 
 * CSRF protection (double-submit token stored in the signed session)
 * In-process rate limiter (per IP + per route) — good enough for a single
@@ -113,7 +113,7 @@ def rate_limit(limit, window_seconds, scope=None, methods=("POST",)):
 COMMON_PASSWORDS = {
     "password", "password1", "password123", "12345678", "123456789", "1234567890",
     "qwerty123", "abc12345", "iloveyou", "welcome1", "letmein1", "admin123",
-    "nigeria1", "lagos123", "jamb2026", "waec2026", "student1", "prepnova",
+    "nigeria1", "lagos123", "jamb2026", "waec2026", "student1", "confamprep",
 }
 
 

@@ -1,4 +1,4 @@
-# PrepNova CBT
+# ConfamPrep
 
 A computer-based-test practice platform for Nigerian students preparing for **JAMB UTME**,
 **WAEC** and university **Post-UTME** screening — built with Flask + SQLite, with Paystack
@@ -37,7 +37,7 @@ helpers.py        Course/subject catalogue, question sourcing, subscriptions, e-
 security.py       CSRF, rate limiting, login guards, headers, password policy
 db.py             Schema creation + migrations (runs automatically on start)
 templates/        Jinja templates (student pages extend base.html)
-static/           prepnova.css / prepnova.js design system, vendored Bootstrap 5.3
+static/           confamprep.css / confamprep.js design system, vendored Bootstrap 5.3
 scripts/          One-off data maintenance utilities (see scripts/README.md)
 ```
 

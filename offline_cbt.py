@@ -1,5 +1,5 @@
 """
-PrepNova Offline — JAMB CBT Simulator
+ConfamPrep Offline — JAMB CBT Simulator
 =====================================
 Builds a single self-contained HTML file: the full JAMB mock-exam experience
 embedded with real questions from the live bank. The buyer downloads it once
@@ -117,7 +117,7 @@ def build_offline_jamb_html(conn, site_url, buyer_name="", buyer_ref=""):
     total = sum(len(s["q"]) for s in subjects)
     data = {
         "exam": "JAMB",
-        "title": "PrepNova Offline — JAMB CBT Simulator",
+        "title": "ConfamPrep Offline — JAMB CBT Simulator",
         "hero_title": "The JAMB mock exam that lives in this file",
         "hero_sub": "Downloaded once — now it works anywhere: bus, village, midnight, "
                     "flight mode. Pick your subjects and practise under real exam "
@@ -126,7 +126,7 @@ def build_offline_jamb_html(conn, site_url, buyer_name="", buyer_ref=""):
                   "Scored over 400", "No network needed"],
         "built": datetime.utcnow().strftime("%d %B %Y"),
         "site": site_url,
-        "buyer": {"name": (buyer_name or "PrepNova student").strip()[:60],
+        "buyer": {"name": (buyer_name or "ConfamPrep student").strip()[:60],
                   "ref": (buyer_ref or "").strip()[:40]},
         "english": ENGLISH_SUBJECT,
         "subjects": subjects,
@@ -141,7 +141,7 @@ def build_offline_waec_html(conn, site_url, buyer_name="", buyer_ref=""):
     total = sum(len(s["q"]) for s in subjects)
     data = {
         "exam": "WAEC",
-        "title": "PrepNova Offline — WAEC Exam Simulator",
+        "title": "ConfamPrep Offline — WAEC Exam Simulator",
         "hero_title": "Every WAEC objective paper, in one file",
         "hero_sub": "The official 2026 WASSCE formats — real question counts and real "
                     "durations, English Paper 1 and the Test of Orals included — with "
@@ -151,7 +151,7 @@ def build_offline_waec_html(conn, site_url, buyer_name="", buyer_ref=""):
                   "Graded A1–F9", "No network needed"],
         "built": datetime.utcnow().strftime("%d %B %Y"),
         "site": site_url,
-        "buyer": {"name": (buyer_name or "PrepNova student").strip()[:60],
+        "buyer": {"name": (buyer_name or "ConfamPrep student").strip()[:60],
                   "ref": (buyer_ref or "").strip()[:40]},
         "subjects": subjects,
         "passages": {},
@@ -178,7 +178,7 @@ _TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>PrepNova Offline — JAMB CBT Simulator</title>
+<title>ConfamPrep Offline — JAMB CBT Simulator</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--pri:#0b7a4b;--pri600:#096640;--pri50:#e9f7f0;--gold:#f2b705;--navy:#0f1f3d;--navy2:#14285a;
@@ -375,9 +375,9 @@ var state = null, timerId = null, inExam = false, calcOpen = false;
 function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
 function topbar(subtitle, withTimer, submitFn) {
   var bar = h("div", "pn-top");
-  bar.appendChild(h("div", "pn-logo", "PN"));
+  bar.appendChild(h("div", "pn-logo", "CP"));
   var tw = h("div"); tw.style.minWidth = "0";
-  tw.appendChild(h("div", "t", "PrepNova Offline"));
+  tw.appendChild(h("div", "t", "ConfamPrep Offline"));
   if (subtitle) tw.appendChild(h("div", "s", subtitle));
   bar.appendChild(tw);
   bar.appendChild(h("span", "pill", "WORKS OFFLINE"));
@@ -391,7 +391,7 @@ function topbar(subtitle, withTimer, submitFn) {
 }
 function watermark() {
   var w = h("div", "wm", "Licensed to " + PN.buyer.name + (PN.buyer.ref ? " · " + PN.buyer.ref : "") +
-    " · PrepNova CBT · built " + PN.built);
+    " · ConfamPrep · built " + PN.built);
   return w;
 }
 function modal(build) {
