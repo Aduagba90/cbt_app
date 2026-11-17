@@ -9,7 +9,8 @@
     <!-- Google Search Console ownership verification — removing this un-verifies the site -->
     <meta name="google-site-verification" content="16sZKYplugVRMVeKfOvur9fbBLK73ZVR5IvrpfWUlNU" />
     <title>{% block title %}{{ brand }}{% endblock %} | {{ brand }}</title>
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='logo/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo/apple-touch.png') }}">
     <link rel="preload" href="{{ url_for('static', filename='vendor/fonts/pjk-600.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ url_for('static', filename='vendor/fonts/pjk-800.woff2') }}" as="font" type="font/woff2" crossorigin>
     <meta property="og:type" content="website">
@@ -21,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/confamprep.css') }}?v=32">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/confamprep.css') }}?v=33">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if not session.get('user') and request.endpoint != 'gift_page' and 'pn-landing' in (self.body_class() or '') %} pn-has-promo{% endif %}">
@@ -49,7 +50,7 @@
     <div class="container">
         <div class="pn-bar">
             <a class="pn-brand" href="{{ url_for('dashboard') }}">
-                <span class="pn-logo">CP</span>
+                <img class="pn-logo" src="{{ url_for('static', filename='logo/confamprep_logo.png') }}" alt="ConfamPrep logo">
                 <span>ConfamPrep <span class="text-primary">CBT</span><small>Practice · Prepare · Pass</small></span>
             </a>
 
@@ -116,7 +117,7 @@
 {% block footer %}
 <footer class="pn-footer">
     <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>&copy; {{ current_year }} {{ brand }}. Built for Nigerian students.</span>
+        <span class="d-inline-flex align-items-center gap-2"><img class="pn-logo" src="{{ url_for('static', filename='logo/confamprep_logo.png') }}" alt="ConfamPrep logo" style="width:26px;height:26px">&copy; {{ current_year }} {{ brand }}. Built for Nigerian students.</span>
         <span class="d-flex gap-3">
             <a href="{{ url_for('terms') }}">Terms</a>
             <a href="{{ url_for('privacy') }}">Privacy</a>

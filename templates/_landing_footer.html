@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-4">
-                <a class="pn-brand mb-2" href="{{ url_for('index') }}"><span class="pn-logo">CP</span><span>ConfamPrep <span style="color:var(--pn-accent)">CBT</span></span></a>
+                <a class="pn-brand mb-2" href="{{ url_for('index') }}"><img class="pn-logo" src="{{ url_for('static', filename='logo/confamprep_logo.png') }}" alt="ConfamPrep logo"><span>ConfamPrep <span style="color:var(--pn-accent)">CBT</span></span></a>
                 <p class="mt-2 mb-0" style="max-width:320px">Nigeria's smart exam-preparation platform for JAMB UTME, WAEC SSCE and university Post-UTME screening.</p>
             </div>
             <div class="col-6 col-lg-2"><h5>Exams</h5><a href="{{ url_for('seo_library') }}">Past questions — all subjects</a><a href="{{ url_for('register') }}">JAMB UTME</a><a href="{{ url_for('register') }}">WAEC SSCE</a><a href="{{ url_for('register') }}">Post-UTME</a></div>

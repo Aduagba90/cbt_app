@@ -27,7 +27,7 @@
 </style>
 <div class="pn-admin-bar">
   <div class="inner">
-    <a class="brand" href="{{ url_for('admin_bp.admin') }}"><span class="pn-logo">CP</span><span>ConfamPrep<small>Admin</small></span></a>
+    <a class="brand" href="{{ url_for('admin_bp.admin') }}"><img class="pn-logo" src="{{ url_for('static', filename='logo/confamprep_logo.png') }}" alt="ConfamPrep logo"><span>ConfamPrep<small>Admin</small></span></a>
     <nav>
       {% set ep = (request.endpoint or '').split('.')[-1] %}
       <a href="{{ url_for('admin_bp.admin') }}" class="{{ 'active' if ep == 'admin' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>

@@ -31,7 +31,7 @@
     {% include "_auth_side.html" %}
     <div class="pn-auth-body">
         <div class="pn-auth-card text-center">
-            <a class="pn-brand d-lg-none mb-4 justify-content-center" href="/"><span class="pn-logo">CP</span><span>ConfamPrep <span class="text-primary">CBT</span></span></a>
+            <a class="pn-brand d-lg-none mb-4 justify-content-center" href="/"><img class="pn-logo" src="{{ url_for('static', filename='logo/confamprep_logo.png') }}" alt="ConfamPrep logo"><span>ConfamPrep <span class="text-primary">CBT</span></span></a>
             <span class="pn-stat-icon {{ tint }} mx-auto mb-3" style="width:64px;height:64px;font-size:1.7rem"><i class="bi {{ icon }}"></i></span>
             <h1>{{ title }}</h1>
             <p class="text-muted">{{ text|safe }}</p>

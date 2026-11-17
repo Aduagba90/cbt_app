@@ -163,6 +163,7 @@ a:hover { color: var(--pn-primary-700); }
 /* Three-zone bar: brand | centred links | actions. Nothing is ever allowed to wrap. */
 .pn-navbar .pn-bar { display: flex; align-items: center; gap: 1rem; flex-wrap: nowrap; min-height: 46px; }
 .pn-navbar .pn-bar > .pn-brand { flex: 0 0 auto; }
+img.pn-logo { border-radius: 50%; background: none; box-shadow: none; object-fit: cover; font-size: 0; }
 .pn-navbar .pn-bar > .pn-nav { flex: 1 1 auto; justify-content: center; }
 .pn-navbar .pn-bar > .pn-actions { flex: 0 0 auto; margin-left: auto; }
 .pn-brand { display: flex; align-items: center; gap: .6rem; font-weight: 800; color: var(--pn-navy); font-size: 1.05rem; letter-spacing: -.01em; white-space: nowrap; line-height: 1.15; }

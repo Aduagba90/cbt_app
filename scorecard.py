@@ -72,9 +72,13 @@ def _canvas():
     return img, ImageDraw.Draw(img)
 
 
-def _brand(d):
-    d.rounded_rectangle([72, 64, 118, 110], radius=12, fill=GOLD)
-    d.text((95, 87), "CP", font=font(800, 22), fill=NAVY, anchor="mm")
+def _logo():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "logo", "confamprep_logo.png")
+    return Image.open(path).convert("RGBA").resize((46, 46), Image.LANCZOS)
+
+
+def _brand(img, d):
+    img.paste(_logo(), (72, 64), _logo())
     d.text((134, 87), "ConfamPrep", font=font(700, 30), fill=WHITE, anchor="lm")
 
 
@@ -108,7 +112,7 @@ def build_scorecard(result, display_name, site_url):
     first = ((display_name or "").strip().split() or ["I"])[0][:14]
 
     img, d = _canvas()
-    _brand(d)
+    _brand(img, d)
     cx = W // 2
 
     # eyebrow: exam name (caps, gold) — shrink to fit
